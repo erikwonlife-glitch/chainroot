@@ -502,6 +502,64 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 .data-badge-live{background:rgba(0,232,122,.1);color:#00e87a;border:1px solid rgba(0,232,122,.25)}
 .data-badge-delay{background:rgba(244,197,66,.1);color:#f4c542;border:1px solid rgba(244,197,66,.25)}
 .data-badge-eod{background:rgba(77,100,117,.1);color:#4d6475;border:1px solid rgba(77,100,117,.2)}
+
+/* ── NEWS ENGINE STYLES ─────────────────────────────────────── */
+.news-tab{
+  padding:11px 16px;background:transparent;border:none;border-bottom:2px solid transparent;
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;
+  color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
+  margin-bottom:-1px;
+}
+.news-tab:hover{color:var(--text)}
+.news-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
+
+.news-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
+  padding:18px 20px;display:flex;flex-direction:column;gap:10px;
+  cursor:pointer;transition:all .18s;text-decoration:none;
+  position:relative;overflow:hidden;
+}
+.news-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.news-card.featured{border-color:rgba(0,232,122,.2)}
+.news-card.featured::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),var(--blue));
+}
+.news-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.news-card-source{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
+.news-card-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+.news-card-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.news-card:hover .news-card-title{color:var(--accent)}
+.news-card-body{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.news-card-footer{display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap}
+.news-cat-badge{
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;
+  padding:2px 7px;border-radius:3px;text-transform:uppercase;
+}
+.ncb-crypto{background:rgba(0,232,122,.1);color:var(--accent);border:1px solid rgba(0,232,122,.2)}
+.ncb-defi{background:rgba(153,69,255,.1);color:#a78bfa;border:1px solid rgba(153,69,255,.2)}
+.ncb-stocks{background:rgba(0,180,216,.1);color:var(--blue);border:1px solid rgba(0,180,216,.2)}
+.ncb-macro{background:rgba(244,197,66,.1);color:var(--gold);border:1px solid rgba(244,197,66,.2)}
+.ncb-commodities{background:rgba(255,124,58,.1);color:#ff7c3a;border:1px solid rgba(255,124,58,.2)}
+.ncb-news{background:rgba(77,100,117,.1);color:var(--muted);border:1px solid rgba(77,100,117,.2)}
+.news-sentiment-tag{
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.5px;
+  padding:2px 7px;border-radius:3px;display:flex;align-items:center;gap:4px;
+}
+.nst-bull{background:rgba(0,232,122,.08);color:var(--accent);border:1px solid rgba(0,232,122,.18)}
+.nst-bear{background:rgba(255,69,96,.08);color:var(--red);border:1px solid rgba(255,69,96,.18)}
+.nst-neut{background:rgba(77,100,117,.08);color:var(--muted);border:1px solid rgba(77,100,117,.18)}
+.news-card-img{
+  width:100%;height:140px;object-fit:cover;border-radius:5px;
+  background:var(--bg3);display:block;
+}
+.news-hero{grid-column:1/-1}
+.news-hero .news-card-title{font-size:17px;-webkit-line-clamp:2}
+.news-hero .news-card-body{-webkit-line-clamp:3}
+@media(max-width:820px){
+  #news-grid{grid-template-columns:1fr!important}
+  .news-hero{grid-column:1}
+}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y0D07PGRN0"></script>
@@ -2217,8 +2275,73 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <!-- NEWS -->
     <div class="pnl" id="P-news">
-      <div class="ph"><div><div class="pht"><span data-mn="Крипто &amp; Зах зээлийн мэдээ" data-en="Crypto &amp; TradFi News">Крипто &amp; Зах зээлийн мэдээ</span> <span class="pbg c">CeFi</span></div><div class="phs"><span data-mn="Зах зээлийн цуглуулсан мэдээлэл — цаг тутам шинэчлэгдэнэ" data-en="Aggregated market intelligence — refreshed hourly">Зах зээлийн цуглуулсан мэдээлэл — цаг тутам шинэчлэгдэнэ</span></div></div></div>
-      <div class="pc" id="newsFeed"></div>
+      <div class="ph">
+        <div>
+          <div class="pht">
+            <span data-mn="Крипто &amp; Зах зээлийн мэдээ" data-en="Crypto &amp; TradFi News">Крипто &amp; Зах зээлийн мэдээ</span>
+            <span class="pbg c">CeFi</span>
+            <span id="news-live-dot" style="display:inline-flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);padding:3px 9px;border-radius:3px">
+              <span class="live-dot"></span>LIVE
+            </span>
+          </div>
+          <div class="phs">
+            <span data-mn="CryptoCompare · Finnhub · RSS цуглуулагч — 10 минут тутам шинэчлэгдэнэ" data-en="CryptoCompare · Finnhub · RSS aggregator — refreshes every 10 min">CryptoCompare · Finnhub · RSS aggregator — refreshes every 10 min</span>
+          </div>
+        </div>
+        <div class="phst" style="gap:10px;flex-wrap:wrap">
+          <div id="news-last-updated" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">Fetching…</div>
+          <button onclick="newsRefresh(true)" style="display:flex;align-items:center;gap:5px;padding:6px 13px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">↻ Refresh</button>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div style="padding:0 40px 0;border-bottom:1px solid var(--border);background:var(--bg1)">
+        <div style="display:flex;align-items:center;gap:0;overflow-x:auto" id="news-filter-bar">
+          <button class="news-tab on" data-cat="all" onclick="newsSetCat('all',this)">All</button>
+          <button class="news-tab" data-cat="crypto" onclick="newsSetCat('crypto',this)">🔗 Crypto</button>
+          <button class="news-tab" data-cat="defi" onclick="newsSetCat('defi',this)">⬡ DeFi</button>
+          <button class="news-tab" data-cat="stocks" onclick="newsSetCat('stocks',this)">📈 Stocks</button>
+          <button class="news-tab" data-cat="macro" onclick="newsSetCat('macro',this)">🌐 Macro</button>
+          <button class="news-tab" data-cat="commodities" onclick="newsSetCat('commodities',this)">🪨 Commodities</button>
+          <div style="margin-left:auto;padding:8px 0;flex-shrink:0">
+            <input id="news-search" type="text" placeholder="Search news…" oninput="newsFilter()"
+              style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;width:200px;transition:border-color .15s"
+              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Sentiment bar -->
+      <div style="padding:12px 40px;border-bottom:1px solid var(--border);background:var(--bg1);display:flex;align-items:center;gap:20px;flex-wrap:wrap">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0">Market Mood</div>
+        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
+          <div style="flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;display:flex">
+            <div id="news-bull-bar" style="height:100%;background:var(--accent);border-radius:3px 0 0 3px;transition:width .5s"></div>
+            <div id="news-neut-bar" style="height:100%;background:var(--muted);transition:width .5s"></div>
+            <div id="news-bear-bar" style="height:100%;background:var(--red);border-radius:0 3px 3px 0;transition:width .5s"></div>
+          </div>
+          <span id="news-sentiment-txt" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);white-space:nowrap">—</span>
+        </div>
+        <div id="news-stats-row" style="display:flex;gap:16px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">
+          <span id="ns-total">0 articles</span>
+          <span id="ns-bull" style="color:var(--accent)">0 bullish</span>
+          <span id="ns-bear" style="color:var(--red)">0 bearish</span>
+          <span id="ns-src">0 sources</span>
+        </div>
+      </div>
+
+      <!-- News grid -->
+      <div class="pc" style="padding-top:24px">
+        <div id="news-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
+            <div style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
+            FETCHING LIVE NEWS…
+          </div>
+        </div>
+        <div id="news-load-more" style="display:none;text-align:center;margin-top:24px">
+          <button onclick="newsLoadMore()" style="padding:10px 28px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">Load More →</button>
+        </div>
+      </div>
     </div>
 
     <!-- BITCOIN MAs -->
@@ -5725,6 +5848,248 @@ function setSiteLang(lang) {
 
 // Expose globally
 window.setSiteLang = setSiteLang;
+</script>
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   CHAINROOT LIVE NEWS ENGINE
+   Sources: CryptoCompare (no key) · Finnhub (existing key) · RSS via proxy
+   Auto-refresh: 10 minutes · Filter by category · Sentiment tagging
+═══════════════════════════════════════════════════════════════ */
+
+const NEWS = (() => {
+  const FINNHUB_KEY = 'ct0ios9r01qh0skacv7gct0ios9r01qh0skacv80';
+  const PROXY       = 'https://api.allorigins.win/get?url=';
+  const PAGE_SIZE   = 20;
+
+  let allArticles  = [];
+  let filtered     = [];
+  let currentCat   = 'all';
+  let displayCount = PAGE_SIZE;
+
+  // ── RSS FETCHER ──────────────────────────────────────────────
+  async function fetchRSS(feedUrl, defaultCat) {
+    try {
+      const r = await fetch(PROXY + encodeURIComponent(feedUrl));
+      if (!r.ok) return [];
+      const d = await r.json();
+      const xml = d.contents || '';
+      const doc = new DOMParser().parseFromString(xml, 'text/xml');
+      const items = Array.from(doc.querySelectorAll('item')).slice(0, 15);
+      const srcName = doc.querySelector('channel > title')?.textContent?.trim().split('|')[0].trim() || feedUrl.split('/')[2];
+      return items.map((item, i) => {
+        const title   = item.querySelector('title')?.textContent?.replace(/<[^>]+>/g,'').trim() || '';
+        const desc    = item.querySelector('description')?.textContent?.replace(/<[^>]+>/g,'').slice(0,260).trim() || '';
+        const link    = item.querySelector('link')?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || '#';
+        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
+        const encImg  = item.querySelector('enclosure[type^="image"]')?.getAttribute('url') || '';
+        const mediaImg= item.querySelector('thumbnail')?.getAttribute('url') || item.querySelector('content')?.getAttribute('url') || '';
+        return { id:`rss_${defaultCat}_${i}_${Date.now()}`, title, body:desc, url:link, source:srcName,
+          time: pubDate ? new Date(pubDate).getTime() : Date.now()-i*300000,
+          cat: catFromText(defaultCat, title), sentiment: sentimentFromText(title+' '+desc),
+          imageUrl: encImg||mediaImg||'' };
+      }).filter(a=>a.title);
+    } catch(e) { return []; }
+  }
+
+  // ── SOURCES ──────────────────────────────────────────────────
+  const SOURCES = [
+    {
+      id:'cryptocompare', label:'CryptoCompare',
+      async fetch(){
+        try{
+          const r = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest');
+          if(!r.ok)return[];
+          const d = await r.json();
+          return (d.Data||[]).slice(0,30).map(a=>({
+            id:'cc_'+a.id, title:a.title,
+            body:(a.body||'').replace(/<[^>]+>/g,'').slice(0,260),
+            url:a.url, source:a.source_info?.name||a.source||'CryptoCompare',
+            time:(a.published_on||0)*1000,
+            cat:catFromText(a.categories||'',a.title),
+            sentiment:sentimentVotes(a.upvotes,a.downvotes),
+            imageUrl:a.imageurl||''
+          }));
+        }catch(e){return[];}
+      }
+    },
+    {
+      id:'finnhub', label:'Finnhub Markets',
+      async fetch(){
+        try{
+          const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
+          if(!r.ok)return[];
+          const d = await r.json();
+          return (d||[]).slice(0,20).map(a=>({
+            id:'fh_'+a.id, title:a.headline, body:a.summary||'',
+            url:a.url, source:a.source||'Finnhub',
+            time:(a.datetime||0)*1000,
+            cat:catFromText(a.category||'',a.headline),
+            sentiment:sentimentFromText(a.headline+' '+(a.summary||'')),
+            imageUrl:a.image||''
+          }));
+        }catch(e){return[];}
+      }
+    },
+    {
+      id:'finnhub-crypto', label:'Finnhub Crypto',
+      async fetch(){
+        try{
+          const r = await fetch(`https://finnhub.io/api/v1/news?category=crypto&token=${FINNHUB_KEY}`);
+          if(!r.ok)return[];
+          const d = await r.json();
+          return (d||[]).slice(0,20).map(a=>({
+            id:'fhc_'+a.id, title:a.headline, body:a.summary||'',
+            url:a.url, source:a.source||'Finnhub',
+            time:(a.datetime||0)*1000,
+            cat:catFromText('crypto',a.headline),
+            sentiment:sentimentFromText(a.headline+' '+(a.summary||'')),
+            imageUrl:a.image||''
+          }));
+        }catch(e){return[];}
+      }
+    },
+    { id:'cointelegraph', label:'CoinTelegraph',   async fetch(){ return fetchRSS('https://cointelegraph.com/rss','crypto'); } },
+    { id:'coindesk',      label:'CoinDesk',         async fetch(){ return fetchRSS('https://www.coindesk.com/arc/outboundfeeds/rss/','crypto'); } },
+    { id:'decrypt',       label:'Decrypt',           async fetch(){ return fetchRSS('https://decrypt.co/feed','crypto'); } },
+    { id:'investing',     label:'Investing.com',     async fetch(){ return fetchRSS('https://www.investing.com/rss/news.rss','macro'); } },
+    { id:'invest-cmd',    label:'Investing Commodities', async fetch(){ return fetchRSS('https://www.investing.com/rss/news_288.rss','commodities'); } },
+    { id:'invest-eq',     label:'Investing Stocks',  async fetch(){ return fetchRSS('https://www.investing.com/rss/news_25.rss','stocks'); } },
+    { id:'cnbc',          label:'CNBC Markets',      async fetch(){ return fetchRSS('https://www.cnbc.com/id/20409666/device/rss/rss.html','stocks'); } },
+  ];
+
+  // ── HELPERS ──────────────────────────────────────────────────
+  function catFromText(hint, title) {
+    const t = (hint+' '+title).toLowerCase();
+    if(/defi|uniswap|aave|curve|tvl|protocol|amm|raydium|orca|yield farm/i.test(t))return'defi';
+    if(/bitcoin|ethereum|solana|crypto|btc|eth|sol|nft|blockchain|web3|altcoin|binance|stablecoin|usdc|usdt|xrp|bnb|doge/i.test(t))return'crypto';
+    if(/gold|silver|oil|crude|natural gas|wheat|corn|commodity|commodities|wti|brent|xau|xag|metal|copper/i.test(t))return'commodities';
+    if(/stock|equity|nasdaq|s&p|dow|aapl|msft|nvda|tsla|earnings|ipo|nyse|shares|dividend/i.test(t))return'stocks';
+    if(/fed|federal|inflation|cpi|ppi|gdp|interest rate|treasury|dollar|dxy|macro|economic|recession|central bank|fomc|m2/i.test(t))return'macro';
+    return'crypto';
+  }
+  const BULL=/surge|soar|rally|gain|bullish|pump|green|rise|high|record|ath|bull|buy|breakout|recovery|growth|adoption|upgrade|invest|expand/i;
+  const BEAR=/crash|drop|fall|decline|bearish|dump|red|low|loss|bear|sell|correction|fear|hack|exploit|ban|lawsuit|regulat|fine|liquidat|bankrupt|plunge|warning/i;
+  function sentimentFromText(t){
+    const b=(t.match(BULL)||[]).length,br=(t.match(BEAR)||[]).length;
+    return b>br?'bullish':br>b?'bearish':'neutral';
+  }
+  function sentimentVotes(up,down){
+    const u=parseInt(up)||0,d=parseInt(down)||0;
+    return u>d*1.3?'bullish':d>u*1.3?'bearish':'neutral';
+  }
+  function dedupe(arr){
+    const seen=new Set();
+    return arr.filter(a=>{const k=a.title.slice(0,55).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
+  }
+  function timeAgo(ms){
+    if(!ms)return'';const diff=Date.now()-ms,m=Math.floor(diff/60000);
+    if(m<1)return'Just now';if(m<60)return m+'m ago';
+    const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';
+  }
+  function sentTag(s){
+    if(s==='bullish')return`<span class="news-sentiment-tag nst-bull">▲ Bullish</span>`;
+    if(s==='bearish')return`<span class="news-sentiment-tag nst-bear">▼ Bearish</span>`;
+    return`<span class="news-sentiment-tag nst-neut">→ Neutral</span>`;
+  }
+  function catBadge(cat){
+    const m={crypto:['ncb-crypto','🔗 Crypto'],defi:['ncb-defi','⬡ DeFi'],stocks:['ncb-stocks','📈 Stocks'],macro:['ncb-macro','🌐 Macro'],commodities:['ncb-commodities','🪨 Commodities']};
+    const[cls,lbl]=m[cat]||['ncb-news',cat];
+    return`<span class="news-cat-badge ${cls}">${lbl}</span>`;
+  }
+
+  // ── RENDER ───────────────────────────────────────────────────
+  function render(){
+    const grid=document.getElementById('news-grid');if(!grid)return;
+    const slice=filtered.slice(0,displayCount);
+    if(!slice.length){
+      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">No articles found</div>`;
+      document.getElementById('news-load-more').style.display='none';return;
+    }
+    grid.innerHTML=slice.map((a,i)=>{
+      const isHero=i===0;
+      const hasImg=a.imageUrl&&a.imageUrl.startsWith('http');
+      return`<a href="${a.url}" target="_blank" rel="noopener noreferrer" class="news-card${isHero?' featured news-hero':''}" style="text-decoration:none">
+        ${hasImg?`<img class="news-card-img" src="${a.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:''}
+        <div class="news-card-top">
+          <span class="news-card-source">${a.source}</span>
+          <span class="news-card-time">${timeAgo(a.time)}</span>
+        </div>
+        <div class="news-card-title">${a.title}</div>
+        ${a.body?`<div class="news-card-body">${a.body}</div>`:''}
+        <div class="news-card-footer">${catBadge(a.cat)}${sentTag(a.sentiment)}</div>
+      </a>`;
+    }).join('');
+    document.getElementById('news-load-more').style.display=filtered.length>displayCount?'block':'none';
+
+    // Sentiment bar
+    const bull=filtered.filter(a=>a.sentiment==='bullish').length;
+    const bear=filtered.filter(a=>a.sentiment==='bearish').length;
+    const neut=filtered.length-bull-bear;
+    const tot=filtered.length||1;
+    const bb=document.getElementById('news-bull-bar'),nb=document.getElementById('news-neut-bar'),rb=document.getElementById('news-bear-bar');
+    const st=document.getElementById('news-sentiment-txt');
+    if(bb)bb.style.width=(bull/tot*100).toFixed(1)+'%';
+    if(nb)nb.style.width=(neut/tot*100).toFixed(1)+'%';
+    if(rb)rb.style.width=(bear/tot*100).toFixed(1)+'%';
+    if(st){
+      st.textContent=bull>bear*1.5?'Bullish 📈':bear>bull*1.5?'Bearish 📉':'Neutral ↔';
+      st.style.color=bull>bear*1.5?'var(--accent)':bear>bull*1.5?'var(--red)':'var(--muted)';
+    }
+    const nsTotal=document.getElementById('ns-total'),nsBull=document.getElementById('ns-bull'),nsBear=document.getElementById('ns-bear'),nsSrc=document.getElementById('ns-src');
+    if(nsTotal)nsTotal.textContent=filtered.length+' articles';
+    if(nsBull)nsBull.textContent=bull+' bullish';
+    if(nsBear)nsBear.textContent=bear+' bearish';
+    if(nsSrc)nsSrc.textContent=new Set(allArticles.map(a=>a.source)).size+' sources';
+  }
+
+  function applyFilter(){
+    const q=(document.getElementById('news-search')?.value||'').toLowerCase();
+    filtered=allArticles.filter(a=>{
+      const mc=currentCat==='all'||a.cat===currentCat;
+      const mq=!q||a.title.toLowerCase().includes(q)||(a.body||'').toLowerCase().includes(q)||a.source.toLowerCase().includes(q);
+      return mc&&mq;
+    });
+    displayCount=PAGE_SIZE;render();
+  }
+
+  async function fetchAll(){
+    const results=await Promise.allSettled(SOURCES.map(s=>s.fetch()));
+    let fresh=[];
+    results.forEach(r=>{if(r.status==='fulfilled')fresh=fresh.concat(r.value);});
+    if(fresh.length){
+      allArticles=dedupe(fresh).sort((a,b)=>b.time-a.time);
+      applyFilter();
+      const upd=document.getElementById('news-last-updated');
+      if(upd)upd.textContent='Updated '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    } else if(!allArticles.length){
+      const grid=document.getElementById('news-grid');
+      if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">⚠ Could not load news — check connection or CORS proxy</div>`;
+    }
+  }
+
+  return {
+    init(){ fetchAll(); setInterval(fetchAll,10*60*1000); },
+    refresh(){ fetchAll(); },
+    setCat(c){ currentCat=c;displayCount=PAGE_SIZE;applyFilter(); },
+    filter(){ applyFilter(); },
+    loadMore(){ displayCount+=PAGE_SIZE;render(); }
+  };
+})();
+
+function newsRefresh(){NEWS.refresh();const btn=document.querySelector('[onclick="newsRefresh()"]');if(btn){const orig=btn.textContent;btn.textContent='⟳ Fetching…';setTimeout(()=>btn.textContent=orig,3000);}}
+function newsSetCat(cat,el){document.querySelectorAll('.news-tab').forEach(t=>t.classList.remove('on'));if(el)el.classList.add('on');NEWS.setCat(cat);}
+function newsFilter(){NEWS.filter();}
+function newsLoadMore(){NEWS.loadMore();}
+
+// Lazy-init: only fetch when the news panel is first opened
+let _newsInited=false;
+(function(){
+  const _orig=window.go;
+  window.go=function(id,el){
+    if(_orig)_orig(id,el);
+    if(id==='news'&&!_newsInited){_newsInited=true;setTimeout(()=>NEWS.init(),80);}
+  };
+})();
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
