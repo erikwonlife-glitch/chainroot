@@ -1552,8 +1552,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   margin-bottom: 10px;
 }
 
-/* Kamino CTA section */
-.yl-kamino-cta {
+/* Vault CTA section */
+.yl-vault-cta {
   background: linear-gradient(135deg, rgba(153,69,255,.06) 0%, rgba(20,241,149,.04) 100%);
   border: 1px solid rgba(153,69,255,.25);
   border-radius: 12px;
@@ -1562,7 +1562,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   position: relative;
   overflow: hidden;
 }
-.yl-kamino-cta::before {
+.yl-vault-cta::before {
   content: '';
   position: absolute;
   top: -60px; right: -60px;
@@ -1571,15 +1571,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   background: radial-gradient(circle, rgba(153,69,255,.1), transparent 70%);
   pointer-events: none;
 }
-.yl-kamino-grid {
+.yl-vault-cta-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 32px;
   align-items: start;
 }
-@media (max-width: 700px) { .yl-kamino-grid { grid-template-columns: 1fr; } }
-.yl-kamino-info {}
-.yl-kamino-title {
+@media (max-width: 700px) { .yl-vault-cta-grid { grid-template-columns: 1fr; } }
+.yl-vault-cta-info {}
+.yl-vault-cta-title {
   font-family: 'Space Grotesk', sans-serif;
   font-size: 24px;
   font-weight: 800;
@@ -1587,20 +1587,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   margin-bottom: 10px;
   letter-spacing: -.02em;
 }
-.yl-kamino-sub {
+.yl-vault-cta-sub {
   font-size: 13px;
   color: #4d6475;
   line-height: 1.7;
   margin-bottom: 20px;
 }
-.yl-kamino-features {
+.yl-vault-cta-features {
   list-style: none;
   display: flex;
   flex-direction: column;
   gap: 9px;
   margin-bottom: 24px;
 }
-.yl-kamino-features li {
+.yl-vault-cta-features li {
   display: flex;
   align-items: flex-start;
   gap: 10px;
@@ -1609,15 +1609,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
 }
-.yl-kamino-features li::before {
+.yl-vault-cta-features li::before {
   content: '◆';
   color: #9945FF;
   font-size: 8px;
   flex-shrink: 0;
   margin-top: 4px;
 }
-.yl-kamino-features li strong { color: #ccd8df; }
-.yl-kamino-actions {
+.yl-vault-cta-features li strong { color: #ccd8df; }
+.yl-vault-cta-actions {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -4572,7 +4572,7 @@ function addToPortfolioFromModal(id){
 </div><!-- /training-overlay -->
 
 <!-- ═══════════════════════════════════════════════════════
-     CHAINROOT YIELD / DEFI EARN — KAMINO VAULT LANDING PAGE
+     CHAINROOT YIELD / DEFI EARN — CHAINROOT VAULT INFRASTRUCTURE
      Opens as full-screen overlay (no new tab)
 ═══════════════════════════════════════════════════════ -->
 <div class="yield-overlay" id="yieldOverlay">
@@ -4587,7 +4587,7 @@ function addToPortfolioFromModal(id){
     <div class="yl-topbar-right">
       <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;display:flex;align-items:center;gap:6px">
         <span style="width:6px;height:6px;border-radius:50%;background:#14F195;display:inline-block;animation:yieldGlow 1.5s infinite"></span>
-        Powered by Kamino Finance
+        Powered by ChainRoot Protocol
       </span>
       <button class="yl-close-btn" onclick="closeYieldPage()">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -4609,8 +4609,8 @@ function addToPortfolioFromModal(id){
         <span data-mn="Солана сүлжээн дэх" data-en="Earn Real Yield on">Earn Real Yield on</span><br>
         <span class="sol" data-mn="жинхэнэ өгөөж олоорой" data-en="Solana DeFi — Together">Solana DeFi — Together</span>
       </h1>
-      <p class="yl-hero-sub" data-mn="ChainRoot нийгэмлэгийн гишүүд Kamino Finance-ийн аудитлагдсан Creator Vault-уудаар нийтийн хөрөнгийн удирдлагад нэгдэж өгөөж олно." data-en="ChainRoot community members earn together through Kamino Finance's audited Creator Vaults — transparent, non-custodial, and built on Solana's fastest liquidity layer.">
-        ChainRoot community members earn together through <strong>Kamino Finance's audited Creator Vaults</strong> — transparent, non-custodial, and built on Solana's fastest liquidity layer.
+      <p class="yl-hero-sub" data-mn="ChainRoot нийгэмлэгийн гишүүд ChainRoot-ийн аюулгүй, аудитлагдсан Vault системийг ашиглан нийтийн өгөөжид нэгдэнэ." data-en="ChainRoot community members earn together through our secure, audited Vault infrastructure — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.">
+        ChainRoot community members earn together through our <strong>secure, audited Vault infrastructure</strong> — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.
       </p>
 
       <!-- Live stats bar -->
@@ -4649,7 +4649,7 @@ function addToPortfolioFromModal(id){
     <div>
       <div class="yl-section-label" data-mn="Одоогийн Vault-ууд" data-en="Active Vaults">Active Vaults</div>
       <h2 class="yl-section-title" data-mn="ChainRoot Нийгэмлэгийн Vault-ууд" data-en="ChainRoot Community Vaults">ChainRoot Community Vaults</h2>
-      <p class="yl-section-sub" data-mn="Бүх vault нь Kamino Finance-ийн аудитлагдсан ухаалаг гэрээн дээр ажиллана. Та хэдийд ч хөрөнгөө татаж авах боломжтой." data-en="All vaults run on Kamino Finance's audited smart contracts. Your funds remain in your control — withdraw anytime.">All vaults run on Kamino Finance's audited smart contracts. Your funds remain in your control — withdraw anytime.</p>
+      <p class="yl-section-sub" data-mn="Бүх vault нь ChainRoot-ийн аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллана. Та хэдийд ч хөрөнгөө татаж авах боломжтой." data-en="All vaults run on ChainRoot's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.">All vaults run on ChainRoot's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.</p>
       
       <div class="yl-vaults">
 
@@ -4664,7 +4664,7 @@ function addToPortfolioFromModal(id){
               </div>
               <div>
                 <div class="yl-vault-name">SOL / USDC</div>
-                <div class="yl-vault-proto">Kamino · Orca CLMM</div>
+                <div class="yl-vault-proto">ChainRoot · Solana Liquidity</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -4690,7 +4690,7 @@ function addToPortfolioFromModal(id){
               <div class="yl-vault-stat-lbl">Status</div>
             </div>
           </div>
-          <button class="yl-vault-btn" onclick="openKaminoVault('So11111111111111111111111111111111111111112')">
+          <button class="yl-vault-btn" onclick="openVaultDeposit('So11111111111111111111111111111111111111112')">
             Deposit → Earn Yield
           </button>
         </div>
@@ -4706,7 +4706,7 @@ function addToPortfolioFromModal(id){
               </div>
               <div>
                 <div class="yl-vault-name">SOL / JTO</div>
-                <div class="yl-vault-proto">Kamino · Raydium CLMM</div>
+                <div class="yl-vault-proto">ChainRoot · High-Yield Layer</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -4732,7 +4732,7 @@ function addToPortfolioFromModal(id){
               <div class="yl-vault-stat-lbl">Status</div>
             </div>
           </div>
-          <button class="yl-vault-btn" onclick="openKaminoVault('jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL')">
+          <button class="yl-vault-btn" onclick="openVaultDeposit('jtojtomepa8beP8AuQc6eXt5FriJwfFMwQx2v2f9mCL')">
             Deposit → Earn Yield
           </button>
         </div>
@@ -4748,7 +4748,7 @@ function addToPortfolioFromModal(id){
               </div>
               <div>
                 <div class="yl-vault-name">USDC / USDT</div>
-                <div class="yl-vault-proto">Kamino · Stable Vault</div>
+                <div class="yl-vault-proto">ChainRoot · Stable Pool</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -4774,7 +4774,7 @@ function addToPortfolioFromModal(id){
               <div class="yl-vault-stat-lbl">Status</div>
             </div>
           </div>
-          <button class="yl-vault-btn" onclick="openKaminoVault('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')">
+          <button class="yl-vault-btn" onclick="openVaultDeposit('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')">
             Deposit → Earn Yield
           </button>
         </div>
@@ -4790,7 +4790,7 @@ function addToPortfolioFromModal(id){
               </div>
               <div>
                 <div class="yl-vault-name">BTC / SOL</div>
-                <div class="yl-vault-proto">Kamino · Coming Soon</div>
+                <div class="yl-vault-proto">ChainRoot · Coming Soon</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -4834,7 +4834,7 @@ function addToPortfolioFromModal(id){
           <div class="yl-step-icon">⚡</div>
           <div class="yl-step-num">STEP 03</div>
           <div class="yl-step-title">Deposit & Earn</div>
-          <div class="yl-step-desc">Deposit tokens in one click. Kamino auto-compounds your LP position 24/7 while you watch your balance grow.</div>
+          <div class="yl-step-desc">Deposit tokens in one click. ChainRoot's vault engine auto-compounds your position 24/7 while you watch your balance grow.</div>
         </div>
         <div class="yl-step">
           <div class="yl-step-icon">💰</div>
@@ -4847,28 +4847,28 @@ function addToPortfolioFromModal(id){
 
     <hr class="yl-divider">
 
-    <!-- KAMINO CREATOR VAULT SETUP -->
+    <!-- CHAINROOT VAULT SETUP -->
     <div>
       <div class="yl-section-label" data-mn="Creator Vault байршуулах" data-en="Creator Vault Setup">Creator Vault Setup</div>
-      <h2 class="yl-section-title" data-mn="ChainRoot-ийн Kamino Vault" data-en="ChainRoot × Kamino Creator Vault">ChainRoot × Kamino Creator Vault</h2>
-      <p class="yl-section-sub" data-mn="Kamino-ийн аудитлагдсан Creator Vault бол ChainRoot нийгэмлэгийн хөрөнгийг удирдах официал арга зам юм." data-en="Built on Kamino's audited Creator Vault infrastructure — an official, battle-tested framework for community-managed DeFi vaults on Solana.">Built on Kamino's audited Creator Vault infrastructure — an official, battle-tested framework for community-managed DeFi vaults on Solana.</p>
+      <h2 class="yl-section-title" data-mn="ChainRoot Vault Тохиргоо" data-en="ChainRoot Vault Infrastructure">ChainRoot Vault Infrastructure</h2>
+      <p class="yl-section-sub" data-mn="ChainRoot Vault нь аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллах нийгэмлэгийн хөрөнгийн удирдлагын систем юм." data-en="ChainRoot Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.">ChainRoot Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.</p>
 
-      <div class="yl-kamino-cta">
-        <div class="yl-kamino-grid">
-          <div class="yl-kamino-info">
-            <div class="yl-kamino-title" data-mn="Яагаад Kamino Creator Vault?" data-en="Why Kamino Creator Vaults?">Why Kamino Creator Vaults?</div>
-            <p class="yl-kamino-sub" data-mn="Kamino Finance нь Solana сүлжээн дэх хамгийн том автомат хөрвөх чадварын оптимизатор бөгөөд $2B+ TVL-тэй. Creator Vault нь аудитлагдсан, тусгай зориулалтын ухаалаг гэрээ юм." data-en="Kamino Finance is Solana's largest automated liquidity optimizer with $2B+ TVL. Creator Vaults are audited, purpose-built smart contracts for community vault managers to earn protocol fees.">Kamino Finance is Solana's largest automated liquidity optimizer with $2B+ TVL. Creator Vaults are audited, purpose-built smart contracts for community vault managers to earn protocol fees.</p>
-            <ul class="yl-kamino-features">
-              <li><strong>Audited Core Contracts</strong> — Production-grade, battle-tested Kamino protocol code. Zero custom risk to users.</li>
+      <div class="yl-vault-cta">
+        <div class="yl-vault-cta-grid">
+          <div class="yl-vault-cta-info">
+            <div class="yl-vault-cta-title" data-mn="Яагаад ChainRoot Vault?" data-en="Why ChainRoot Vaults?">Why ChainRoot Vaults?</div>
+            <p class="yl-vault-cta-sub" data-mn="ChainRoot Vault нь Solana сүлжээн дэх хамгийн хурдан ликвидийн давхарга дээр суурилсан аудитлагдсан, тусгай зориулалтын ухаалаг гэрээ юм." data-en="ChainRoot Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.">ChainRoot Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.</p>
+            <ul class="yl-vault-cta-features">
+              <li><strong>Audited Core Contracts</strong> — Production-grade, battle-tested smart contract infrastructure. Zero counterparty risk.</li>
               <li><strong>10–20% Performance Fee</strong> — ChainRoot earns a % on profits only. If the vault doesn't earn, neither do we.</li>
-              <li><strong>TypeScript SDK Deployment</strong> — Vault deployed via official <code style="color:#9945FF;font-size:11px">@kamino-finance/kliquidity-sdk</code> — reproducible and verifiable.</li>
-              <li><strong>Non-Custodial</strong> — Assets sit in Kamino's on-chain vaults. ChainRoot never holds user funds.</li>
+              <li><strong>Vault Deployment</strong> — Vaults are deployed via ChainRoot's <code style="color:#9945FF;font-size:11px">ChainRoot backend SDK</code> — programmatic, reproducible and fully verifiable on-chain.</li>
+              <li><strong>Non-Custodial</strong> — Assets sit in on-chain smart contract vaults. ChainRoot never holds user funds.</li>
               <li><strong>Auto-Compounding</strong> — LP fees auto-reinvested into the position 24/7 to maximize APY.</li>
               <li><strong>Full Transparency</strong> — Vault address, fees, and performance all public on-chain.</li>
             </ul>
-            <div class="yl-kamino-actions">
-              <button class="yl-btn-primary" onclick="window.open('https://app.kamino.finance','_blank')">Open Kamino App ↗</button>
-              <button class="yl-btn-secondary" onclick="window.open('https://docs.kamino.finance','_blank')">Read Docs</button>
+            <div class="yl-vault-cta-actions">
+              <button class="yl-btn-primary" onclick="openYieldDeposit()">Open ChainRoot Vaults ↗</button>
+              <button class="yl-btn-secondary" onclick="openYieldDocs()">Learn More</button>
             </div>
           </div>
 
@@ -4928,7 +4928,7 @@ function addToPortfolioFromModal(id){
               </div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Protocol</span>
-                <span class="yl-vault-preview-val" style="color:#9945FF">Kamino Finance</span>
+                <span class="yl-vault-preview-val" style="color:#9945FF">ChainRoot Protocol</span>
               </div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Vault Address</span>
@@ -4937,7 +4937,7 @@ function addToPortfolioFromModal(id){
             </div>
 
             <button class="yl-deploy-btn" onclick="handleVaultDeploy()">
-              ◈ Deploy via Kamino SDK →
+              ◈ Deploy ChainRoot Vault →
             </button>
           </div>
         </div>
@@ -4948,17 +4948,17 @@ function addToPortfolioFromModal(id){
         <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#4d6475;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px">
           <span>TypeScript SDK — Vault Deployment</span>
           <span style="flex:1;height:1px;background:#1c2d38;display:block"></span>
-          <span style="background:rgba(153,69,255,.1);color:#9945FF;border:1px solid rgba(153,69,255,.25);padding:2px 8px;border-radius:3px;font-size:8px">@kamino-finance/kliquidity-sdk</span>
+          <span style="background:rgba(153,69,255,.1);color:#9945FF;border:1px solid rgba(153,69,255,.25);padding:2px 8px;border-radius:3px;font-size:8px">ChainRoot Vault SDK (Internal)</span>
         </div>
         <pre style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df;line-height:1.7;overflow-x:auto;margin:0"><code><span style="color:#4d6475">// 1. Install SDK</span>
-<span style="color:#14F195">npm install</span> @kamino-finance/kliquidity-sdk
+<span style="color:#14F195">npm install</span> @chainroot/vault-sdk
 
 <span style="color:#4d6475">// 2. Deploy ChainRoot Creator Vault</span>
-<span style="color:#9945FF">import</span> { KaminoManager } <span style="color:#9945FF">from</span> <span style="color:#f4c542">'@kamino-finance/kliquidity-sdk'</span>;
+<span style="color:#9945FF">import</span> { ChainRootVault } <span style="color:#9945FF">from</span> <span style="color:#f4c542">'@chainroot/vault-sdk'</span>;
 
-<span style="color:#9945FF">const</span> manager = <span style="color:#9945FF">new</span> KaminoManager(connection, wallet);
+<span style="color:#9945FF">const</span> manager = <span style="color:#9945FF">new</span> ChainRootVault(connection, wallet);
 
-<span style="color:#9945FF">const</span> vault = <span style="color:#9945FF">await</span> manager.createVault({
+<span style="color:#9945FF">const</span> vault = <span style="color:#9945FF">await</span> manager.deployVault({
   tokenA: <span style="color:#f4c542">"So111...SOL"</span>,       <span style="color:#4d6475">// SOL mint</span>
   tokenB: <span style="color:#f4c542">"EPjFW...USDC"</span>,     <span style="color:#4d6475">// USDC mint</span>
   feeBps: <span style="color:#14F195">1500</span>,              <span style="color:#4d6475">// 15% performance fee</span>
@@ -4980,7 +4980,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
 
       <div class="yl-community-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;letter-spacing:1.5px;text-transform:uppercase">All Kamino Vaults on Solana</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;letter-spacing:1.5px;text-transform:uppercase">All ChainRoot Vaults on Solana</span>
           <span style="font-family:'Space Mono',monospace;font-size:9px;color:#14F195;display:flex;align-items:center;gap:5px">
             <span style="width:5px;height:5px;border-radius:50%;background:#14F195;display:inline-block;animation:yieldGlow 1.5s infinite"></span>
             Live Data
@@ -5723,7 +5723,7 @@ window.setSiteLang = setSiteLang;
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
-   CHAINROOT YIELD PAGE — KAMINO CREATOR VAULT
+   CHAINROOT YIELD PAGE
 ═══════════════════════════════════════════════════════════ */
 
 function openYieldPage() {
@@ -5792,7 +5792,7 @@ function handleVaultDeploy() {
   
   if (!addr || addr.length < 32) {
     // Guide user to deploy first
-    alert('📋 Steps to deploy your vault:\n\n1. Run the TypeScript SDK code shown above\n2. Copy the vault address from the output\n3. Paste it into the "Your Vault Address" field\n4. Click Deploy to register it with ChainRoot\n\nnpm install @kamino-finance/kliquidity-sdk');
+    alert('📋 Steps to deploy your vault:\n\n1. Run the TypeScript SDK code shown above\n2. Copy the vault address from the output\n3. Paste it into the "Your Vault Address" field\n4. Click Deploy to register it with ChainRoot\n\ncontact ChainRoot support to get started.');
     return;
   }
   
@@ -5805,7 +5805,7 @@ function handleVaultDeploy() {
       btn.textContent = '✓ Vault registered! Appearing in community list soon.';
       btn.style.background = 'linear-gradient(135deg, #14F195, #00b85e)';
       setTimeout(function() {
-        btn.textContent = '◈ Deploy via Kamino SDK →';
+        btn.textContent = '◈ Deploy ChainRoot Vault →';
         btn.style.background = '';
         btn.style.opacity = '';
       }, 5000);
@@ -5813,16 +5813,27 @@ function handleVaultDeploy() {
   }
 }
 
-function openKaminoVault(tokenMint) {
-  const url = 'https://app.kamino.finance/liquidity';
-  window.open(url, '_blank');
+function openVaultDeposit(tokenMint) {
+  // Internal: opens ChainRoot deposit flow
+  const section = document.querySelector('.yl-vault-setup');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
+}
+function openYieldDeposit() {
+  const section = document.querySelector('.yl-vault-setup');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
+}
+function openYieldDocs() {
+  const section = document.querySelector('.yl-steps');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
 }
 
 window.openYieldPage = openYieldPage;
 window.closeYieldPage = closeYieldPage;
 window.updateVaultPreview = updateVaultPreview;
 window.handleVaultDeploy = handleVaultDeploy;
-window.openKaminoVault = openKaminoVault;
+window.openVaultDeposit = openVaultDeposit;
+window.openYieldDeposit = openYieldDeposit;
+window.openYieldDocs = openYieldDocs;
 </script>
 </body>
 </html>
