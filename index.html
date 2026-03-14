@@ -502,64 +502,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 .data-badge-live{background:rgba(0,232,122,.1);color:#00e87a;border:1px solid rgba(0,232,122,.25)}
 .data-badge-delay{background:rgba(244,197,66,.1);color:#f4c542;border:1px solid rgba(244,197,66,.25)}
 .data-badge-eod{background:rgba(77,100,117,.1);color:#4d6475;border:1px solid rgba(77,100,117,.2)}
-
-/* ── NEWS ENGINE STYLES ─────────────────────────────────────── */
-.news-tab{
-  padding:11px 16px;background:transparent;border:none;border-bottom:2px solid transparent;
-  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;
-  color:var(--muted);cursor:pointer;transition:all .15s;white-space:nowrap;flex-shrink:0;
-  margin-bottom:-1px;
-}
-.news-tab:hover{color:var(--text)}
-.news-tab.on{color:var(--accent);border-bottom-color:var(--accent)}
-
-.news-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:18px 20px;display:flex;flex-direction:column;gap:10px;
-  cursor:pointer;transition:all .18s;text-decoration:none;
-  position:relative;overflow:hidden;
-}
-.news-card:hover{border-color:var(--border2);transform:translateY(-1px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
-.news-card.featured{border-color:rgba(0,232,122,.2)}
-.news-card.featured::before{
-  content:'';position:absolute;top:0;left:0;right:0;height:2px;
-  background:linear-gradient(90deg,var(--accent),var(--blue));
-}
-.news-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.news-card-source{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase}
-.news-card-time{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
-.news-card-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.45;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.news-card:hover .news-card-title{color:var(--accent)}
-.news-card-body{font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.news-card-footer{display:flex;align-items:center;gap:8px;margin-top:2px;flex-wrap:wrap}
-.news-cat-badge{
-  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1px;
-  padding:2px 7px;border-radius:3px;text-transform:uppercase;
-}
-.ncb-crypto{background:rgba(0,232,122,.1);color:var(--accent);border:1px solid rgba(0,232,122,.2)}
-.ncb-defi{background:rgba(153,69,255,.1);color:#a78bfa;border:1px solid rgba(153,69,255,.2)}
-.ncb-stocks{background:rgba(0,180,216,.1);color:var(--blue);border:1px solid rgba(0,180,216,.2)}
-.ncb-macro{background:rgba(244,197,66,.1);color:var(--gold);border:1px solid rgba(244,197,66,.2)}
-.ncb-commodities{background:rgba(255,124,58,.1);color:#ff7c3a;border:1px solid rgba(255,124,58,.2)}
-.ncb-news{background:rgba(77,100,117,.1);color:var(--muted);border:1px solid rgba(77,100,117,.2)}
-.news-sentiment-tag{
-  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.5px;
-  padding:2px 7px;border-radius:3px;display:flex;align-items:center;gap:4px;
-}
-.nst-bull{background:rgba(0,232,122,.08);color:var(--accent);border:1px solid rgba(0,232,122,.18)}
-.nst-bear{background:rgba(255,69,96,.08);color:var(--red);border:1px solid rgba(255,69,96,.18)}
-.nst-neut{background:rgba(77,100,117,.08);color:var(--muted);border:1px solid rgba(77,100,117,.18)}
-.news-card-img{
-  width:100%;height:140px;object-fit:cover;border-radius:5px;
-  background:var(--bg3);display:block;
-}
-.news-hero{grid-column:1/-1}
-.news-hero .news-card-title{font-size:17px;-webkit-line-clamp:2}
-.news-hero .news-card-body{-webkit-line-clamp:3}
-@media(max-width:820px){
-  #news-grid{grid-template-columns:1fr!important}
-  .news-hero{grid-column:1}
-}
 </style>
 <!-- Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-Y0D07PGRN0"></script>
@@ -2008,7 +1950,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       <span class="ftr-text" data-mn="Үнэгүй Сургалт" data-en="Free Training">Үнэгүй Сургалт</span>
       <span class="ftr-badge">FREE</span>
     </button>
-    <button class="abtn aj" onclick="openAuth('register')" id="authEntryBtn" data-mn="Нэвтрэх / Бүртгүүлэх" data-en="Sign In / Join">Нэвтрэх / Бүртгүүлэх</button>
+    <button class="abtn al" onclick="openAuth('login')" data-mn="Нэвтрэх" data-en="Sign In">Нэвтрэх</button>
+    <button class="abtn aj" onclick="openAuth('register')" data-mn="Бүртгүүлэх" data-en="Join Free">Бүртгүүлэх</button>
   </div>
 </header>
 
@@ -2275,73 +2218,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <!-- NEWS -->
     <div class="pnl" id="P-news">
-      <div class="ph">
-        <div>
-          <div class="pht">
-            <span data-mn="Крипто &amp; Зах зээлийн мэдээ" data-en="Crypto &amp; TradFi News">Крипто &amp; Зах зээлийн мэдээ</span>
-            <span class="pbg c">CeFi</span>
-            <span id="news-live-dot" style="display:inline-flex;align-items:center;gap:5px;font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.2);padding:3px 9px;border-radius:3px">
-              <span class="live-dot"></span>LIVE
-            </span>
-          </div>
-          <div class="phs">
-            <span data-mn="CryptoCompare · Finnhub · RSS цуглуулагч — 10 минут тутам шинэчлэгдэнэ" data-en="CryptoCompare · Finnhub · RSS aggregator — refreshes every 10 min">CryptoCompare · Finnhub · RSS aggregator — refreshes every 10 min</span>
-          </div>
-        </div>
-        <div class="phst" style="gap:10px;flex-wrap:wrap">
-          <div id="news-last-updated" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">Fetching…</div>
-          <button onclick="newsRefresh(true)" style="display:flex;align-items:center;gap:5px;padding:6px 13px;background:transparent;border:1px solid var(--border2);border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">↻ Refresh</button>
-        </div>
-      </div>
-
-      <!-- Filter bar -->
-      <div style="padding:0 40px 0;border-bottom:1px solid var(--border);background:var(--bg1)">
-        <div style="display:flex;align-items:center;gap:0;overflow-x:auto" id="news-filter-bar">
-          <button class="news-tab on" data-cat="all" onclick="newsSetCat('all',this)">All</button>
-          <button class="news-tab" data-cat="crypto" onclick="newsSetCat('crypto',this)">🔗 Crypto</button>
-          <button class="news-tab" data-cat="defi" onclick="newsSetCat('defi',this)">⬡ DeFi</button>
-          <button class="news-tab" data-cat="stocks" onclick="newsSetCat('stocks',this)">📈 Stocks</button>
-          <button class="news-tab" data-cat="macro" onclick="newsSetCat('macro',this)">🌐 Macro</button>
-          <button class="news-tab" data-cat="commodities" onclick="newsSetCat('commodities',this)">🪨 Commodities</button>
-          <div style="margin-left:auto;padding:8px 0;flex-shrink:0">
-            <input id="news-search" type="text" placeholder="Search news…" oninput="newsFilter()"
-              style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:6px 12px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);outline:none;width:200px;transition:border-color .15s"
-              onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
-          </div>
-        </div>
-      </div>
-
-      <!-- Sentiment bar -->
-      <div style="padding:12px 40px;border-bottom:1px solid var(--border);background:var(--bg1);display:flex;align-items:center;gap:20px;flex-wrap:wrap">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0">Market Mood</div>
-        <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:200px">
-          <div style="flex:1;height:5px;background:var(--bg3);border-radius:3px;overflow:hidden;display:flex">
-            <div id="news-bull-bar" style="height:100%;background:var(--accent);border-radius:3px 0 0 3px;transition:width .5s"></div>
-            <div id="news-neut-bar" style="height:100%;background:var(--muted);transition:width .5s"></div>
-            <div id="news-bear-bar" style="height:100%;background:var(--red);border-radius:0 3px 3px 0;transition:width .5s"></div>
-          </div>
-          <span id="news-sentiment-txt" style="font-family:'Space Mono',monospace;font-size:10px;color:var(--accent);white-space:nowrap">—</span>
-        </div>
-        <div id="news-stats-row" style="display:flex;gap:16px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">
-          <span id="ns-total">0 articles</span>
-          <span id="ns-bull" style="color:var(--accent)">0 bullish</span>
-          <span id="ns-bear" style="color:var(--red)">0 bearish</span>
-          <span id="ns-src">0 sources</span>
-        </div>
-      </div>
-
-      <!-- News grid -->
-      <div class="pc" style="padding-top:24px">
-        <div id="news-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
-            <div style="width:20px;height:20px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
-            FETCHING LIVE NEWS…
-          </div>
-        </div>
-        <div id="news-load-more" style="display:none;text-align:center;margin-top:24px">
-          <button onclick="newsLoadMore()" style="padding:10px 28px;background:transparent;border:1px solid var(--border2);border-radius:5px;font-family:'Space Mono',monospace;font-size:11px;color:var(--text);cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">Load More →</button>
-        </div>
-      </div>
+      <div class="ph"><div><div class="pht"><span data-mn="Крипто &amp; Зах зээлийн мэдээ" data-en="Crypto &amp; TradFi News">Крипто &amp; Зах зээлийн мэдээ</span> <span class="pbg c">CeFi</span></div><div class="phs"><span data-mn="Зах зээлийн цуглуулсан мэдээлэл — цаг тутам шинэчлэгдэнэ" data-en="Aggregated market intelligence — refreshed hourly">Зах зээлийн цуглуулсан мэдээлэл — цаг тутам шинэчлэгдэнэ</span></div></div></div>
+      <div class="pc" id="newsFeed"></div>
     </div>
 
     <!-- BITCOIN MAs -->
@@ -4181,7 +4059,7 @@ function showAuthSuccess(name, sub, wallet){
       <div class="auth-success-icon">✅</div>
       <div class="auth-success-title">Welcome, ${name}!</div>
       <div class="auth-success-sub">${wallet?'Wallet connected: '+sub:'Signed in as '+sub}<br/>Your portfolio is ready.</div>
-      <button class="asub" style="max-width:240px;margin:18px auto 0;display:block" onclick="closeAuth();openDashboard()">Go to Dashboard →</button>
+      <button class="asub" style="max-width:240px;margin:18px auto 0;display:block" onclick="closeAuth();updateTopbarLoggedIn()">Go to Dashboard →</button>
     </div>`;
   updateTopbarLoggedIn();
   setTimeout(()=>{ closeAuth(); }, 2800);
@@ -4209,40 +4087,34 @@ function updateTopbarLoggedIn(){
   const tbr=document.getElementById('tbr');
   if(!tbr)return;
   const initials=CR_USER.displayName?CR_USER.displayName.slice(0,2).toUpperCase():'CR';
-  const subInfo = getSubInfo();
-  const subBadge = subInfo.active
-    ? `<span style="background:rgba(0,232,122,.12);border:1px solid rgba(0,232,122,.25);color:var(--accent);font-family:'Space Mono',monospace;font-size:8px;padding:2px 7px;border-radius:3px;letter-spacing:1px">● PRO</span>`
-    : `<span style="background:rgba(244,197,66,.1);border:1px solid rgba(244,197,66,.25);color:var(--gold);font-family:'Space Mono',monospace;font-size:8px;padding:2px 7px;border-radius:3px;letter-spacing:1px;cursor:pointer" onclick="openDashboard()">GET PRO</span>`;
   tbr.innerHTML=`
     <div class="clk" id="clk">--:--:-- UTC</div>
-    <div style="display:flex;background:var(--bg2);border:1px solid var(--border);border-radius:6px;overflow:hidden;flex-shrink:0">
-      <button id="main-lang-mn" onclick="setSiteLang('mn')" style="padding:5px 10px;background:#00e87a;color:#000;border:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s">МН</button>
-      <button id="main-lang-en" onclick="setSiteLang('en')" style="padding:5px 10px;background:transparent;color:var(--muted);border:none;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s">EN</button>
-    </div>
-    ${subBadge}
-    <div class="uav" onclick="openDashboard()">
+    <div class="uav" onclick="openPortfolio()">
       <div class="uico">${initials}</div>
       <span class="unm">${CR_USER.displayName}</span>
       <span style="font-size:10px;color:var(--muted)">▾</span>
     </div>
     <button class="abtn al" onclick="doLogout()" style="font-size:10px">Sign Out</button>`;
-  // Re-sync language
-  try{const lang=localStorage.getItem('cr_lang')||'mn';setSiteLang(lang);}catch(e){}
-  // Check subscription expiry reminder
-  checkSubExpiry();
 }
 
 function doLogout(){
   CR_USER=null; DB.clear();
   const tbr=document.getElementById('tbr');
-  if(tbr) tbr.innerHTML=`<div class="clk" id="clk">--:--:-- UTC</div><button class="abtn aj" onclick="openAuth('register')" id="authEntryBtn">Нэвтрэх / Бүртгүүлэх</button>`;
+  if(tbr) tbr.innerHTML=`<div class="clk" id="clk">--:--:-- UTC</div><button class="abtn al" onclick="openAuth('login')">Sign In</button><button class="abtn aj" onclick="openAuth('register')">Join Free</button>`;
   toast('Signed out','#4d6475');
 }
 
-// ── PORTFOLIO PANEL (legacy redirect → new Dashboard) ────────────────────────────────────────────
+// ── PORTFOLIO PANEL ───────────────────────────────────────────────────────────
 function openPortfolio(){
   if(!CR_USER){ openAuth('register'); return; }
-  openDashboard();
+  // Show portfolio in a modal
+  const ov=document.getElementById('authOv');
+  const mbd=document.getElementById('mbd');
+  const tabs=document.getElementById('authTabs');
+  document.getElementById('mtitle').textContent='My Portfolio';
+  tabs.style.display='none';
+  ov.classList.add('on');
+  renderPortfolio(mbd);
 }
 
 function renderPortfolio(container){
@@ -5262,20 +5134,18 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <!-- ═══════════════════════════════════════════════════════════════
-  CHAINROOT MARKET ENGINE v3
-  PRIMARY  : Finnhub REST  (1-yr daily candles + live quote)
-  FALLBACK : Stooq CSV     (when Finnhub returns empty)
-  STREAM   : Finnhub WSS   (real-time trade ticks for US stocks)
-  INDICATORS: RSI-14, MA-20, MA-50, MA-200 — computed in-browser
+  CHAINROOT MARKET ENGINE v4
+  PRIMARY  : Stooq CSV (free, no key, daily OHLC for FX/CMD/EQ)
+  FALLBACK : Yahoo Finance via AllOrigins proxy
+  LIVE QUOTE: Finnhub free quote endpoint (stocks only)
+  INDICATORS: RSI-14 · MA-20/50/200 · MACD(12,26,9) — all in-browser
+  No paid API required. Stooq provides 10yr+ daily history free.
 ═══════════════════════════════════════════════════════════════ -->
 <script>
 (function(){
 'use strict';
 
-// ── YOUR FINNHUB API KEY ────────────────────────────────────────────────────
-const FH_KEY = 'd0eaie9r01qgv48uo9igd0eaie9r01qgv48uo9j0';
-const FH     = 'https://finnhub.io/api/v1';
-
+// ── FINNHUB KEY (free tier — quote only, no candles needed now) ─────────────
 // ── COLOURS ─────────────────────────────────────────────────────────────────
 const C_FX  = '#f4c542';
 const C_CMD = '#ff7c3a';
@@ -5283,177 +5153,114 @@ const C_EQ  = '#a78bfa';
 const C_GRN = '#00e87a';
 const C_RED = '#ff4560';
 const C_MUT = '#4d6475';
+const PROXY = 'https://api.allorigins.win/get?url=';
 
 // ── INSTRUMENT TABLE ─────────────────────────────────────────────────────────
-// fh  = Finnhub symbol for candles / quote
-// fhq = Finnhub symbol for quote endpoint (sometimes differs)
-// stooq = fallback CSV
-// dec = decimal places shown
+// stooq = Stooq symbol | yf = Yahoo Finance symbol | fhq = Finnhub quote (EQ)
 const FX_PAIRS = [
-  {id:'eurusd',sym:'EUR/USD',name:'Euro / Dollar',   fh:'OANDA:EUR_USD', stooq:'eurusd', dec:5},
-  {id:'gbpusd',sym:'GBP/USD',name:'Pound / Dollar',  fh:'OANDA:GBP_USD', stooq:'gbpusd', dec:5},
-  {id:'usdjpy',sym:'USD/JPY',name:'Dollar / Yen',    fh:'OANDA:USD_JPY', stooq:'usdjpy', dec:3},
-  {id:'usdchf',sym:'USD/CHF',name:'Dollar / Franc',  fh:'OANDA:USD_CHF', stooq:'usdchf', dec:5},
-  {id:'audusd',sym:'AUD/USD',name:'Aussie / Dollar', fh:'OANDA:AUD_USD', stooq:'audusd', dec:5},
+  {id:'eurusd',sym:'EUR/USD',name:'Euro / Dollar',   stooq:'eurusd',  yf:'EURUSD=X', dec:5},
+  {id:'gbpusd',sym:'GBP/USD',name:'Pound / Dollar',  stooq:'gbpusd',  yf:'GBPUSD=X', dec:5},
+  {id:'usdjpy',sym:'USD/JPY',name:'Dollar / Yen',    stooq:'usdjpy',  yf:'USDJPY=X', dec:3},
+  {id:'usdchf',sym:'USD/CHF',name:'Dollar / Franc',  stooq:'usdchf',  yf:'USDCHF=X', dec:5},
+  {id:'audusd',sym:'AUD/USD',name:'Aussie / Dollar', stooq:'audusd',  yf:'AUDUSD=X', dec:5},
 ];
 const CMD_ASSETS = [
-  {id:'gold',  sym:'XAU/USD',name:'Gold',        fh:'OANDA:XAU_USD', stooq:'xauusd', dec:2},
-  {id:'silver',sym:'XAG/USD',name:'Silver',      fh:'OANDA:XAG_USD', stooq:'xagusd', dec:3},
-  {id:'oil',   sym:'WTI',    name:'Crude Oil',   fh:'NYMEX:CL1!',    stooq:'cl.f',   dec:2},
-  {id:'natgas',sym:'NATGAS', name:'Natural Gas', fh:'NYMEX:NG1!',    stooq:'ng.f',   dec:3},
+  {id:'gold',  sym:'XAU/USD',name:'Gold',       stooq:'xauusd',  yf:'GC=F',  dec:2},
+  {id:'silver',sym:'XAG/USD',name:'Silver',     stooq:'xagusd',  yf:'SI=F',  dec:3},
+  {id:'oil',   sym:'WTI Oil',name:'Crude Oil',  stooq:'cl.f',    yf:'CL=F',  dec:2},
+  {id:'natgas',sym:'Nat Gas', name:'Nat Gas',   stooq:'ng.f',    yf:'NG=F',  dec:3},
 ];
 const EQ_STOCKS = [
-  {id:'aapl',sym:'AAPL',name:'Apple',     fh:'AAPL', stooq:'aapl.us', dec:2},
-  {id:'msft',sym:'MSFT',name:'Microsoft', fh:'MSFT', stooq:'msft.us', dec:2},
-  {id:'nvda',sym:'NVDA',name:'NVIDIA',    fh:'NVDA', stooq:'nvda.us', dec:2},
-  {id:'tsla',sym:'TSLA',name:'Tesla',     fh:'TSLA', stooq:'tsla.us', dec:2},
-  {id:'spx', sym:'SPY', name:'S&P 500',   fh:'SPY',  stooq:'^spx',   dec:2},
+  {id:'aapl',sym:'AAPL',name:'Apple',     stooq:'aapl.us', yf:'AAPL',  fhq:'AAPL', dec:2},
+  {id:'msft',sym:'MSFT',name:'Microsoft', stooq:'msft.us', yf:'MSFT',  fhq:'MSFT', dec:2},
+  {id:'nvda',sym:'NVDA',name:'NVIDIA',    stooq:'nvda.us', yf:'NVDA',  fhq:'NVDA', dec:2},
+  {id:'tsla',sym:'TSLA',name:'Tesla',     stooq:'tsla.us', yf:'TSLA',  fhq:'TSLA', dec:2},
+  {id:'spx', sym:'SPY', name:'S&P 500',   stooq:'spy.us',  yf:'SPY',   fhq:'SPY',  dec:2},
 ];
 const ALL_INST = [...FX_PAIRS,...CMD_ASSETS,...EQ_STOCKS];
 
 // ── CACHE ────────────────────────────────────────────────────────────────────
-const HIST  = {};   // id → [{date,open,high,low,close,volume}]
-const QUOTE = {};   // id → {c,pc,h,l,o,t}
-const LOADED= {};   // id → bool
-const CHARTS= {};   // canvasId → Chart instance
+const HIST   = {};
+const QUOTE  = {};
+const LOADED = {};
+const CHARTS = {};
 
-// ── FINNHUB REST ──────────────────────────────────────────────────────────────
-async function fhGet(path){
-  const sep = path.includes('?')?'&':'?';
-  const r = await fetch(`${FH}${path}${sep}token=${FH_KEY}`,{signal:AbortSignal.timeout(12000)});
-  if(!r.ok) throw new Error('FH '+r.status);
-  return r.json();
+// ── STOOQ FETCH (primary) ────────────────────────────────────────────────────
+async function fetchStooq(sym, rows=400){
+  try{
+    const url   = `https://stooq.com/q/d/l/?s=${sym.toLowerCase()}&i=d`;
+    const proxy = PROXY + encodeURIComponent(url);
+    const r = await fetch(proxy, {signal:AbortSignal.timeout(14000)});
+    if(!r.ok) return null;
+    const j = await r.json();
+    const csv = (j.contents||'').trim();
+    if(!csv||csv.includes('Przekroczon')||csv.includes('No data')||csv.length<30) return null;
+    const lines = csv.split('\n').slice(1).filter(Boolean);
+    const out = [];
+    for(const ln of lines){
+      const p = ln.split(',');
+      const c = parseFloat(p[4]);
+      if(!isNaN(c)&&c>0) out.push({date:p[0],open:parseFloat(p[1])||c,high:parseFloat(p[2])||c,low:parseFloat(p[3])||c,close:c,volume:parseFloat(p[5])||0});
+    }
+    return out.length>=20 ? out.slice(-rows) : null;
+  }catch(e){ return null; }
 }
 
-function unixAgo(days){ return Math.floor(Date.now()/1000)-days*86400; }
-function nowUnix(){ return Math.floor(Date.now()/1000); }
-
-function parseFhCandles(j){
-  if(!j||j.s!=='ok'||!Array.isArray(j.c)||!j.c.length) return null;
-  return j.t.map((t,i)=>({
-    date: new Date(t*1000).toISOString().slice(0,10),
-    open:j.o[i], high:j.h[i], low:j.l[i], close:j.c[i], volume:j.v?j.v[i]:0
-  }));
+// ── YAHOO FINANCE FALLBACK ───────────────────────────────────────────────────
+async function fetchYahoo(yfSym, rows=400){
+  try{
+    const now  = Math.floor(Date.now()/1000);
+    const from = now - rows * 86400 * 2;
+    const url  = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(yfSym)}?interval=1d&period1=${from}&period2=${now}`;
+    const proxy= PROXY + encodeURIComponent(url);
+    const r = await fetch(proxy, {signal:AbortSignal.timeout(14000)});
+    if(!r.ok) return null;
+    const j = await r.json();
+    const raw = JSON.parse(j.contents||'{}');
+    const res = raw?.chart?.result?.[0];
+    if(!res) return null;
+    const ts = res.timestamp||[];
+    const q  = res.indicators?.quote?.[0]||{};
+    const out = [];
+    ts.forEach((t,i)=>{
+      const c=q.close?.[i];
+      if(c!=null&&!isNaN(c)&&c>0)
+        out.push({date:new Date(t*1000).toISOString().slice(0,10),open:q.open?.[i]||c,high:q.high?.[i]||c,low:q.low?.[i]||c,close:c,volume:q.volume?.[i]||0});
+    });
+    return out.length>=20 ? out.slice(-rows) : null;
+  }catch(e){ return null; }
 }
 
-// ── STOOQ FALLBACK ────────────────────────────────────────────────────────────
-async function fetchStooq(sym,rows=300){
-  const url   = `https://stooq.com/q/d/l/?s=${sym.toLowerCase()}&i=d`;
-  const proxy = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-  const r = await fetch(proxy,{signal:AbortSignal.timeout(12000)});
-  const j = await r.json();
-  const csv=(j.contents||'').trim();
-  if(!csv||csv.includes('No data')||csv.length<30) return null;
-  const lines=csv.split('\n').slice(1);
-  const out=[];
-  for(const ln of lines){
-    const [date,open,high,low,close,vol]=ln.split(',');
-    const c=parseFloat(close);
-    if(!isNaN(c)) out.push({date,open:parseFloat(open)||c,high:parseFloat(high)||c,low:parseFloat(low)||c,close:c,volume:parseFloat(vol)||0});
-  }
-  return out.length?out.slice(-rows):null;
+// ── FINNHUB QUOTE (equities only) ────────────────────────────────────────────
+async function fetchFHQuote(sym){
+  try{
+    const r = await fetch(`https://finnhub.io/api/v1/quote?symbol=${sym}&token=${FH_KEY}`,{signal:AbortSignal.timeout(8000)});
+    if(!r.ok) return null;
+    const d = await r.json();
+    return (d.c&&d.c>0) ? d : null;
+  }catch(e){ return null; }
 }
 
 // ── LOAD ONE INSTRUMENT ───────────────────────────────────────────────────────
-async function loadInst(inst,force=false){
+async function loadInst(inst, force=false){
   if(LOADED[inst.id]&&!force) return;
   LOADED[inst.id]=true;
-  const from=unixAgo(380), to=nowUnix();
-  let rows=null;
-  // Try Finnhub forex/candle for FX+CMD, stock/candle for EQ
-  try{
-    const isFxOrCmd = FX_PAIRS.some(p=>p.id===inst.id)||CMD_ASSETS.some(p=>p.id===inst.id);
-    const endpoint  = isFxOrCmd
-      ? `/forex/candle?symbol=${encodeURIComponent(inst.fh)}&resolution=D&from=${from}&to=${to}`
-      : `/stock/candle?symbol=${encodeURIComponent(inst.fh)}&resolution=D&from=${from}&to=${to}`;
-    const j = await fhGet(endpoint);
-    rows = parseFhCandles(j);
-  }catch(e){}
-  // Stooq fallback
-  if(!rows||rows.length<20){
-    try{ rows=await fetchStooq(inst.stooq,300); }catch(e){}
+  let rows = await fetchStooq(inst.stooq);
+  if(!rows||rows.length<20) rows = await fetchYahoo(inst.yf);
+  HIST[inst.id] = rows||[];
+  if(inst.fhq&&HIST[inst.id].length){
+    const q = await fetchFHQuote(inst.fhq);
+    if(q) QUOTE[inst.id]=q;
   }
-  HIST[inst.id]=rows||[];
-  // Non-blocking live quote
-  try{
-    const isFxOrCmd=FX_PAIRS.some(p=>p.id===inst.id)||CMD_ASSETS.some(p=>p.id===inst.id);
-    if(isFxOrCmd){
-      const q=await fhGet(`/forex/candle?symbol=${encodeURIComponent(inst.fh)}&resolution=1&from=${nowUnix()-3600}&to=${nowUnix()}`);
-      if(q&&q.s==='ok'&&q.c?.length){
-        const last=q.c[q.c.length-1];
-        QUOTE[inst.id]={c:last,pc:HIST[inst.id].length?HIST[inst.id][HIST[inst.id].length-1].close:last,h:Math.max(...q.h),l:Math.min(...q.l),o:q.o[0],t:q.t[q.t.length-1]};
-      }
-    } else {
-      const q=await fhGet(`/quote?symbol=${encodeURIComponent(inst.fh)}`);
-      if(q&&q.c) QUOTE[inst.id]=q;
-    }
-  }catch(e){}
 }
 
 async function loadGroup(group){
-  // Stagger 150ms apart — safe within 60 req/min free tier
-  for(const inst of group){
-    loadInst(inst);
-    await new Promise(r=>setTimeout(r,150));
-  }
+  for(const inst of group){ await loadInst(inst); await new Promise(r=>setTimeout(r,200)); }
 }
 
-// ── WEBSOCKET — live equity ticks ────────────────────────────────────────────
-let ws=null;
-const wsSubs=new Set();
-
-function wsConnect(){
-  if(ws&&ws.readyState<=1) return;
-  ws=new WebSocket(`wss://ws.finnhub.io?token=${FH_KEY}`);
-  ws.addEventListener('open',()=>{
-    wsSubs.forEach(sym=>ws.send(JSON.stringify({type:'subscribe',symbol:sym})));
-  });
-  ws.addEventListener('message',e=>{
-    try{
-      const msg=JSON.parse(e.data);
-      if(msg.type!=='trade'||!msg.data) return;
-      msg.data.forEach(trade=>{
-        const inst=ALL_INST.find(i=>i.fh===trade.s);
-        if(!inst) return;
-        const newP=trade.p, oldP=(QUOTE[inst.id]||{}).c||newP;
-        if(!QUOTE[inst.id]) QUOTE[inst.id]={c:newP,pc:newP};
-        QUOTE[inst.id].c=newP; QUOTE[inst.id].t=trade.t;
-        if(HIST[inst.id]?.length) HIST[inst.id][HIST[inst.id].length-1].close=newP;
-        flashEl('live-'+inst.id, newP, inst.dec||2, newP>=oldP);
-        patchChart(inst.id, newP);
-      });
-    }catch(_){}
-  });
-  ws.addEventListener('close',()=>setTimeout(wsConnect,5000));
-}
-function wsSub(sym){
-  if(wsSubs.has(sym)) return;
-  wsSubs.add(sym);
-  if(ws&&ws.readyState===1) ws.send(JSON.stringify({type:'subscribe',symbol:sym}));
-  else wsConnect();
-}
-
-function flashEl(elId,val,dec,up){
-  const el=document.getElementById(elId);
-  if(!el) return;
-  el.textContent=fmtP(val,dec);
-  el.style.color=up?C_GRN:C_RED;
-  clearTimeout(el._ft);
-  el._ft=setTimeout(()=>el.style.color='',1400);
-}
-function patchChart(id,price){
-  Object.keys(CHARTS).forEach(cid=>{
-    if(!cid.startsWith(id+'|price')) return;
-    const ch=CHARTS[cid];
-    if(!ch) return;
-    const ds=ch.data.datasets[0];
-    if(ds&&ds.data.length){ ds.data[ds.data.length-1]=price; ch.update('none'); }
-  });
-}
-
-// ── INDICATORS ────────────────────────────────────────────────────────────────
-function calcRSI(closes,p=14){
-  if(closes.length<p+1) return null;
+// ── INDICATORS ───────────────────────────────────────────────────────────────
+function calcRSI(closes, p=14){
+  if(!closes||closes.length<p+1) return null;
   let g=0,l=0;
   for(let i=1;i<=p;i++){const d=closes[i]-closes[i-1];d>0?g+=d:l-=d;}
   let ag=g/p,al=l/p;
@@ -5461,94 +5268,108 @@ function calcRSI(closes,p=14){
     const d=closes[i]-closes[i-1];
     ag=(ag*(p-1)+(d>0?d:0))/p; al=(al*(p-1)+(d<0?-d:0))/p;
   }
-  if(al===0) return 100;
-  return +(100-(100/(1+ag/al))).toFixed(2);
+  return al===0?100:+(100-(100/(1+ag/al))).toFixed(2);
 }
-function calcMA(closes,p){
-  if(closes.length<p) return null;
-  return closes.slice(-p).reduce((a,b)=>a+b,0)/p;
+
+function calcEMA(closes, p){
+  if(!closes||closes.length<p) return [];
+  const k=2/(p+1);
+  let ema=closes.slice(0,p).reduce((a,b)=>a+b,0)/p;
+  const out=new Array(p-1).fill(null);
+  out.push(+ema.toFixed(8));
+  for(let i=p;i<closes.length;i++){ema=closes[i]*k+ema*(1-k);out.push(+ema.toFixed(8));}
+  return out;
 }
+
+function calcMACD(closes, fast=12, slow=26, sig=9){
+  const ef=calcEMA(closes,fast), es=calcEMA(closes,slow);
+  const ml=closes.map((_,i)=>ef[i]!=null&&es[i]!=null?+(ef[i]-es[i]).toFixed(8):null);
+  const valid=ml.filter(v=>v!=null);
+  const se=calcEMA(valid,sig);
+  let sf=new Array(ml.length).fill(null),vi=0;
+  for(let i=0;i<ml.length;i++){if(ml[i]!=null)sf[i]=se[vi++];}
+  const hist=ml.map((v,i)=>v!=null&&sf[i]!=null?+(v-sf[i]).toFixed(8):null);
+  return {macdLine:ml,sigFull:sf,histogram:hist};
+}
+
+function calcMA(closes, p){ if(!closes||closes.length<p)return null; return closes.slice(-p).reduce((a,b)=>a+b,0)/p; }
+
+function calcRSISeries(closes, p=14){
+  const out=new Array(p).fill(null);
+  for(let i=p;i<closes.length;i++) out.push(calcRSI(closes.slice(0,i+1),p));
+  return out;
+}
+
 function maSig(price,ma){ return !ma?'neut':price>ma?'bull':'bear'; }
-function overallSig(rsi,price,ma20,ma50,ma200){
+function overallSig(rsi,price,ma20,ma50,ma200,macdVal){
   let s=0;
-  if(rsi!=null){if(rsi<30)s+=2;else if(rsi>70)s-=2;}
+  if(rsi!=null){if(rsi<35)s+=2;else if(rsi>65)s-=2;}
   if(ma20)price>ma20?s++:s--;
   if(ma50)price>ma50?s++:s--;
   if(ma200)price>ma200?s++:s--;
+  if(macdVal!=null){macdVal>0?s++:s--;}
   return s>=2?'bull':s<=-2?'bear':'neut';
 }
 
-// ── FORMATTING ────────────────────────────────────────────────────────────────
+// ── FORMATTING ───────────────────────────────────────────────────────────────
 function fmtP(v,dec=4){
-  if(v==null||isNaN(v)) return '—';
-  if(Math.abs(v)>=10000) return v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+  if(v==null||isNaN(v))return'—';
+  if(Math.abs(v)>=1000)return v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
   return Number(v).toFixed(dec);
 }
-function fmtPct(v){
-  if(v==null||isNaN(v)) return '—';
-  return (v>=0?'+':'')+Number(v).toFixed(2)+'%';
-}
-function chgCol(v){ return v>=0?C_GRN:C_RED; }
+function fmtPct(v){if(v==null||isNaN(v))return'—';return(v>=0?'+':'')+Number(v).toFixed(2)+'%';}
+function chgCol(v){return v>=0?C_GRN:C_RED;}
 
 // ── CHART HELPERS ─────────────────────────────────────────────────────────────
-function killChart(id){
-  if(CHARTS[id]){try{CHARTS[id].destroy();}catch(_){}delete CHARTS[id];}
-}
+function killChart(id){if(CHARTS[id]){try{CHARTS[id].destroy();}catch(_){}delete CHARTS[id];}}
 const MONO={family:'Space Mono',size:9};
 const MONO11={family:'Space Mono',size:11};
 
-function drawPrice(canvasId,instId,labels,prices,color,ma20s,ma50s,ma200s){
+function drawPrice(canvasId,labels,prices,color,ma20s,ma50s,ma200s){
   killChart(canvasId);
-  const ctx=document.getElementById(canvasId);
-  if(!ctx) return;
-  CHARTS[instId+'|price|'+canvasId]=CHARTS[canvasId]=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'Price', data:prices, borderColor:color, backgroundColor:color+'18', fill:true, tension:0.3, pointRadius:0, borderWidth:2},
-      {label:'MA 20', data:ma20s,  borderColor:'#00e87a', backgroundColor:'transparent', fill:false, tension:0.3, pointRadius:0, borderWidth:1.3, borderDash:[4,3]},
-      {label:'MA 50', data:ma50s,  borderColor:'#00b4d8', backgroundColor:'transparent', fill:false, tension:0.3, pointRadius:0, borderWidth:1.3, borderDash:[6,4]},
-      {label:'MA 200',data:ma200s, borderColor:'#ff4560', backgroundColor:'transparent', fill:false, tension:0.3, pointRadius:0, borderWidth:1.6, borderDash:[8,4]},
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:true,labels:{color:C_MUT,font:MONO,boxWidth:14,padding:10}},
-        tooltip:{backgroundColor:'#162028',borderColor:'#243844',borderWidth:1,
-          titleFont:MONO,bodyFont:MONO11,callbacks:{label:c=>` ${c.dataset.label}: ${c.raw!=null?Number(c.raw).toFixed(4):''}`}}},
-      scales:{
-        x:{grid:{color:'rgba(28,45,56,.4)'},ticks:{color:C_MUT,font:MONO,maxTicksLimit:9}},
-        y:{grid:{color:'rgba(28,45,56,.4)'},ticks:{color:C_MUT,font:MONO}}
-      }}
-  });
+  const ctx=document.getElementById(canvasId);if(!ctx)return;
+  CHARTS[canvasId]=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'Price',data:prices,borderColor:color,backgroundColor:color+'18',fill:true,tension:0.25,pointRadius:0,borderWidth:2},
+    {label:'MA20', data:ma20s, borderColor:'#00e87a',backgroundColor:'transparent',fill:false,tension:0.25,pointRadius:0,borderWidth:1.3,borderDash:[4,3]},
+    {label:'MA50', data:ma50s, borderColor:'#00b4d8',backgroundColor:'transparent',fill:false,tension:0.25,pointRadius:0,borderWidth:1.3,borderDash:[6,4]},
+    {label:'MA200',data:ma200s,borderColor:'#ff4560',backgroundColor:'transparent',fill:false,tension:0.25,pointRadius:0,borderWidth:1.6,borderDash:[8,4]},
+  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:true,labels:{color:C_MUT,font:MONO,boxWidth:12,padding:10}},tooltip:{backgroundColor:'#162028',borderColor:'#243844',borderWidth:1,titleFont:MONO,bodyFont:MONO11}},
+    scales:{x:{grid:{color:'rgba(28,45,56,.4)'},ticks:{color:C_MUT,font:MONO,maxTicksLimit:9}},y:{grid:{color:'rgba(28,45,56,.4)'},ticks:{color:C_MUT,font:MONO}}}}});
 }
 
 function drawRSI(canvasId,labels,rsiArr){
   killChart(canvasId);
-  const ctx=document.getElementById(canvasId);
-  if(!ctx) return;
-  CHARTS[canvasId]=new Chart(ctx,{
-    type:'line',
-    data:{labels,datasets:[
-      {label:'RSI-14',data:rsiArr,borderColor:'#00b4d8',backgroundColor:'rgba(0,180,216,.07)',fill:true,tension:0.3,pointRadius:0,borderWidth:1.8}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},
-      interaction:{mode:'index',intersect:false},
-      plugins:{legend:{display:false},
-        tooltip:{backgroundColor:'#162028',borderColor:'#243844',borderWidth:1,titleFont:MONO,bodyFont:MONO11}},
-      scales:{
-        x:{grid:{color:'rgba(28,45,56,.3)'},ticks:{color:C_MUT,font:MONO,maxTicksLimit:7}},
-        y:{min:0,max:100,grid:{color:'rgba(28,45,56,.3)'},
-          ticks:{color:C_MUT,font:MONO,stepSize:25,callback:v=>v+''}}
-      }}
-  });
+  const ctx=document.getElementById(canvasId);if(!ctx)return;
+  CHARTS[canvasId]=new Chart(ctx,{type:'line',data:{labels,datasets:[
+    {label:'RSI-14',data:rsiArr,borderColor:'#00b4d8',backgroundColor:'rgba(0,180,216,.07)',fill:true,tension:0.3,pointRadius:0,borderWidth:1.8},
+    {label:'OB 70', data:rsiArr.map(()=>70),borderColor:'rgba(255,69,96,.3)',backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1,borderDash:[4,3]},
+    {label:'OS 30', data:rsiArr.map(()=>30),borderColor:'rgba(0,232,122,.3)',backgroundColor:'transparent',fill:false,tension:0,pointRadius:0,borderWidth:1,borderDash:[4,3]},
+  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:false},tooltip:{backgroundColor:'#162028',borderColor:'#243844',borderWidth:1,titleFont:MONO,bodyFont:MONO11}},
+    scales:{x:{grid:{color:'rgba(28,45,56,.3)'},ticks:{color:C_MUT,font:MONO,maxTicksLimit:7}},y:{min:0,max:100,grid:{color:'rgba(28,45,56,.3)'},ticks:{color:C_MUT,font:MONO,stepSize:25}}}}});
 }
 
-// ── RSI GAUGE HTML ────────────────────────────────────────────────────────────
+function drawMACD(canvasId,labels,ml,sf,hist){
+  killChart(canvasId);
+  const ctx=document.getElementById(canvasId);if(!ctx)return;
+  const bc=hist.map(v=>v==null?'transparent':v>=0?'rgba(0,232,122,.55)':'rgba(255,69,96,.55)');
+  CHARTS[canvasId]=new Chart(ctx,{type:'bar',data:{labels,datasets:[
+    {label:'MACD',    type:'line',data:ml,  borderColor:'#00b4d8',backgroundColor:'transparent',fill:false,tension:0.3,pointRadius:0,borderWidth:1.6},
+    {label:'Signal',  type:'line',data:sf,  borderColor:'#f4c542',backgroundColor:'transparent',fill:false,tension:0.3,pointRadius:0,borderWidth:1.3,borderDash:[4,3]},
+    {label:'Hist',    type:'bar', data:hist,backgroundColor:bc},
+  ]},options:{responsive:true,maintainAspectRatio:false,animation:{duration:0},interaction:{mode:'index',intersect:false},
+    plugins:{legend:{display:true,labels:{color:C_MUT,font:MONO,boxWidth:12,padding:10}},tooltip:{backgroundColor:'#162028',borderColor:'#243844',borderWidth:1,titleFont:MONO,bodyFont:MONO11}},
+    scales:{x:{grid:{color:'rgba(28,45,56,.3)'},ticks:{color:C_MUT,font:MONO,maxTicksLimit:8}},y:{grid:{color:'rgba(28,45,56,.3)'},ticks:{color:C_MUT,font:MONO}}}}});
+}
+
+// ── RSI GAUGE HTML ───────────────────────────────────────────────────────────
 function rsiHTML(rsi){
-  if(rsi==null) return `<div style="color:${C_MUT};font-family:'Space Mono',monospace;font-size:11px;padding:10px">Insufficient data for RSI (need 15+ bars)</div>`;
+  if(rsi==null)return`<div style="color:${C_MUT};font-family:'Space Mono',monospace;font-size:11px;padding:10px">Need 15+ bars for RSI</div>`;
   const col=rsi>70?C_RED:rsi<30?C_GRN:'#f4c542';
   const lbl=rsi>70?'OVERBOUGHT':rsi<30?'OVERSOLD':'NEUTRAL';
   const pct=Math.max(0,Math.min(100,rsi));
-  return `<div class="rsi-gauge-row">
+  return`<div class="rsi-gauge-row">
     <div><div class="rsi-big" style="color:${col}">${rsi.toFixed(1)}</div><div class="rsi-label" style="color:${col}">${lbl}</div><div style="font-family:'Space Mono',monospace;font-size:8px;color:${C_MUT};margin-top:4px">RSI · 14-period</div></div>
     <div class="rsi-slider-wrap">
       <div class="rsi-zone-list">
@@ -5556,83 +5377,76 @@ function rsiHTML(rsi){
         <div class="rsi-zone-row"><span style="color:${C_MUT}">Neutral</span><span style="color:#f4c542">30–70</span></div>
         <div class="rsi-zone-row"><span style="color:${C_MUT}">Oversold</span><span style="color:${C_GRN}">&lt;30</span></div>
       </div>
-      <div class="rsi-slider-track">
-        <div class="rsi-slider-dot" style="left:${pct}%;color:${col}"></div>
-      </div>
-      <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:9px;color:${C_MUT}">
-        <span>0</span><span>30</span><span>50</span><span>70</span><span>100</span></div>
+      <div class="rsi-slider-track"><div class="rsi-slider-dot" style="left:${pct}%;color:${col}"></div></div>
+      <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:9px;color:${C_MUT}"><span>0</span><span>30</span><span>50</span><span>70</span><span>100</span></div>
     </div>
   </div>`;
 }
 
-// ── MA BADGE ──────────────────────────────────────────────────────────────────
-function maBadge(sig){ return `<span class="ma-badge ma-${sig}">${sig==='bull'?'↑ BULL':sig==='bear'?'↓ BEAR':'— NEUT'}</span>`; }
-
-// ── DATA BADGE ────────────────────────────────────────────────────────────────
-function dataBadge(quote){
-  if(!quote||!quote.t) return `<span class="data-badge data-badge-eod">EOD</span>`;
-  const age=(Date.now()/1000-quote.t)/60;
-  if(age<20) return `<span class="data-badge data-badge-live"><span class="live-dot"></span> LIVE</span>`;
-  if(age<120) return `<span class="data-badge data-badge-delay">⏱ ${Math.round(age)}m ago</span>`;
-  return `<span class="data-badge data-badge-eod">EOD</span>`;
+// ── MACD SUMMARY HTML ────────────────────────────────────────────────────────
+function macdSummaryHTML(macd){
+  if(!macd)return'';
+  const n=macd.macdLine.length-1,line=macd.macdLine[n],sig=macd.sigFull[n],hist=macd.histogram[n];
+  if(line==null)return'';
+  const bull=line>sig,col=bull?C_GRN:C_RED;
+  return`<div style="display:flex;align-items:center;gap:16px;background:var(--bg3);border-radius:6px;padding:14px 16px;flex-wrap:wrap;margin-bottom:12px">
+    <div><div style="font-family:'Space Mono',monospace;font-size:8px;color:${C_MUT};letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">MACD</div><div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:${col}">${line.toFixed(5)}</div></div>
+    <div><div style="font-family:'Space Mono',monospace;font-size:8px;color:${C_MUT};letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Signal</div><div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:#f4c542">${sig!=null?sig.toFixed(5):'—'}</div></div>
+    <div><div style="font-family:'Space Mono',monospace;font-size:8px;color:${C_MUT};letter-spacing:2px;text-transform:uppercase;margin-bottom:4px">Histogram</div><div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:${hist>=0?C_GRN:C_RED}">${hist!=null?hist.toFixed(5):'—'}</div></div>
+    <div style="margin-left:auto"><div style="font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:${col};background:${col}18;border:1px solid ${col}44;padding:5px 12px;border-radius:4px">${bull?'▲ BULLISH':'▼ BEARISH'} MOMENTUM</div></div>
+  </div>`;
 }
 
-// ── DETAIL PANEL ──────────────────────────────────────────────────────────────
+function maBadge(sig){return`<span class="ma-badge ma-${sig}">${sig==='bull'?'↑ BULL':sig==='bear'?'↓ BEAR':'— NEUT'}</span>`;}
+
+// ── DETAIL PANEL ─────────────────────────────────────────────────────────────
 function renderDetail(bodyId,inst,color){
-  const el=document.getElementById(bodyId);
-  if(!el) return;
-  const data=HIST[inst.id]||[];
-  const quote=QUOTE[inst.id];
+  const el=document.getElementById(bodyId);if(!el)return;
+  const data=HIST[inst.id]||[], quote=QUOTE[inst.id];
   if(!data.length){
-    el.innerHTML=`<div class="mkt-loading" style="color:${C_RED}">⚠ Could not load data for ${inst.sym}. Try refreshing.</div>`;
-    return;
+    el.innerHTML=`<div class="mkt-loading" style="flex-direction:column;gap:14px;padding:60px 20px">
+      <div style="color:${C_RED};font-family:'Space Mono',monospace;font-size:12px;text-align:center">⚠ Could not load ${inst.sym}</div>
+      <div style="font-family:'Space Mono',monospace;font-size:10px;color:${C_MUT};text-align:center;line-height:1.9">Stooq and Yahoo Finance both returned empty.<br>This can happen due to proxy rate limits — try refreshing.</div>
+      <button onclick="mktRefresh('${inst.id}')" style="background:rgba(0,232,122,.1);border:1px solid rgba(0,232,122,.3);color:var(--accent);padding:9px 24px;border-radius:5px;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;margin:0 auto">↻ Retry</button>
+    </div>`;return;
   }
   let closes=data.map(d=>d.close);
-  // Patch live quote into last close
   if(quote?.c&&quote.c>0) closes=[...closes.slice(0,-1),quote.c];
-  const price=closes[closes.length-1];
-  const prev=closes[closes.length-2]||price;
+  const price=closes[closes.length-1],prev=closes[closes.length-2]||price;
   const chg=((price-prev)/prev)*100;
-  const rsi=calcRSI(closes,14);
-  const ma20=calcMA(closes,20);
-  const ma50=calcMA(closes,50);
-  const ma200=calcMA(closes,200);
-  const sig=overallSig(rsi,price,ma20,ma50,ma200);
+  const rsi=calcRSI(closes,14),ma20=calcMA(closes,20),ma50=calcMA(closes,50),ma200=calcMA(closes,200);
+  const macd=calcMACD(closes);
+  const lMacd=macd.macdLine[macd.macdLine.length-1];
+  const sig=overallSig(rsi,price,ma20,ma50,ma200,lMacd);
   const sigCol=sig==='bull'?C_GRN:sig==='bear'?C_RED:'#f4c542';
   const dec=inst.dec||4;
-  const labels=data.map(d=>d.date);
-  // RSI series
-  const rsiSeries=[];
-  for(let i=14;i<closes.length;i++) rsiSeries.push(calcRSI(closes.slice(0,i+1),14));
-  const chartLabels=labels.slice(14);
-  const chartCloses=closes.slice(14);
-  // MA series (aligned to chartCloses)
-  const ma20s=[],ma50s=[],ma200s=[];
-  for(let i=0;i<chartCloses.length;i++){
-    const sl=closes.slice(0,14+i+1);
-    ma20s.push(sl.length>=20?+calcMA(sl,20).toFixed(6):null);
-    ma50s.push(sl.length>=50?+calcMA(sl,50).toFixed(6):null);
-    ma200s.push(sl.length>=200?+calcMA(sl,200).toFixed(6):null);
-  }
-  const pCanvasId=bodyId+'-pc';
-  const rCanvasId=bodyId+'-rc';
-  const high24=quote?.h||price, low24=quote?.l||price, open24=quote?.o||prev;
+  const W=Math.min(closes.length,252);
+  const cLabels=data.map(d=>d.date).slice(-W);
+  const cCloses=closes.slice(-W);
+  const rsiSeries=calcRSISeries(cCloses,14);
+  const ma20s=cCloses.map((_,i)=>{const s=cCloses.slice(0,i+1);return s.length>=20?+calcMA(s,20).toFixed(dec+1):null;});
+  const ma50s=cCloses.map((_,i)=>{const s=cCloses.slice(0,i+1);return s.length>=50?+calcMA(s,50).toFixed(dec+1):null;});
+  const ma200s=cCloses.map((_,i)=>{const s=cCloses.slice(0,i+1);return s.length>=200?+calcMA(s,200).toFixed(dec+1):null;});
+  const macdChart=calcMACD(cCloses);
+  const h24=quote?.h||price,l24=quote?.l||price,o24=quote?.o||prev;
+  const pC=bodyId+'-pc',rC=bodyId+'-rc',mC=bodyId+'-mc';
+
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
-    ${dataBadge(quote)}
-    <span style="font-family:'Space Mono',monospace;font-size:9px;color:${C_MUT}">Finnhub · ${data.length} days history${quote?.t?' · updated '+new Date(quote.t*1000).toLocaleTimeString():''}</span>
-    <button onclick="mktRefresh('${inst.id}')" style="margin-left:auto;background:var(--bg3);border:1px solid var(--border2);color:${C_MUT};padding:5px 13px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px;transition:all .15s" onmouseover="this.style.color='#fff';this.style.borderColor='var(--border2)'" onmouseout="this.style.color='${C_MUT}'">↻ REFRESH</button>
+    <span class="data-badge" style="background:rgba(0,180,216,.08);color:var(--blue);border:1px solid rgba(0,180,216,.2);font-family:'Space Mono',monospace;font-size:8px;padding:3px 8px;border-radius:3px">Stooq · ${data.length} days</span>
+    <span style="font-family:'Space Mono',monospace;font-size:9px;color:${C_MUT}">+ Yahoo Finance fallback · Daily OHLC · Free</span>
+    <button onclick="mktRefresh('${inst.id}')" style="margin-left:auto;background:var(--bg3);border:1px solid var(--border2);color:${C_MUT};padding:5px 13px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;letter-spacing:1px" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='${C_MUT}'">↻ REFRESH</button>
   </div>
   <div class="mkt-cards" style="margin-bottom:22px">
     <div class="mkt-card" style="border-color:${chg>=0?'rgba(0,232,122,.2)':'rgba(255,69,96,.2)'}">
       <div class="mkt-card-sym" style="color:${color}">${inst.sym}</div>
-      <div class="mkt-card-price" id="live-${inst.id}">${fmtP(price,dec)}</div>
-      <div class="mkt-card-chg" style="color:${chgCol(chg)}">${fmtPct(chg)} <span style="color:${C_MUT};font-size:9px">today</span></div>
+      <div class="mkt-card-price">${fmtP(price,dec)}</div>
+      <div class="mkt-card-chg" style="color:${chgCol(chg)}">${fmtPct(chg)} <span style="color:${C_MUT};font-size:9px">vs prev</span></div>
     </div>
     <div class="mkt-card">
-      <div class="mkt-card-sym" style="color:${color}">24h Range</div>
-      <div class="mkt-card-price" style="font-size:14px">${fmtP(low24,dec)} – ${fmtP(high24,dec)}</div>
-      <div class="mkt-card-sub">Open: ${fmtP(open24,dec)}</div>
+      <div class="mkt-card-sym" style="color:${color}">Range</div>
+      <div class="mkt-card-price" style="font-size:13px">${fmtP(l24,dec)} – ${fmtP(h24,dec)}</div>
+      <div class="mkt-card-sub">Open: ${fmtP(o24,dec)}</div>
     </div>
     <div class="mkt-card">
       <div class="mkt-card-sym" style="color:${color}">RSI-14</div>
@@ -5640,32 +5454,37 @@ function renderDetail(bodyId,inst,color){
       <div class="mkt-card-chg" style="color:${C_MUT}">${rsi>70?'OVERBOUGHT':rsi<30?'OVERSOLD':'NEUTRAL'}</div>
     </div>
     <div class="mkt-card">
-      <div class="mkt-card-sym" style="color:${color}">MA 20 / 50</div>
-      <div class="mkt-card-price" style="font-size:13px">${ma20?fmtP(ma20,dec):'—'} · ${ma50?fmtP(ma50,dec):'—'}</div>
-      <div class="mkt-card-chg" style="color:${chgCol(price-(ma20||price))}">${ma20?(price>ma20?'↑ Above MA20':'↓ Below MA20'):'—'}</div>
+      <div class="mkt-card-sym" style="color:${color}">MACD</div>
+      <div class="mkt-card-price" style="font-size:13px;color:${lMacd!=null?lMacd>0?C_GRN:C_RED:C_MUT}">${lMacd!=null?lMacd.toFixed(4):'—'}</div>
+      <div class="mkt-card-chg" style="color:${C_MUT}">${lMacd!=null?lMacd>0?'▲ Bull':'▼ Bear':'—'} momentum</div>
     </div>
     <div class="mkt-card">
-      <div class="mkt-card-sym" style="color:${color}">MA 200</div>
-      <div class="mkt-card-price">${ma200?fmtP(ma200,dec):'—'}</div>
-      <div class="mkt-card-chg" style="color:${chgCol(price-(ma200||price))}">${ma200?(price>ma200?'↑ Above':'↓ Below'):'—'}</div>
+      <div class="mkt-card-sym" style="color:${color}">MA 20/50</div>
+      <div class="mkt-card-price" style="font-size:12px">${ma20?fmtP(ma20,dec):'—'} / ${ma50?fmtP(ma50,dec):'—'}</div>
+      <div class="mkt-card-chg" style="color:${chgCol(price-(ma20||price))}">${ma20?(price>ma20?'↑ Above MA20':'↓ Below MA20'):'—'}</div>
     </div>
     <div class="mkt-card" style="border-color:${sigCol}">
       <div class="mkt-card-sym" style="color:${color}">Signal</div>
       <div class="mkt-card-price" style="color:${sigCol}">${sig==='bull'?'BULLISH':sig==='bear'?'BEARISH':'NEUTRAL'}</div>
-      <div class="mkt-card-chg" style="color:${C_MUT}">RSI + 3×MA</div>
+      <div class="mkt-card-chg" style="color:${C_MUT}">RSI + MA + MACD</div>
     </div>
   </div>
   <div class="mkt-box">
-    <div class="mkt-box-title">${inst.name} — 1 Year Daily · MA Overlay</div>
-    <div class="mkt-chart-wrap" style="height:268px"><canvas id="${pCanvasId}"></canvas></div>
+    <div class="mkt-box-title">${inst.name} — ${W} Days · Price + MA Overlay</div>
+    <div class="mkt-chart-wrap" style="height:268px"><canvas id="${pC}"></canvas></div>
   </div>
   <div class="mkt-box">
     <div class="mkt-box-title">RSI-14 — Relative Strength Index</div>
     ${rsiHTML(rsi)}
-    <div class="mkt-chart-wrap" style="height:160px;margin-top:10px"><canvas id="${rCanvasId}"></canvas></div>
+    <div class="mkt-chart-wrap" style="height:150px;margin-top:12px"><canvas id="${rC}"></canvas></div>
   </div>
   <div class="mkt-box">
-    <div class="mkt-box-title">Moving Average Detail</div>
+    <div class="mkt-box-title">MACD (12, 26, 9) — Momentum Oscillator</div>
+    ${macdSummaryHTML(macd)}
+    <div class="mkt-chart-wrap" style="height:160px"><canvas id="${mC}"></canvas></div>
+  </div>
+  <div class="mkt-box">
+    <div class="mkt-box-title">Moving Average Table</div>
     <table class="ma-table"><thead><tr><th>Period</th><th>Value</th><th>% vs Price</th><th>Signal</th></tr></thead>
     <tbody>
       <tr><td>MA 20</td><td>${ma20?fmtP(ma20,dec):'—'}</td><td style="color:${chgCol(price-(ma20||price))}">${ma20?fmtPct(((price-ma20)/ma20)*100):'—'}</td><td>${maBadge(maSig(price,ma20))}</td></tr>
@@ -5674,116 +5493,84 @@ function renderDetail(bodyId,inst,color){
     </tbody></table>
   </div>`;
   requestAnimationFrame(()=>{
-    drawPrice(pCanvasId,inst.id,chartLabels,chartCloses,color,ma20s,ma50s,ma200s);
-    drawRSI(rCanvasId,chartLabels.slice(-rsiSeries.length),rsiSeries);
+    drawPrice(pC,cLabels,cCloses,color,ma20s,ma50s,ma200s);
+    drawRSI(rC,cLabels,rsiSeries);
+    drawMACD(mC,cLabels,macdChart.macdLine,macdChart.sigFull,macdChart.histogram);
   });
-  // Subscribe WS for equities
-  if(EQ_STOCKS.find(s=>s.id===inst.id)) wsSub(inst.fh);
 }
 
-// ── OVERVIEW PANEL ────────────────────────────────────────────────────────────
+// ── OVERVIEW PANEL ───────────────────────────────────────────────────────────
 function renderOverview(cardsId,rsiId,maId,sigId,group,color){
-  const cardsEl=document.getElementById(cardsId);
-  const rsiEl=document.getElementById(rsiId);
-  const maEl=document.getElementById(maId);
-  const sigEl=document.getElementById(sigId);
-  if(!cardsEl||!rsiEl||!maEl||!sigEl) return;
+  const cEl=document.getElementById(cardsId),rEl=document.getElementById(rsiId),mEl=document.getElementById(maId),sEl=document.getElementById(sigId);
+  if(!cEl||!rEl||!mEl||!sEl)return;
   let cH='',rH='',mH='',sH='';
   group.forEach(inst=>{
-    const data=HIST[inst.id]||[];
-    const q=QUOTE[inst.id];
-    if(!data.length){
-      cH+=`<div class="mkt-card"><div class="mkt-card-sym" style="color:${color}">${inst.sym}</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:${C_MUT};margin-top:8px">No data</div></div>`;
-      return;
-    }
+    const data=HIST[inst.id]||[],q=QUOTE[inst.id];
+    if(!data.length){cH+=`<div class="mkt-card"><div class="mkt-card-sym" style="color:${color}">${inst.sym}</div><div style="font-family:'Space Mono',monospace;font-size:10px;color:${C_MUT};margin-top:8px">No data</div></div>`;return;}
     let closes=data.map(d=>d.close);
-    if(q?.c&&q.c>0) closes=[...closes.slice(0,-1),q.c];
-    const price=closes[closes.length-1];
-    const prev=closes[closes.length-2]||price;
+    if(q?.c&&q.c>0)closes=[...closes.slice(0,-1),q.c];
+    const price=closes[closes.length-1],prev=closes[closes.length-2]||price;
     const chg=((price-prev)/prev)*100;
-    const rsi=calcRSI(closes,14);
-    const ma20=calcMA(closes,20);
-    const ma50=calcMA(closes,50);
-    const ma200=calcMA(closes,200);
-    const sig=overallSig(rsi,price,ma20,ma50,ma200);
+    const rsi=calcRSI(closes,14),ma20=calcMA(closes,20),ma50=calcMA(closes,50),ma200=calcMA(closes,200);
+    const macd=calcMACD(closes),lm=macd.macdLine[macd.macdLine.length-1];
+    const sig=overallSig(rsi,price,ma20,ma50,ma200,lm);
     const dec=inst.dec||4;
-    const sigCol=sig==='bull'?C_GRN:sig==='bear'?C_RED:'#f4c542';
-    cH+=`<div class="mkt-card">
-      <div class="mkt-card-sym" style="color:${color}">${inst.sym}</div>
-      <div class="mkt-card-price" id="live-${inst.id}">${fmtP(price,dec)}</div>
-      <div class="mkt-card-chg" style="color:${chgCol(chg)}">${fmtPct(chg)}</div>
-    </div>`;
+    cH+=`<div class="mkt-card"><div class="mkt-card-sym" style="color:${color}">${inst.sym}</div><div class="mkt-card-price">${fmtP(price,dec)}</div><div class="mkt-card-chg" style="color:${chgCol(chg)}">${fmtPct(chg)}</div></div>`;
     sH+=`<div class="sig-pill sig-${sig}">${sig==='bull'?'↑':sig==='bear'?'↓':'→'} ${inst.sym}</div>`;
     rH+=`<div style="display:flex;align-items:center;gap:10px;margin-bottom:9px">
       <span style="font-family:'Space Mono',monospace;font-size:11px;width:74px;color:${color};flex-shrink:0">${inst.sym}</span>
-      <div style="flex:1;height:4px;border-radius:2px;background:var(--bg3)">
-        <div style="height:100%;border-radius:2px;width:${Math.max(0,Math.min(100,rsi||50))}%;background:${rsi>70?C_RED:rsi<30?C_GRN:'#f4c542'};transition:width .4s"></div>
-      </div>
+      <div style="flex:1;height:4px;border-radius:2px;background:var(--bg3)"><div style="height:100%;border-radius:2px;width:${Math.max(0,Math.min(100,rsi||50))}%;background:${rsi>70?C_RED:rsi<30?C_GRN:'#f4c542'};transition:width .4s"></div></div>
       <span style="font-family:'Space Mono',monospace;font-size:11px;width:44px;text-align:right;color:${rsi>70?C_RED:rsi<30?C_GRN:'#f4c542'}">${rsi!=null?rsi.toFixed(1):'—'}</span>
     </div>`;
-    mH+=`<tr><td>${inst.sym}</td>
-      <td style="color:${chgCol(price-(ma20||price))}">${ma20?fmtP(ma20,dec):'—'}</td>
-      <td style="color:${chgCol(price-(ma50||price))}">${ma50?fmtP(ma50,dec):'—'}</td>
-      <td style="color:${chgCol(price-(ma200||price))}">${ma200?fmtP(ma200,dec):'—'}</td>
-      <td>${maBadge(sig)}</td></tr>`;
-    if(EQ_STOCKS.find(s=>s.id===inst.id)) wsSub(inst.fh);
+    mH+=`<tr><td>${inst.sym}</td><td style="color:${chgCol(price-(ma20||price))}">${ma20?fmtP(ma20,dec):'—'}</td><td style="color:${chgCol(price-(ma50||price))}">${ma50?fmtP(ma50,dec):'—'}</td><td style="color:${chgCol(price-(ma200||price))}">${ma200?fmtP(ma200,dec):'—'}</td><td>${maBadge(sig)}</td></tr>`;
   });
-  cardsEl.innerHTML=cH||`<div style="color:${C_RED};font-family:'Space Mono',monospace;font-size:11px;padding:20px">No data loaded</div>`;
-  rsiEl.innerHTML=rH;
-  maEl.innerHTML=mH;
-  sigEl.innerHTML=sH;
+  cEl.innerHTML=cH||`<div style="color:${C_RED};font-family:'Space Mono',monospace;font-size:11px;padding:20px">No data — check connection</div>`;
+  rEl.innerHTML=rH; mEl.innerHTML=mH; sEl.innerHTML=sH;
 }
 
-// ── REFRESH HANDLER ───────────────────────────────────────────────────────────
+// ── REFRESH ───────────────────────────────────────────────────────────────────
 async function mktRefresh(id){
-  const inst=ALL_INST.find(i=>i.id===id);
-  if(!inst) return;
-  delete LOADED[id];
+  const inst=ALL_INST.find(i=>i.id===id);if(!inst)return;
+  delete LOADED[id];delete HIST[id];delete QUOTE[id];
   const g=FX_PAIRS.find(p=>p.id===id)?'fx':CMD_ASSETS.find(p=>p.id===id)?'cmd':'eq';
-  const bodyId=`${g}-${id}-body`;
-  const el=document.getElementById(bodyId);
-  if(el) el.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Refreshing ${inst.sym}…</div>`;
+  const bId=`${g}-${id}-body`,el=document.getElementById(bId);
+  if(el)el.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Refreshing ${inst.sym}…</div>`;
   await loadInst(inst,true);
-  const col=g==='fx'?C_FX:g==='cmd'?C_CMD:C_EQ;
-  renderDetail(bodyId,inst,col);
+  renderDetail(bId,inst,g==='fx'?C_FX:g==='cmd'?C_CMD:C_EQ);
 }
 window.mktRefresh=mktRefresh;
 
-// ── PANEL OPEN HANDLER ────────────────────────────────────────────────────────
+// ── PANEL OPEN HANDLER ───────────────────────────────────────────────────────
 async function openMkt(type,id){
   const group=type==='fx'?FX_PAIRS:type==='cmd'?CMD_ASSETS:EQ_STOCKS;
   const color=type==='fx'?C_FX:type==='cmd'?C_CMD:C_EQ;
   if(id==='overview'){
+    const cEl=document.getElementById(`${type}-ov-cards`);
+    if(cEl&&!group.some(i=>HIST[i.id]?.length)) cEl.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Fetching from Stooq…</div>`;
     await loadGroup(group);
-    renderOverview(
-      `${type}-ov-cards`,`${type}-ov-rsi`,`${type}-ov-ma`,`${type}-ov-sigs`,
-      group, color
-    );
+    renderOverview(`${type}-ov-cards`,`${type}-ov-rsi`,`${type}-ov-ma`,`${type}-ov-sigs`,group,color);
   } else {
-    const inst=group.find(p=>p.id===id);
-    if(!inst) return;
-    const bodyId=`${type}-${id}-body`;
-    const el=document.getElementById(bodyId);
-    if(el&&!HIST[inst.id]?.length)
-      el.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Fetching ${inst.sym} from Finnhub…</div>`;
+    const inst=group.find(p=>p.id===id);if(!inst)return;
+    const bId=`${type}-${id}-body`,el=document.getElementById(bId);
+    if(el&&!HIST[inst.id]?.length) el.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Fetching ${inst.sym}…</div>`;
     await loadInst(inst);
-    renderDetail(bodyId,inst,color);
+    renderDetail(bId,inst,color);
   }
 }
 
-// ── HOOK INTO go() ────────────────────────────────────────────────────────────
-const _origGo=window.go;
-window.go=function(id,el){
-  _origGo(id,el);
-  if(id.startsWith('fx-'))       openMkt('fx', id.slice(3));
-  else if(id.startsWith('cmd-')) openMkt('cmd',id.slice(4));
-  else if(id.startsWith('eq-'))  openMkt('eq', id.slice(3));
-};
-
-// ── BOOT ──────────────────────────────────────────────────────────────────────
-wsConnect(); // connect WS immediately so equity subs are instant
+// ── HOOK INTO go() ───────────────────────────────────────────────────────────
+(function(){
+  const _o=window.go;
+  window.go=function(id,el){
+    if(_o)_o(id,el);
+    if(id.startsWith('fx-'))       openMkt('fx', id.slice(3));
+    else if(id.startsWith('cmd-')) openMkt('cmd',id.slice(4));
+    else if(id.startsWith('eq-'))  openMkt('eq', id.slice(3));
+  };
+})();
 
 })(); // end IIFE
+
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -5848,248 +5635,6 @@ function setSiteLang(lang) {
 
 // Expose globally
 window.setSiteLang = setSiteLang;
-</script>
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   CHAINROOT LIVE NEWS ENGINE
-   Sources: CryptoCompare (no key) · Finnhub (existing key) · RSS via proxy
-   Auto-refresh: 10 minutes · Filter by category · Sentiment tagging
-═══════════════════════════════════════════════════════════════ */
-
-const NEWS = (() => {
-  const FINNHUB_KEY = 'ct0ios9r01qh0skacv7gct0ios9r01qh0skacv80';
-  const PROXY       = 'https://api.allorigins.win/get?url=';
-  const PAGE_SIZE   = 20;
-
-  let allArticles  = [];
-  let filtered     = [];
-  let currentCat   = 'all';
-  let displayCount = PAGE_SIZE;
-
-  // ── RSS FETCHER ──────────────────────────────────────────────
-  async function fetchRSS(feedUrl, defaultCat) {
-    try {
-      const r = await fetch(PROXY + encodeURIComponent(feedUrl));
-      if (!r.ok) return [];
-      const d = await r.json();
-      const xml = d.contents || '';
-      const doc = new DOMParser().parseFromString(xml, 'text/xml');
-      const items = Array.from(doc.querySelectorAll('item')).slice(0, 15);
-      const srcName = doc.querySelector('channel > title')?.textContent?.trim().split('|')[0].trim() || feedUrl.split('/')[2];
-      return items.map((item, i) => {
-        const title   = item.querySelector('title')?.textContent?.replace(/<[^>]+>/g,'').trim() || '';
-        const desc    = item.querySelector('description')?.textContent?.replace(/<[^>]+>/g,'').slice(0,260).trim() || '';
-        const link    = item.querySelector('link')?.textContent?.trim() || item.querySelector('guid')?.textContent?.trim() || '#';
-        const pubDate = item.querySelector('pubDate')?.textContent?.trim() || '';
-        const encImg  = item.querySelector('enclosure[type^="image"]')?.getAttribute('url') || '';
-        const mediaImg= item.querySelector('thumbnail')?.getAttribute('url') || item.querySelector('content')?.getAttribute('url') || '';
-        return { id:`rss_${defaultCat}_${i}_${Date.now()}`, title, body:desc, url:link, source:srcName,
-          time: pubDate ? new Date(pubDate).getTime() : Date.now()-i*300000,
-          cat: catFromText(defaultCat, title), sentiment: sentimentFromText(title+' '+desc),
-          imageUrl: encImg||mediaImg||'' };
-      }).filter(a=>a.title);
-    } catch(e) { return []; }
-  }
-
-  // ── SOURCES ──────────────────────────────────────────────────
-  const SOURCES = [
-    {
-      id:'cryptocompare', label:'CryptoCompare',
-      async fetch(){
-        try{
-          const r = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest');
-          if(!r.ok)return[];
-          const d = await r.json();
-          return (d.Data||[]).slice(0,30).map(a=>({
-            id:'cc_'+a.id, title:a.title,
-            body:(a.body||'').replace(/<[^>]+>/g,'').slice(0,260),
-            url:a.url, source:a.source_info?.name||a.source||'CryptoCompare',
-            time:(a.published_on||0)*1000,
-            cat:catFromText(a.categories||'',a.title),
-            sentiment:sentimentVotes(a.upvotes,a.downvotes),
-            imageUrl:a.imageurl||''
-          }));
-        }catch(e){return[];}
-      }
-    },
-    {
-      id:'finnhub', label:'Finnhub Markets',
-      async fetch(){
-        try{
-          const r = await fetch(`https://finnhub.io/api/v1/news?category=general&token=${FINNHUB_KEY}`);
-          if(!r.ok)return[];
-          const d = await r.json();
-          return (d||[]).slice(0,20).map(a=>({
-            id:'fh_'+a.id, title:a.headline, body:a.summary||'',
-            url:a.url, source:a.source||'Finnhub',
-            time:(a.datetime||0)*1000,
-            cat:catFromText(a.category||'',a.headline),
-            sentiment:sentimentFromText(a.headline+' '+(a.summary||'')),
-            imageUrl:a.image||''
-          }));
-        }catch(e){return[];}
-      }
-    },
-    {
-      id:'finnhub-crypto', label:'Finnhub Crypto',
-      async fetch(){
-        try{
-          const r = await fetch(`https://finnhub.io/api/v1/news?category=crypto&token=${FINNHUB_KEY}`);
-          if(!r.ok)return[];
-          const d = await r.json();
-          return (d||[]).slice(0,20).map(a=>({
-            id:'fhc_'+a.id, title:a.headline, body:a.summary||'',
-            url:a.url, source:a.source||'Finnhub',
-            time:(a.datetime||0)*1000,
-            cat:catFromText('crypto',a.headline),
-            sentiment:sentimentFromText(a.headline+' '+(a.summary||'')),
-            imageUrl:a.image||''
-          }));
-        }catch(e){return[];}
-      }
-    },
-    { id:'cointelegraph', label:'CoinTelegraph',   async fetch(){ return fetchRSS('https://cointelegraph.com/rss','crypto'); } },
-    { id:'coindesk',      label:'CoinDesk',         async fetch(){ return fetchRSS('https://www.coindesk.com/arc/outboundfeeds/rss/','crypto'); } },
-    { id:'decrypt',       label:'Decrypt',           async fetch(){ return fetchRSS('https://decrypt.co/feed','crypto'); } },
-    { id:'investing',     label:'Investing.com',     async fetch(){ return fetchRSS('https://www.investing.com/rss/news.rss','macro'); } },
-    { id:'invest-cmd',    label:'Investing Commodities', async fetch(){ return fetchRSS('https://www.investing.com/rss/news_288.rss','commodities'); } },
-    { id:'invest-eq',     label:'Investing Stocks',  async fetch(){ return fetchRSS('https://www.investing.com/rss/news_25.rss','stocks'); } },
-    { id:'cnbc',          label:'CNBC Markets',      async fetch(){ return fetchRSS('https://www.cnbc.com/id/20409666/device/rss/rss.html','stocks'); } },
-  ];
-
-  // ── HELPERS ──────────────────────────────────────────────────
-  function catFromText(hint, title) {
-    const t = (hint+' '+title).toLowerCase();
-    if(/defi|uniswap|aave|curve|tvl|protocol|amm|raydium|orca|yield farm/i.test(t))return'defi';
-    if(/bitcoin|ethereum|solana|crypto|btc|eth|sol|nft|blockchain|web3|altcoin|binance|stablecoin|usdc|usdt|xrp|bnb|doge/i.test(t))return'crypto';
-    if(/gold|silver|oil|crude|natural gas|wheat|corn|commodity|commodities|wti|brent|xau|xag|metal|copper/i.test(t))return'commodities';
-    if(/stock|equity|nasdaq|s&p|dow|aapl|msft|nvda|tsla|earnings|ipo|nyse|shares|dividend/i.test(t))return'stocks';
-    if(/fed|federal|inflation|cpi|ppi|gdp|interest rate|treasury|dollar|dxy|macro|economic|recession|central bank|fomc|m2/i.test(t))return'macro';
-    return'crypto';
-  }
-  const BULL=/surge|soar|rally|gain|bullish|pump|green|rise|high|record|ath|bull|buy|breakout|recovery|growth|adoption|upgrade|invest|expand/i;
-  const BEAR=/crash|drop|fall|decline|bearish|dump|red|low|loss|bear|sell|correction|fear|hack|exploit|ban|lawsuit|regulat|fine|liquidat|bankrupt|plunge|warning/i;
-  function sentimentFromText(t){
-    const b=(t.match(BULL)||[]).length,br=(t.match(BEAR)||[]).length;
-    return b>br?'bullish':br>b?'bearish':'neutral';
-  }
-  function sentimentVotes(up,down){
-    const u=parseInt(up)||0,d=parseInt(down)||0;
-    return u>d*1.3?'bullish':d>u*1.3?'bearish':'neutral';
-  }
-  function dedupe(arr){
-    const seen=new Set();
-    return arr.filter(a=>{const k=a.title.slice(0,55).toLowerCase();if(seen.has(k))return false;seen.add(k);return true;});
-  }
-  function timeAgo(ms){
-    if(!ms)return'';const diff=Date.now()-ms,m=Math.floor(diff/60000);
-    if(m<1)return'Just now';if(m<60)return m+'m ago';
-    const h=Math.floor(m/60);if(h<24)return h+'h ago';return Math.floor(h/24)+'d ago';
-  }
-  function sentTag(s){
-    if(s==='bullish')return`<span class="news-sentiment-tag nst-bull">▲ Bullish</span>`;
-    if(s==='bearish')return`<span class="news-sentiment-tag nst-bear">▼ Bearish</span>`;
-    return`<span class="news-sentiment-tag nst-neut">→ Neutral</span>`;
-  }
-  function catBadge(cat){
-    const m={crypto:['ncb-crypto','🔗 Crypto'],defi:['ncb-defi','⬡ DeFi'],stocks:['ncb-stocks','📈 Stocks'],macro:['ncb-macro','🌐 Macro'],commodities:['ncb-commodities','🪨 Commodities']};
-    const[cls,lbl]=m[cat]||['ncb-news',cat];
-    return`<span class="news-cat-badge ${cls}">${lbl}</span>`;
-  }
-
-  // ── RENDER ───────────────────────────────────────────────────
-  function render(){
-    const grid=document.getElementById('news-grid');if(!grid)return;
-    const slice=filtered.slice(0,displayCount);
-    if(!slice.length){
-      grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">No articles found</div>`;
-      document.getElementById('news-load-more').style.display='none';return;
-    }
-    grid.innerHTML=slice.map((a,i)=>{
-      const isHero=i===0;
-      const hasImg=a.imageUrl&&a.imageUrl.startsWith('http');
-      return`<a href="${a.url}" target="_blank" rel="noopener noreferrer" class="news-card${isHero?' featured news-hero':''}" style="text-decoration:none">
-        ${hasImg?`<img class="news-card-img" src="${a.imageUrl}" alt="" loading="lazy" onerror="this.style.display='none'"/>`:''}
-        <div class="news-card-top">
-          <span class="news-card-source">${a.source}</span>
-          <span class="news-card-time">${timeAgo(a.time)}</span>
-        </div>
-        <div class="news-card-title">${a.title}</div>
-        ${a.body?`<div class="news-card-body">${a.body}</div>`:''}
-        <div class="news-card-footer">${catBadge(a.cat)}${sentTag(a.sentiment)}</div>
-      </a>`;
-    }).join('');
-    document.getElementById('news-load-more').style.display=filtered.length>displayCount?'block':'none';
-
-    // Sentiment bar
-    const bull=filtered.filter(a=>a.sentiment==='bullish').length;
-    const bear=filtered.filter(a=>a.sentiment==='bearish').length;
-    const neut=filtered.length-bull-bear;
-    const tot=filtered.length||1;
-    const bb=document.getElementById('news-bull-bar'),nb=document.getElementById('news-neut-bar'),rb=document.getElementById('news-bear-bar');
-    const st=document.getElementById('news-sentiment-txt');
-    if(bb)bb.style.width=(bull/tot*100).toFixed(1)+'%';
-    if(nb)nb.style.width=(neut/tot*100).toFixed(1)+'%';
-    if(rb)rb.style.width=(bear/tot*100).toFixed(1)+'%';
-    if(st){
-      st.textContent=bull>bear*1.5?'Bullish 📈':bear>bull*1.5?'Bearish 📉':'Neutral ↔';
-      st.style.color=bull>bear*1.5?'var(--accent)':bear>bull*1.5?'var(--red)':'var(--muted)';
-    }
-    const nsTotal=document.getElementById('ns-total'),nsBull=document.getElementById('ns-bull'),nsBear=document.getElementById('ns-bear'),nsSrc=document.getElementById('ns-src');
-    if(nsTotal)nsTotal.textContent=filtered.length+' articles';
-    if(nsBull)nsBull.textContent=bull+' bullish';
-    if(nsBear)nsBear.textContent=bear+' bearish';
-    if(nsSrc)nsSrc.textContent=new Set(allArticles.map(a=>a.source)).size+' sources';
-  }
-
-  function applyFilter(){
-    const q=(document.getElementById('news-search')?.value||'').toLowerCase();
-    filtered=allArticles.filter(a=>{
-      const mc=currentCat==='all'||a.cat===currentCat;
-      const mq=!q||a.title.toLowerCase().includes(q)||(a.body||'').toLowerCase().includes(q)||a.source.toLowerCase().includes(q);
-      return mc&&mq;
-    });
-    displayCount=PAGE_SIZE;render();
-  }
-
-  async function fetchAll(){
-    const results=await Promise.allSettled(SOURCES.map(s=>s.fetch()));
-    let fresh=[];
-    results.forEach(r=>{if(r.status==='fulfilled')fresh=fresh.concat(r.value);});
-    if(fresh.length){
-      allArticles=dedupe(fresh).sort((a,b)=>b.time-a.time);
-      applyFilter();
-      const upd=document.getElementById('news-last-updated');
-      if(upd)upd.textContent='Updated '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
-    } else if(!allArticles.length){
-      const grid=document.getElementById('news-grid');
-      if(grid)grid.innerHTML=`<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">⚠ Could not load news — check connection or CORS proxy</div>`;
-    }
-  }
-
-  return {
-    init(){ fetchAll(); setInterval(fetchAll,10*60*1000); },
-    refresh(){ fetchAll(); },
-    setCat(c){ currentCat=c;displayCount=PAGE_SIZE;applyFilter(); },
-    filter(){ applyFilter(); },
-    loadMore(){ displayCount+=PAGE_SIZE;render(); }
-  };
-})();
-
-function newsRefresh(){NEWS.refresh();const btn=document.querySelector('[onclick="newsRefresh()"]');if(btn){const orig=btn.textContent;btn.textContent='⟳ Fetching…';setTimeout(()=>btn.textContent=orig,3000);}}
-function newsSetCat(cat,el){document.querySelectorAll('.news-tab').forEach(t=>t.classList.remove('on'));if(el)el.classList.add('on');NEWS.setCat(cat);}
-function newsFilter(){NEWS.filter();}
-function newsLoadMore(){NEWS.loadMore();}
-
-// Lazy-init: only fetch when the news panel is first opened
-let _newsInited=false;
-(function(){
-  const _orig=window.go;
-  window.go=function(id,el){
-    if(_orig)_orig(id,el);
-    if(id==='news'&&!_newsInited){_newsInited=true;setTimeout(()=>NEWS.init(),80);}
-  };
-})();
 </script>
 <script>
 /* ═══════════════════════════════════════════════════════════
@@ -6204,1049 +5749,6 @@ window.handleVaultDeploy = handleVaultDeploy;
 window.openVaultDeposit = openVaultDeposit;
 window.openYieldDeposit = openYieldDeposit;
 window.openYieldDocs = openYieldDocs;
-</script>
-
-<!-- ═══════════════════════════════════════════════════════════════
-     CHAINROOT PROFESSIONAL DASHBOARD OVERLAY
-     Full-screen user dashboard: wallet info, portfolio, subscription
-═══════════════════════════════════════════════════════════════ -->
-<style>
-/* ── DASHBOARD OVERLAY ──────────────────────────────────────── */
-.dash-overlay{
-  display:none;position:fixed;inset:0;z-index:900;
-  background:var(--bg);flex-direction:column;overflow:hidden;
-}
-.dash-overlay.on{display:flex;}
-
-/* Topbar */
-.dash-tb{
-  height:56px;flex-shrink:0;
-  background:rgba(7,9,11,.97);backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
-  display:flex;align-items:center;padding:0 28px;gap:16px;
-}
-.dash-tb-logo{display:flex;align-items:center;gap:8px;font-family:'Space Grotesk',sans-serif;font-size:15px;font-weight:700;color:#fff}
-.dash-tb-logo .root{color:var(--accent)}
-.dash-tb-title{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-left:4px}
-.dash-close-btn{
-  margin-left:auto;display:flex;align-items:center;gap:6px;
-  padding:7px 16px;background:transparent;border:1px solid var(--border);
-  border-radius:4px;font-family:'Space Mono',monospace;font-size:11px;
-  color:var(--muted);cursor:pointer;transition:all .2s;
-}
-.dash-close-btn:hover{border-color:var(--border2);color:var(--text)}
-
-/* Layout: sidebar + main */
-.dash-shell{display:flex;flex:1;overflow:hidden;}
-.dash-nav{
-  width:200px;flex-shrink:0;background:var(--bg1);
-  border-right:1px solid var(--border);padding:16px 0;
-  display:flex;flex-direction:column;gap:2px;
-}
-.dash-nav-item{
-  display:flex;align-items:center;gap:10px;padding:10px 18px;
-  font-family:'Inter',sans-serif;font-size:13px;font-weight:500;
-  color:var(--text);cursor:pointer;border-left:2px solid transparent;
-  transition:all .15s;
-}
-.dash-nav-item:hover{color:var(--accent);background:rgba(0,232,122,.04);border-left-color:rgba(0,232,122,.25)}
-.dash-nav-item.on{color:var(--accent);background:rgba(0,232,122,.07);border-left-color:var(--accent)}
-.dash-nav-icon{font-size:14px;width:18px;text-align:center;flex-shrink:0}
-
-/* Main scroll area */
-.dash-main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg);}
-.dash-main::-webkit-scrollbar{width:4px}
-.dash-main::-webkit-scrollbar-thumb{background:var(--border)}
-
-/* Panels */
-.dash-panel{display:none;padding:36px 40px 60px;}
-.dash-panel.on{display:block;animation:pin .2s ease}
-
-/* ── OVERVIEW PANEL ── */
-.dash-welcome{
-  display:flex;align-items:center;justify-content:space-between;
-  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:28px 32px;margin-bottom:24px;position:relative;overflow:hidden;
-}
-.dash-welcome::before{
-  content:'';position:absolute;top:-40px;right:-40px;
-  width:200px;height:200px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,232,122,.08),transparent 70%);
-  pointer-events:none;
-}
-.dash-welcome-left{}
-.dash-welcome-name{font-family:'Space Grotesk',sans-serif;font-size:26px;font-weight:800;color:#fff;letter-spacing:-.02em}
-.dash-welcome-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:5px}
-.dash-welcome-wallet{
-  display:flex;align-items:center;gap:8px;margin-top:12px;
-  background:var(--bg3);border:1px solid var(--border);border-radius:6px;
-  padding:8px 14px;width:fit-content;
-}
-.dash-welcome-wallet-icon{font-size:14px}
-.dash-welcome-wallet-addr{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent)}
-.dash-welcome-wallet-type{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-left:4px}
-.dash-welcome-right{text-align:right;flex-shrink:0}
-.dash-net-worth-label{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.dash-net-worth{font-family:'Space Mono',monospace;font-size:38px;font-weight:700;color:#fff;line-height:1}
-.dash-net-chg{font-family:'Space Mono',monospace;font-size:12px;margin-top:6px}
-
-/* Stat grid */
-.dash-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
-.dash-stat-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:8px;
-  padding:18px 20px;transition:border-color .2s;
-}
-.dash-stat-card:hover{border-color:var(--border2)}
-.dash-stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-.dash-stat-value{font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#fff}
-.dash-stat-sub{font-family:'Space Mono',monospace;font-size:10px;margin-top:4px}
-
-/* ── SECTION HEADER ── */
-.dash-section-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  margin-bottom:16px;
-}
-.dash-section-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text);letter-spacing:.02em}
-.dash-section-badge{font-family:'Space Mono',monospace;font-size:8px;padding:3px 8px;border-radius:3px;letter-spacing:1px}
-
-/* ── WALLET DETAIL CARD ── */
-.dash-wallet-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:24px;margin-bottom:24px;
-}
-.dash-wallet-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.dash-wallet-chain-badge{
-  display:flex;align-items:center;gap:6px;
-  background:var(--bg3);border:1px solid var(--border);border-radius:5px;padding:6px 12px;
-  font-family:'Space Mono',monospace;font-size:10px;color:var(--text);
-}
-.dash-wallet-chain-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:pulse-dot 1.5s infinite}
-.dash-wallet-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
-.dash-wallet-field{background:var(--bg3);border-radius:6px;padding:14px 16px}
-.dash-wallet-field-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.dash-wallet-field-value{font-family:'Space Mono',monospace;font-size:12px;color:var(--text);word-break:break-all}
-
-/* ── PORTFOLIO TABLE ── */
-.dash-portfolio-wrap{background:var(--bg2);border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:24px}
-.dash-portfolio-hdr{
-  display:flex;align-items:center;justify-content:space-between;
-  padding:16px 20px;border-bottom:1px solid var(--border);
-}
-.dash-portfolio-title{font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:var(--text)}
-.dash-add-btn{
-  display:flex;align-items:center;gap:6px;padding:7px 14px;
-  background:rgba(0,232,122,.08);border:1px solid rgba(0,232,122,.25);
-  border-radius:5px;font-family:'Space Mono',monospace;font-size:10px;
-  color:var(--accent);cursor:pointer;transition:all .15s;
-}
-.dash-add-btn:hover{background:rgba(0,232,122,.15)}
-.dash-asset-table{width:100%;border-collapse:collapse}
-.dash-asset-table th{
-  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;
-  color:var(--muted);text-transform:uppercase;padding:9px 16px;
-  border-bottom:1px solid var(--border);text-align:right;
-}
-.dash-asset-table th:first-child{text-align:left}
-.dash-asset-table td{
-  padding:12px 16px;border-bottom:1px solid rgba(28,45,56,.35);
-  font-family:'Space Mono',monospace;font-size:12px;text-align:right;
-  vertical-align:middle;
-}
-.dash-asset-table tr:last-child td{border-bottom:none}
-.dash-asset-table tr:hover td{background:rgba(0,232,122,.022)}
-.dash-asset-table td:first-child{text-align:left}
-.dash-asset-icon{
-  width:30px;height:30px;border-radius:50%;display:flex;align-items:center;
-  justify-content:center;font-size:13px;font-weight:700;flex-shrink:0;
-}
-.dash-asset-name-cell{display:flex;align-items:center;gap:10px}
-.dash-asset-nm{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fff}
-.dash-asset-sym{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
-.dash-alloc-bar{display:flex;align-items:center;gap:8px}
-.dash-alloc-track{flex:1;height:4px;background:var(--bg3);border-radius:2px;overflow:hidden}
-.dash-alloc-fill{height:100%;border-radius:2px;background:var(--accent)}
-
-/* ── VAULT SECTION ── */
-.dash-vault-teaser{
-  background:linear-gradient(135deg,rgba(153,69,255,.06),rgba(20,241,149,.04));
-  border:1px solid rgba(153,69,255,.25);border-radius:10px;
-  padding:28px;margin-bottom:24px;position:relative;overflow:hidden;
-}
-.dash-vault-teaser::before{
-  content:'COMING SOON';
-  position:absolute;top:16px;right:16px;
-  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;
-  color:#9945FF;background:rgba(153,69,255,.1);border:1px solid rgba(153,69,255,.3);
-  padding:3px 10px;border-radius:3px;
-}
-.dash-vault-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px}
-.dash-vault-stat{
-  background:rgba(7,9,11,.6);border:1px solid rgba(28,45,56,.8);
-  border-radius:6px;padding:16px;text-align:center;
-}
-.dash-vault-stat-val{font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:#14F195}
-.dash-vault-stat-lbl{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:4px;letter-spacing:1.5px;text-transform:uppercase}
-
-/* ── SUBSCRIPTION PANEL ── */
-.dash-sub-card{
-  background:var(--bg2);border:1px solid var(--border);border-radius:10px;
-  padding:28px;margin-bottom:20px;
-}
-.dash-sub-active{
-  border-color:rgba(0,232,122,.3);
-  background:linear-gradient(135deg,rgba(0,232,122,.04),var(--bg2));
-}
-.dash-sub-expiring{
-  border-color:rgba(244,197,66,.4);
-  background:linear-gradient(135deg,rgba(244,197,66,.04),var(--bg2));
-}
-.dash-sub-inactive{border-color:var(--border)}
-.dash-sub-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.dash-sub-badge{
-  display:inline-flex;align-items:center;gap:6px;
-  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
-  letter-spacing:1.5px;padding:5px 14px;border-radius:4px;
-}
-.dash-sub-badge.active{background:rgba(0,232,122,.12);color:var(--accent);border:1px solid rgba(0,232,122,.25)}
-.dash-sub-badge.expiring{background:rgba(244,197,66,.12);color:var(--gold);border:1px solid rgba(244,197,66,.3)}
-.dash-sub-badge.inactive{background:rgba(77,100,117,.1);color:var(--muted);border:1px solid var(--border)}
-.dash-sub-info-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-bottom:20px}
-.dash-sub-info-item{background:var(--bg3);border-radius:6px;padding:14px 16px}
-.dash-sub-info-label{font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px}
-.dash-sub-info-value{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#fff}
-.dash-sub-info-sub{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:3px}
-.dash-expiry-alert{
-  display:flex;align-items:flex-start;gap:12px;
-  background:rgba(244,197,66,.06);border:1px solid rgba(244,197,66,.25);
-  border-radius:6px;padding:14px 16px;margin-bottom:18px;
-}
-.dash-expiry-alert-icon{font-size:18px;flex-shrink:0;margin-top:1px}
-.dash-expiry-alert-text{font-family:'Space Mono',monospace;font-size:11px;color:var(--gold);line-height:1.7}
-.dash-expiry-alert-text strong{color:var(--gold)}
-.dash-sub-plans{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px}
-.dash-plan{background:var(--bg3);border:1px solid var(--border);border-radius:8px;padding:20px}
-.dash-plan.featured{border-color:rgba(0,232,122,.3);background:linear-gradient(135deg,rgba(0,232,122,.04),var(--bg3))}
-.dash-plan-badge{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:1.5px;color:var(--accent);text-transform:uppercase;margin-bottom:8px}
-.dash-plan-name{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:800;color:#fff;margin-bottom:6px}
-.dash-plan-price{font-family:'Space Mono',monospace;font-size:28px;font-weight:700;color:#fff}
-.dash-plan-price span{font-size:13px;color:var(--muted);font-weight:400}
-.dash-plan-period{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:14px}
-.dash-plan-features{list-style:none;display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
-.dash-plan-features li{font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:7px}
-.dash-plan-features li::before{content:'✓';color:var(--accent);font-weight:700;flex-shrink:0}
-.dash-sub-btn{
-  width:100%;padding:11px;border-radius:5px;
-  font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
-  letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;
-  background:var(--accent);border:1px solid var(--accent);color:#000;
-}
-.dash-sub-btn:hover{background:var(--ad)}
-.dash-sub-btn.secondary{background:transparent;color:var(--accent);border-color:rgba(0,232,122,.3)}
-.dash-sub-btn.secondary:hover{background:rgba(0,232,122,.08)}
-
-/* Indicator features list */
-.dash-indicator-features{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;
-}
-.dash-indicator-feature{
-  display:flex;align-items:flex-start;gap:10px;
-  background:var(--bg3);border-radius:6px;padding:12px 14px;
-}
-.dash-indicator-feature-icon{font-size:16px;flex-shrink:0}
-.dash-indicator-feature-text{font-family:'Inter',sans-serif;font-size:12px;color:var(--text);line-height:1.5}
-.dash-indicator-feature-text strong{color:#fff;display:block;margin-bottom:2px;font-size:13px}
-
-/* Empty state */
-.dash-empty{
-  text-align:center;padding:48px 24px;
-  font-family:'Space Mono',monospace;
-}
-.dash-empty-icon{font-size:40px;margin-bottom:12px}
-.dash-empty-title{font-size:14px;font-weight:700;color:var(--text);margin-bottom:6px}
-.dash-empty-sub{font-size:11px;color:var(--muted);line-height:1.7}
-
-/* Responsive */
-@media(max-width:860px){
-  .dash-nav{display:none}
-  .dash-stat-grid{grid-template-columns:1fr 1fr}
-  .dash-wallet-grid{grid-template-columns:1fr 1fr}
-  .dash-sub-info-grid{grid-template-columns:1fr 1fr}
-  .dash-vault-grid{grid-template-columns:1fr}
-  .dash-panel{padding:20px 16px 48px}
-}
-@media(max-width:540px){
-  .dash-stat-grid{grid-template-columns:1fr}
-  .dash-sub-plans{grid-template-columns:1fr}
-  .dash-indicator-features{grid-template-columns:1fr}
-  .dash-welcome{flex-direction:column;gap:16px}
-  .dash-welcome-right{text-align:left}
-}
-</style>
-
-<!-- Dashboard HTML -->
-<div class="dash-overlay" id="dashOverlay">
-  <!-- Topbar -->
-  <div class="dash-tb">
-    <div class="dash-tb-logo">
-      <svg width="22" height="22" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="14" stroke="#1c2d38" stroke-width="1.5"/><rect x="4" y="11.5" width="10" height="7" rx="3.5" stroke="#00e87a" stroke-width="2" fill="none"/><rect x="16" y="11.5" width="10" height="7" rx="3.5" stroke="#00b4d8" stroke-width="2" fill="none"/><circle cx="15" cy="15" r="2.2" fill="#00e87a"/></svg>
-      <span><span style="font-weight:600">Chain</span><span class="root">Root</span></span>
-    </div>
-    <span class="dash-tb-title">Dashboard</span>
-    <button class="dash-close-btn" onclick="closeDashboard()">
-      <svg width="11" height="11" viewBox="0 0 12 12" fill="currentColor"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
-      Close
-    </button>
-  </div>
-
-  <div class="dash-shell">
-    <!-- Sidebar Nav -->
-    <nav class="dash-nav">
-      <div class="dash-nav-item on" onclick="dashNav('overview',this)"><span class="dash-nav-icon">◈</span> Overview</div>
-      <div class="dash-nav-item" onclick="dashNav('wallet',this)"><span class="dash-nav-icon">🔗</span> Wallet</div>
-      <div class="dash-nav-item" onclick="dashNav('portfolio',this)"><span class="dash-nav-icon">📊</span> Portfolio</div>
-      <div class="dash-nav-item" onclick="dashNav('vault',this)"><span class="dash-nav-icon">⬡</span> Vault</div>
-      <div class="dash-nav-item" onclick="dashNav('subscription',this)"><span class="dash-nav-icon">⚡</span> Subscription</div>
-    </nav>
-
-    <!-- Main content -->
-    <div class="dash-main" id="dashMain">
-
-      <!-- ── OVERVIEW PANEL ── -->
-      <div class="dash-panel on" id="dp-overview">
-        <!-- Welcome card -->
-        <div class="dash-welcome" id="dash-welcome-card">
-          <div class="dash-welcome-left">
-            <div class="dash-welcome-name" id="dash-welcome-name">Welcome back!</div>
-            <div class="dash-welcome-sub" id="dash-welcome-sub">ChainRoot member</div>
-            <div class="dash-welcome-wallet" id="dash-welcome-wallet" style="display:none">
-              <span class="dash-welcome-wallet-icon">🔗</span>
-              <span class="dash-welcome-wallet-addr" id="dash-welcome-addr">—</span>
-              <span class="dash-welcome-wallet-type" id="dash-welcome-wtype">—</span>
-            </div>
-          </div>
-          <div class="dash-welcome-right">
-            <div class="dash-net-worth-label">Portfolio Value</div>
-            <div class="dash-net-worth" id="dash-net-worth">$0.00</div>
-            <div class="dash-net-chg" id="dash-net-chg" style="color:var(--muted)">No assets tracked</div>
-          </div>
-        </div>
-
-        <!-- Quick stats -->
-        <div class="dash-stat-grid">
-          <div class="dash-stat-card">
-            <div class="dash-stat-label">Assets Tracked</div>
-            <div class="dash-stat-value" id="dash-asset-count">0</div>
-            <div class="dash-stat-sub" style="color:var(--muted)">in portfolio</div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="dash-stat-label">Subscription</div>
-            <div class="dash-stat-value" id="dash-sub-status" style="font-size:14px;padding-top:4px">—</div>
-            <div class="dash-stat-sub" id="dash-sub-expiry" style="color:var(--muted)">—</div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="dash-stat-label">ChainRoot Vault</div>
-            <div class="dash-stat-value" style="font-size:14px;padding-top:4px;color:#9945FF">Coming Soon</div>
-            <div class="dash-stat-sub" style="color:var(--muted)">Solana DeFi</div>
-          </div>
-          <div class="dash-stat-card">
-            <div class="dash-stat-label">Member Since</div>
-            <div class="dash-stat-value" id="dash-joined" style="font-size:14px;padding-top:4px">—</div>
-            <div class="dash-stat-sub" style="color:var(--muted)">registration date</div>
-          </div>
-        </div>
-
-        <!-- Top holdings preview -->
-        <div class="dash-portfolio-wrap">
-          <div class="dash-portfolio-hdr">
-            <div class="dash-portfolio-title">Portfolio Holdings</div>
-            <button class="dash-add-btn" onclick="dashNav('portfolio',null);dashAddAsset()">+ Add Asset</button>
-          </div>
-          <div id="dash-holdings-preview"></div>
-        </div>
-
-        <!-- Subscription quick view -->
-        <div id="dash-sub-quick"></div>
-      </div>
-
-      <!-- ── WALLET PANEL ── -->
-      <div class="dash-panel" id="dp-wallet">
-        <div style="margin-bottom:24px">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">Web3 Wallet</div>
-          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">Connected wallet details & on-chain information</div>
-        </div>
-
-        <div class="dash-wallet-card" id="dash-wallet-detail">
-          <!-- injected by JS -->
-        </div>
-
-        <!-- Network info -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:24px">
-          <div class="dash-section-hdr" style="margin-bottom:18px">
-            <div class="dash-section-title">Supported Networks</div>
-          </div>
-          <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center">
-              <div style="font-size:22px;margin-bottom:6px">⟠</div>
-              <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text);font-weight:700">Ethereum</div>
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);margin-top:3px">● LIVE</div>
-            </div>
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center">
-              <div style="font-size:22px;margin-bottom:6px">◎</div>
-              <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text);font-weight:700">Solana</div>
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);margin-top:3px">● LIVE</div>
-            </div>
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center">
-              <div style="font-size:22px;margin-bottom:6px">⬡</div>
-              <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text);font-weight:700">BNB Chain</div>
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);margin-top:3px">● LIVE</div>
-            </div>
-            <div style="background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:14px;text-align:center">
-              <div style="font-size:22px;margin-bottom:6px">🔷</div>
-              <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--text);font-weight:700">Base</div>
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--gold);margin-top:3px">◎ SOON</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Connect prompt if no wallet -->
-        <div id="dash-wallet-connect-prompt"></div>
-      </div>
-
-      <!-- ── PORTFOLIO PANEL ── -->
-      <div class="dash-panel" id="dp-portfolio">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px">
-          <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">Portfolio</div>
-            <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">Track your crypto holdings with live prices</div>
-          </div>
-          <button class="dash-add-btn" style="padding:10px 18px" onclick="dashAddAsset()">+ Add Asset</button>
-        </div>
-
-        <!-- Portfolio value header -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:16px">
-          <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px">
-            <div>
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Total Value</div>
-              <div style="font-family:'Space Mono',monospace;font-size:40px;font-weight:700;color:#fff;line-height:1" id="port-total-val">$0.00</div>
-            </div>
-            <div style="text-align:right">
-              <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">Assets</div>
-              <div style="font-family:'Space Mono',monospace;font-size:20px;font-weight:700;color:var(--text)" id="port-asset-cnt">0</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="dash-portfolio-wrap">
-          <div class="dash-portfolio-hdr">
-            <div class="dash-portfolio-title">Holdings</div>
-          </div>
-          <div id="dash-full-portfolio"></div>
-        </div>
-      </div>
-
-      <!-- ── VAULT PANEL ── -->
-      <div class="dash-panel" id="dp-vault">
-        <div style="margin-bottom:24px">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">ChainRoot Vault <span style="font-size:14px;background:rgba(153,69,255,.12);color:#9945FF;border:1px solid rgba(153,69,255,.3);padding:3px 10px;border-radius:3px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;vertical-align:middle">COMING SOON</span></div>
-          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">High-yield DeFi vault on Solana — deploying soon</div>
-        </div>
-
-        <div class="dash-vault-teaser" style="position:relative">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:800;color:#fff;margin-bottom:8px">
-            ChainRoot <span style="background:linear-gradient(135deg,#9945FF,#14F195);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">SOL/USDC</span> Vault
-          </div>
-          <div style="font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);line-height:1.7;max-width:520px;margin-bottom:20px">
-            Earn high yields on your stablecoin holdings through ChainRoot's automated Solana DeFi strategy. 
-            Deployed assets will appear here once the vault goes live.
-          </div>
-          <div class="dash-vault-grid">
-            <div class="dash-vault-stat">
-              <div class="dash-vault-stat-val">—</div>
-              <div class="dash-vault-stat-lbl">Your Deposited</div>
-            </div>
-            <div class="dash-vault-stat">
-              <div class="dash-vault-stat-val" style="color:var(--gold)">—</div>
-              <div class="dash-vault-stat-lbl">Earned to Date</div>
-            </div>
-            <div class="dash-vault-stat">
-              <div class="dash-vault-stat-val">—%</div>
-              <div class="dash-vault-stat-lbl">Current APY</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:14px">How it will work</div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-            <div style="background:var(--bg3);border-radius:6px;padding:16px">
-              <div style="font-size:20px;margin-bottom:8px">🔗</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Connect Wallet</div>
-              <div style="font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6">Link your Phantom or other Solana wallet to ChainRoot</div>
-            </div>
-            <div style="background:var(--bg3);border-radius:6px;padding:16px">
-              <div style="font-size:20px;margin-bottom:8px">💰</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Deposit Assets</div>
-              <div style="font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6">Deposit USDC or SOL into the vault with one click</div>
-            </div>
-            <div style="background:var(--bg3);border-radius:6px;padding:16px">
-              <div style="font-size:20px;margin-bottom:8px">⚙️</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Auto-Strategy</div>
-              <div style="font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6">ChainRoot's strategy optimizes yield across Solana DeFi protocols</div>
-            </div>
-            <div style="background:var(--bg3);border-radius:6px;padding:16px">
-              <div style="font-size:20px;margin-bottom:8px">📈</div>
-              <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:#fff;margin-bottom:4px">Earn & Withdraw</div>
-              <div style="font-family:'Inter',sans-serif;font-size:12px;color:var(--muted);line-height:1.6">Track earnings in real-time and withdraw anytime</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- ── SUBSCRIPTION PANEL ── -->
-      <div class="dash-panel" id="dp-subscription">
-        <div style="margin-bottom:24px">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:22px;font-weight:800;color:#fff;margin-bottom:6px">ChainRoot Indicator</div>
-          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">Manage your TradingView indicator subscription</div>
-        </div>
-
-        <!-- Sub status card -->
-        <div class="dash-sub-card" id="dash-sub-main-card">
-          <!-- injected by JS -->
-        </div>
-
-        <!-- Indicator features -->
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:24px;margin-bottom:20px">
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:16px">What's Included</div>
-          <div class="dash-indicator-features">
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">📊</div>
-              <div class="dash-indicator-feature-text"><strong>Live BUY / SELL Signals</strong>Real-time buy & sell signal overlay on any TradingView chart</div>
-            </div>
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">🔔</div>
-              <div class="dash-indicator-feature-text"><strong>Custom Alerts</strong>Get instantly notified when your signal triggers</div>
-            </div>
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">💎</div>
-              <div class="dash-indicator-feature-text"><strong>Multi-Asset Support</strong>Works on BTC, ETH, SOL and all major stocks & pairs</div>
-            </div>
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">🇲🇳</div>
-              <div class="dash-indicator-feature-text"><strong>Mongolian Support</strong>Full Mongolian-language guide & onboarding</div>
-            </div>
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">🔄</div>
-              <div class="dash-indicator-feature-text"><strong>Free Updates</strong>All future indicator versions included</div>
-            </div>
-            <div class="dash-indicator-feature">
-              <div class="dash-indicator-feature-icon">❌</div>
-              <div class="dash-indicator-feature-text"><strong>Cancel Anytime</strong>No lock-in — cancel your subscription anytime</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Plans -->
-        <div id="dash-sub-plans-section"></div>
-      </div>
-
-    </div><!-- /dash-main -->
-  </div><!-- /dash-shell -->
-</div><!-- /dash-overlay -->
-
-<script>
-/* ═══════════════════════════════════════════════════════
-   CHAINROOT DASHBOARD LOGIC
-═══════════════════════════════════════════════════════ */
-
-// ── SUBSCRIPTION STORAGE ──────────────────────────────
-const SubDB = {
-  get(){
-    try{
-      const r = localStorage.getItem('cr_sub');
-      return r ? JSON.parse(r) : null;
-    }catch(e){return null;}
-  },
-  set(data){
-    try{localStorage.setItem('cr_sub', JSON.stringify(data));}catch(e){}
-  },
-  // For demo: simulate a subscription
-  demo(plan){
-    const now = Date.now();
-    const days = plan === 'annual' ? 365 : 30;
-    const expiry = now + days * 86400000;
-    const sub = {plan, startedAt: now, expiresAt: expiry, active: true};
-    this.set(sub);
-    return sub;
-  }
-};
-
-function getSubInfo(){
-  const sub = SubDB.get();
-  if(!sub) return {active:false, plan:null, expiresAt:null, daysLeft:null};
-  const now = Date.now();
-  const daysLeft = Math.ceil((sub.expiresAt - now) / 86400000);
-  if(daysLeft <= 0) return {active:false, expired:true, plan:sub.plan, expiresAt:sub.expiresAt, daysLeft:0};
-  return {active:true, plan:sub.plan, expiresAt:sub.expiresAt, daysLeft, expiring: daysLeft <= 10};
-}
-
-function checkSubExpiry(){
-  const sub = getSubInfo();
-  if(sub.active && sub.expiring){
-    const existing = document.getElementById('sub-expiry-toast');
-    if(existing) return;
-    const t = document.createElement('div');
-    t.id = 'sub-expiry-toast';
-    t.style.cssText = `position:fixed;bottom:28px;left:50%;transform:translateX(-50%);
-      background:#162028;border:1px solid rgba(244,197,66,.4);color:var(--gold);
-      padding:12px 22px;border-radius:8px;font-family:'Space Mono',monospace;font-size:11px;
-      z-index:9999;box-shadow:0 8px 24px rgba(0,0,0,.5);display:flex;align-items:center;gap:10px;
-      white-space:nowrap;cursor:pointer;`;
-    t.innerHTML = `⚠️ <span>Your ChainRoot indicator subscription expires in <strong>${sub.daysLeft} day${sub.daysLeft===1?'':'s'}</strong> — </span><span style="color:#fff;text-decoration:underline">Renew now</span>`;
-    t.onclick = () => { openDashboard(); setTimeout(()=>dashNav('subscription',null), 200); t.remove(); };
-    document.body.appendChild(t);
-    setTimeout(() => { if(t.parentNode) t.remove(); }, 8000);
-  }
-}
-
-// ── DASHBOARD OPEN / CLOSE ────────────────────────────
-function openDashboard(){
-  if(!CR_USER){ openAuth('register'); return; }
-  const ov = document.getElementById('dashOverlay');
-  if(ov){ ov.classList.add('on'); document.body.style.overflow='hidden'; }
-  dashNav('overview', document.querySelector('.dash-nav-item'));
-  renderDashboard();
-}
-
-function closeDashboard(){
-  const ov = document.getElementById('dashOverlay');
-  if(ov){ ov.classList.remove('on'); document.body.style.overflow=''; }
-}
-
-document.addEventListener('keydown', function(e){
-  if(e.key === 'Escape'){
-    const dash = document.getElementById('dashOverlay');
-    if(dash && dash.classList.contains('on')) closeDashboard();
-  }
-});
-
-// ── NAV ───────────────────────────────────────────────
-function dashNav(id, el){
-  document.querySelectorAll('.dash-panel').forEach(p=>p.classList.remove('on'));
-  const panel = document.getElementById('dp-'+id);
-  if(panel){panel.classList.add('on'); document.getElementById('dashMain').scrollTop=0;}
-  document.querySelectorAll('.dash-nav-item').forEach(i=>i.classList.remove('on'));
-  if(el) el.classList.add('on');
-  else {
-    document.querySelectorAll('.dash-nav-item').forEach(i=>{
-      if(i.getAttribute('onclick')&&i.getAttribute('onclick').includes("'"+id+"'")) i.classList.add('on');
-    });
-  }
-  // Lazy render each panel
-  if(id==='wallet') renderWalletPanel();
-  if(id==='portfolio') renderPortfolioPanel();
-  if(id==='subscription') renderSubscriptionPanel();
-  if(id==='overview') renderDashboard();
-}
-
-// ── MAIN RENDER ───────────────────────────────────────
-function renderDashboard(){
-  if(!CR_USER) return;
-  const sub = getSubInfo();
-
-  // Welcome
-  document.getElementById('dash-welcome-name').textContent = 'Welcome, ' + CR_USER.displayName + '!';
-  document.getElementById('dash-welcome-sub').textContent = 
-    (CR_USER.type==='wallet' ? (CR_USER.walletType||'Wallet')+' user' : 'Email account')
-    + ' · ' + new Date(CR_USER.joinedAt).toLocaleDateString('en', {year:'numeric',month:'short',day:'numeric'});
-
-  // Wallet badge
-  const walletDiv = document.getElementById('dash-welcome-wallet');
-  if(CR_USER.walletAddress){
-    walletDiv.style.display = 'flex';
-    document.getElementById('dash-welcome-addr').textContent = CR_USER.walletAddress.slice(0,8)+'…'+CR_USER.walletAddress.slice(-6);
-    document.getElementById('dash-welcome-wtype').textContent = CR_USER.walletType || 'Wallet';
-  } else {
-    walletDiv.style.display = 'none';
-  }
-
-  // Portfolio value
-  const portfolio = CR_USER.portfolio || [];
-  let totalVal = 0;
-  portfolio.forEach(item=>{
-    const coin = ALL_COINS.find(c=>c.id===item.id||c.symbol.toLowerCase()===(item.symbol||'').toLowerCase());
-    if(coin) totalVal += coin.current_price * (item.amount||0);
-  });
-  document.getElementById('dash-net-worth').textContent = fmt(totalVal);
-  document.getElementById('dash-net-chg').textContent = portfolio.length ? portfolio.length + ' asset' + (portfolio.length===1?'':'s') + ' tracked' : 'No assets tracked';
-  document.getElementById('dash-net-chg').style.color = portfolio.length ? 'var(--accent)' : 'var(--muted)';
-
-  // Stat cards
-  document.getElementById('dash-asset-count').textContent = portfolio.length;
-  document.getElementById('dash-joined').textContent = new Date(CR_USER.joinedAt).toLocaleDateString('en',{month:'short',year:'numeric'});
-
-  // Sub status card
-  const subStatusEl = document.getElementById('dash-sub-status');
-  const subExpEl = document.getElementById('dash-sub-expiry');
-  if(sub.active){
-    subStatusEl.textContent = sub.plan === 'annual' ? 'Annual Pro' : 'Monthly Pro';
-    subStatusEl.style.color = sub.expiring ? 'var(--gold)' : 'var(--accent)';
-    subExpEl.textContent = sub.expiring ? '⚠ Expires in '+sub.daysLeft+'d' : 'Expires in '+sub.daysLeft+' days';
-    subExpEl.style.color = sub.expiring ? 'var(--gold)' : 'var(--muted)';
-  } else {
-    subStatusEl.textContent = sub.expired ? 'Expired' : 'Inactive';
-    subStatusEl.style.color = 'var(--muted)';
-    subExpEl.textContent = 'Subscribe to get access';
-    subExpEl.style.color = 'var(--muted)';
-  }
-
-  // Holdings preview (top 5)
-  renderHoldingsTable(document.getElementById('dash-holdings-preview'), portfolio, 5);
-
-  // Sub quick view
-  renderSubQuick(document.getElementById('dash-sub-quick'), sub);
-}
-
-function renderHoldingsTable(container, portfolio, limit){
-  if(!container) return;
-  if(!portfolio.length){
-    container.innerHTML = `<div class="dash-empty"><div class="dash-empty-icon">📊</div><div class="dash-empty-title">No assets yet</div><div class="dash-empty-sub">Add your crypto holdings to track their value in real-time.</div></div>`;
-    return;
-  }
-  const rows = portfolio.slice(0, limit||999).map(item=>{
-    const coin = ALL_COINS.find(c=>c.id===item.id||c.symbol.toLowerCase()===(item.symbol||'').toLowerCase());
-    const val = coin ? coin.current_price*(item.amount||0) : 0;
-    const chg = coin?.price_change_percentage_24h||0;
-    return {item, coin, val, chg};
-  }).sort((a,b)=>b.val-a.val);
-  const total = rows.reduce((s,r)=>s+r.val,0);
-
-  container.innerHTML = `
-    <table class="dash-asset-table">
-      <thead><tr>
-        <th>Asset</th>
-        <th>Price</th>
-        <th>Holdings</th>
-        <th>Value</th>
-        <th>24h</th>
-        <th>Allocation</th>
-        <th></th>
-      </tr></thead>
-      <tbody>
-        ${rows.map(({item,coin,val,chg})=>{
-          const sym = (item.symbol||item.id||'?').toUpperCase();
-          const col = stringToColor(item.id||sym);
-          const allocPct = total>0 ? (val/total*100).toFixed(1) : 0;
-          return `<tr>
-            <td>
-              <div class="dash-asset-name-cell">
-                <div class="dash-asset-icon" style="background:${col}22;color:${col}">${sym[0]}</div>
-                <div><div class="dash-asset-nm">${coin?.name||sym}</div><div class="dash-asset-sym">${sym}</div></div>
-              </div>
-            </td>
-            <td>${coin?fmt(coin.current_price):'—'}</td>
-            <td>${item.amount} ${sym}</td>
-            <td style="color:#fff;font-weight:700">${fmt(val)}</td>
-            <td style="color:${chg>=0?'var(--accent)':'var(--red)'}">${fmtPct(chg)}</td>
-            <td>
-              <div class="dash-alloc-bar">
-                <div class="dash-alloc-track">
-                  <div class="dash-alloc-fill" style="width:${allocPct}%;background:${col}"></div>
-                </div>
-                <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);width:32px">${allocPct}%</span>
-              </div>
-            </td>
-            <td><button onclick="dashRemoveAsset('${item.id||item.symbol}')" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px 8px;transition:color .15s" title="Remove" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--muted)'">✕</button></td>
-          </tr>`;
-        }).join('')}
-      </tbody>
-    </table>`;
-}
-
-function stringToColor(str){
-  let hash=0;for(let c of str)hash=((hash<<5)-hash)+c.charCodeAt(0);
-  const h=Math.abs(hash)%360, s=60, l=55;
-  return `hsl(${h},${s}%,${l}%)`;
-}
-
-function renderSubQuick(container, sub){
-  if(!container) return;
-  if(sub.active){
-    const cls = sub.expiring ? 'dash-sub-expiring' : 'dash-sub-active';
-    const badgeCls = sub.expiring ? 'expiring' : 'active';
-    const badgeTxt = sub.expiring ? '⚠ EXPIRING SOON' : '✓ ACTIVE';
-    container.innerHTML = `
-      <div class="dash-sub-card ${cls}">
-        <div class="dash-sub-header">
-          <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">ChainRoot Indicator · ${sub.plan==='annual'?'Annual':'Monthly'} Plan</div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">TradingView BUY / SELL Signal Indicator</div>
-          </div>
-          <span class="dash-sub-badge ${badgeCls}">${badgeTxt}</span>
-        </div>
-        ${sub.expiring ? `<div class="dash-expiry-alert"><div class="dash-expiry-alert-icon">⏰</div><div class="dash-expiry-alert-text">Your subscription expires in <strong>${sub.daysLeft} day${sub.daysLeft===1?'':'s'}</strong>. Renew now to avoid losing access to your signals and alerts.</div></div>` : ''}
-        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">
-            Expires: <span style="color:${sub.expiring?'var(--gold)':'var(--text)'}">${new Date(sub.expiresAt).toLocaleDateString('en',{year:'numeric',month:'long',day:'numeric'})}</span>
-          </div>
-          <button class="dash-sub-btn secondary" style="width:auto;padding:8px 18px" onclick="dashNav('subscription',null)">
-            ${sub.expiring ? 'Renew Subscription →' : 'Manage Subscription →'}
-          </button>
-        </div>
-      </div>`;
-  } else {
-    container.innerHTML = `
-      <div class="dash-sub-card dash-sub-inactive">
-        <div class="dash-sub-header">
-          <div>
-            <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:4px">ChainRoot Indicator</div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">Get BUY / SELL signals on TradingView</div>
-          </div>
-          <span class="dash-sub-badge inactive">NOT SUBSCRIBED</span>
-        </div>
-        <div style="font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:16px">
-          Subscribe to ChainRoot Indicator and get professional trading signals directly on TradingView. 
-          Works on all crypto and stock pairs.
-        </div>
-        <button class="dash-sub-btn" style="width:auto;padding:10px 24px" onclick="dashNav('subscription',null)">Subscribe Now →</button>
-      </div>`;
-  }
-}
-
-// ── WALLET PANEL ──────────────────────────────────────
-function renderWalletPanel(){
-  const container = document.getElementById('dash-wallet-detail');
-  const prompt = document.getElementById('dash-wallet-connect-prompt');
-  if(!container) return;
-  if(!CR_USER?.walletAddress){
-    container.innerHTML = `
-      <div class="dash-empty">
-        <div class="dash-empty-icon">🔗</div>
-        <div class="dash-empty-title">No wallet connected</div>
-        <div class="dash-empty-sub">Connect a Web3 wallet to see your on-chain assets and portfolio automatically.<br/>Your keys stay with you — we never store private keys.</div>
-        <button class="dash-add-btn" style="margin:16px auto 0;padding:12px 24px" onclick="closeDashboard();openAuth('register')">Connect Wallet →</button>
-      </div>`;
-    if(prompt) prompt.innerHTML='';
-    return;
-  }
-  const addr = CR_USER.walletAddress;
-  const wtype = CR_USER.walletType || 'Wallet';
-  const isEVM = wtype==='metamask'||wtype==='coinbase'||wtype==='walletconnect';
-  const isSol = wtype==='phantom';
-  container.innerHTML = `
-    <div class="dash-wallet-header">
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff">Connected Wallet</div>
-      <div class="dash-wallet-chain-badge">
-        <div class="dash-wallet-chain-dot"></div>
-        <span>${isSol?'Solana':'Ethereum'} Network</span>
-      </div>
-    </div>
-    <div class="dash-wallet-grid">
-      <div class="dash-wallet-field" style="grid-column:1/-1">
-        <div class="dash-wallet-field-label">Wallet Address</div>
-        <div class="dash-wallet-field-value" style="color:var(--accent);cursor:pointer;display:flex;align-items:center;gap:8px" onclick="copyToClipboard('${addr}',this)">
-          <span>${addr}</span>
-          <span style="font-size:11px;flex-shrink:0;opacity:.7">📋</span>
-        </div>
-      </div>
-      <div class="dash-wallet-field">
-        <div class="dash-wallet-field-label">Wallet Type</div>
-        <div class="dash-wallet-field-value" style="text-transform:capitalize">${wtype}</div>
-      </div>
-      <div class="dash-wallet-field">
-        <div class="dash-wallet-field-label">Network</div>
-        <div class="dash-wallet-field-value">${isSol?'Solana (SOL)':isEVM?'Ethereum (EVM)':'Multi-chain'}</div>
-      </div>
-      <div class="dash-wallet-field">
-        <div class="dash-wallet-field-label">Short Address</div>
-        <div class="dash-wallet-field-value">${addr.slice(0,6)}…${addr.slice(-4)}</div>
-      </div>
-    </div>
-    <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
-      <button class="dash-add-btn" onclick="copyToClipboard('${addr}',this)">📋 Copy Address</button>
-      <a href="${isSol?'https://solscan.io/account/'+addr:'https://etherscan.io/address/'+addr}" target="_blank" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:rgba(0,180,216,.08);border:1px solid rgba(0,180,216,.25);border-radius:5px;font-family:'Space Mono',monospace;font-size:10px;color:var(--blue);text-decoration:none;transition:all .15s">🔍 View on Explorer</a>
-    </div>`;
-  if(prompt) prompt.innerHTML='';
-}
-
-function copyToClipboard(text, btn){
-  navigator.clipboard?.writeText(text).then(()=>{
-    const orig = btn.innerHTML;
-    btn.style.color='var(--accent)';
-    if(btn.tagName==='BUTTON') btn.textContent='✓ Copied!';
-    setTimeout(()=>{ btn.innerHTML=orig; btn.style.color=''; },2000);
-  }).catch(()=>toast('Copy failed','var(--red)'));
-}
-
-// ── PORTFOLIO PANEL ───────────────────────────────────
-function renderPortfolioPanel(){
-  const portfolio = CR_USER?.portfolio || [];
-  let totalVal = 0;
-  portfolio.forEach(item=>{
-    const coin = ALL_COINS.find(c=>c.id===item.id||c.symbol.toLowerCase()===(item.symbol||'').toLowerCase());
-    if(coin) totalVal += coin.current_price*(item.amount||0);
-  });
-  const totalEl = document.getElementById('port-total-val');
-  const cntEl = document.getElementById('port-asset-cnt');
-  if(totalEl) totalEl.textContent = fmt(totalVal);
-  if(cntEl) cntEl.textContent = portfolio.length;
-  renderHoldingsTable(document.getElementById('dash-full-portfolio'), portfolio);
-}
-
-function dashAddAsset(){
-  const sym = prompt('Enter coin symbol (e.g. BTC, ETH, SOL):');
-  if(!sym) return;
-  const amt = parseFloat(prompt('Enter amount you hold:'));
-  if(!amt||isNaN(amt)) return;
-  const coin = ALL_COINS.find(c=>c.symbol.toLowerCase()===sym.toLowerCase());
-  const entry = {id:coin?.id||sym.toLowerCase(), symbol:sym.toUpperCase(), amount:amt};
-  if(!CR_USER.portfolio) CR_USER.portfolio=[];
-  CR_USER.portfolio.push(entry);
-  DB.save(CR_USER);
-  const users=DB.getUsers();
-  const key=CR_USER.email||'wallet_'+CR_USER.walletAddress;
-  if(users[key]) users[key].portfolio=CR_USER.portfolio;
-  try{localStorage.setItem('cr_users',JSON.stringify(users));}catch(e){}
-  renderPortfolioPanel();
-  renderDashboard();
-  toast('Asset added!','#00e87a');
-}
-
-function dashRemoveAsset(idOrSym){
-  if(!CR_USER?.portfolio) return;
-  CR_USER.portfolio = CR_USER.portfolio.filter(a=>a.id!==idOrSym&&a.symbol!==idOrSym);
-  DB.save(CR_USER);
-  renderPortfolioPanel();
-  renderDashboard();
-  toast('Asset removed','#4d6475');
-}
-
-// ── SUBSCRIPTION PANEL ────────────────────────────────
-function renderSubscriptionPanel(){
-  const sub = getSubInfo();
-  const card = document.getElementById('dash-sub-main-card');
-  const plansSection = document.getElementById('dash-sub-plans-section');
-
-  if(sub.active){
-    const cls = sub.expiring ? 'dash-sub-expiring' : 'dash-sub-active';
-    card.className = 'dash-sub-card ' + cls;
-    card.innerHTML = `
-      <div class="dash-sub-header">
-        <div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">
-            ChainRoot Indicator — ${sub.plan==='annual'?'Annual':'Monthly'} Plan
-          </div>
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">TradingView BUY/SELL Signal Indicator</div>
-        </div>
-        <span class="dash-sub-badge ${sub.expiring?'expiring':'active'}">${sub.expiring?'⚠ EXPIRING SOON':'✓ ACTIVE'}</span>
-      </div>
-      ${sub.expiring ? `
-      <div class="dash-expiry-alert">
-        <div class="dash-expiry-alert-icon">⏰</div>
-        <div class="dash-expiry-alert-text">
-          <strong>Action required:</strong> Your subscription expires in <strong>${sub.daysLeft} day${sub.daysLeft===1?'':'s'}</strong> 
-          on ${new Date(sub.expiresAt).toLocaleDateString('en',{year:'numeric',month:'long',day:'numeric'})}.
-          Renew now to keep uninterrupted access to your signals and alerts.
-        </div>
-      </div>` : ''}
-      <div class="dash-sub-info-grid">
-        <div class="dash-sub-info-item">
-          <div class="dash-sub-info-label">Plan</div>
-          <div class="dash-sub-info-value">${sub.plan==='annual'?'Annual':'Monthly'}</div>
-          <div class="dash-sub-info-sub">${sub.plan==='annual'?'$69/year · 36% off':'$9/month'}</div>
-        </div>
-        <div class="dash-sub-info-item">
-          <div class="dash-sub-info-label">Status</div>
-          <div class="dash-sub-info-value" style="color:${sub.expiring?'var(--gold)':'var(--accent)'}">${sub.expiring?'Expiring Soon':'Active'}</div>
-          <div class="dash-sub-info-sub">${sub.daysLeft} day${sub.daysLeft===1?'':'s'} remaining</div>
-        </div>
-        <div class="dash-sub-info-item">
-          <div class="dash-sub-info-label">Expiry Date</div>
-          <div class="dash-sub-info-value" style="font-size:11px">${new Date(sub.expiresAt).toLocaleDateString('en',{month:'short',day:'numeric',year:'numeric'})}</div>
-          <div class="dash-sub-info-sub">Auto-renews on expiry</div>
-        </div>
-      </div>
-      <div style="display:flex;gap:10px;flex-wrap:wrap">
-        <button class="dash-sub-btn" style="width:auto;padding:10px 22px" onclick="dashSubscribe(${sub.plan==="annual"?"'annual'":"'monthly'"})">
-          ${sub.expiring ? '↻ Renew Subscription →' : '↑ Upgrade to Annual →'}
-        </button>
-        <button class="dash-sub-btn secondary" style="width:auto;padding:10px 22px" onclick="toast('Support contact coming soon','#4d6475')">Contact Support</button>
-      </div>`;
-  } else {
-    card.className = 'dash-sub-card dash-sub-inactive';
-    card.innerHTML = `
-      <div class="dash-sub-header">
-        <div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:800;color:#fff;margin-bottom:4px">
-            ${sub.expired ? 'Subscription Expired' : 'No Active Subscription'}
-          </div>
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">Subscribe to get your indicator access</div>
-        </div>
-        <span class="dash-sub-badge inactive">${sub.expired?'EXPIRED':'INACTIVE'}</span>
-      </div>
-      <div style="font-family:'Inter',sans-serif;font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:0">
-        ${sub.expired 
-          ? 'Your previous subscription has expired. Renew below to restore access to your ChainRoot indicator signals and alerts.'
-          : 'Choose a plan below to get access to ChainRoot\'s professional TradingView indicator with real-time BUY / SELL signals.'
-        }
-      </div>`;
-  }
-
-  // Plans section
-  if(!sub.active || sub.expiring){
-    plansSection.innerHTML = `
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;color:#fff;margin-bottom:14px">
-        ${sub.expiring ? 'Renew Your Subscription' : 'Choose a Plan'}
-      </div>
-      <div class="dash-sub-plans">
-        <div class="dash-plan">
-          <div class="dash-plan-badge">Monthly</div>
-          <div class="dash-plan-name">Monthly Plan</div>
-          <div class="dash-plan-price">$9<span>/month</span></div>
-          <div class="dash-plan-period">Billed monthly · cancel anytime</div>
-          <ul class="dash-plan-features">
-            <li>TradingView indicator access</li>
-            <li>BUY / SELL signals</li>
-            <li>Custom alert setup</li>
-            <li>Mongolian support</li>
-          </ul>
-          <button class="dash-sub-btn secondary" onclick="dashSubscribe('monthly')">Subscribe Monthly →</button>
-        </div>
-        <div class="dash-plan featured">
-          <div class="dash-plan-badge">✦ Best Value · Save 36%</div>
-          <div class="dash-plan-name">Annual Plan</div>
-          <div class="dash-plan-price">$69<span>/year</span></div>
-          <div class="dash-plan-period" style="color:var(--accent)">Save $39 vs monthly</div>
-          <ul class="dash-plan-features">
-            <li>Everything in Monthly</li>
-            <li>Free indicator updates</li>
-            <li>Priority support</li>
-            <li>Lock in the low price</li>
-          </ul>
-          <button class="dash-sub-btn" onclick="dashSubscribe('annual')">Subscribe Annual →</button>
-        </div>
-      </div>`;
-  } else {
-    plansSection.innerHTML = '';
-  }
-}
-
-function dashSubscribe(plan){
-  // Simulate subscription purchase (wire to real payment in production)
-  const sub = SubDB.demo(plan);
-  toast(plan==='annual' ? '✓ Annual plan activated!' : '✓ Monthly plan activated!', '#00e87a');
-  renderSubscriptionPanel();
-  renderDashboard();
-  updateTopbarLoggedIn();
-}
-
-window.openDashboard = openDashboard;
-window.closeDashboard = closeDashboard;
-window.dashNav = dashNav;
-window.dashAddAsset = dashAddAsset;
-window.dashRemoveAsset = dashRemoveAsset;
-window.dashSubscribe = dashSubscribe;
-window.getSubInfo = getSubInfo;
-window.checkSubExpiry = checkSubExpiry;
 </script>
 </body>
 </html>
