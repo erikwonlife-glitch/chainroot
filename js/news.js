@@ -189,16 +189,24 @@ const NEWS = (function(){
     var bull=filtered.filter(function(a){return a.sentiment==='bullish';}).length;
     var bear=filtered.filter(function(a){return a.sentiment==='bearish';}).length;
     var neut=filtered.length-bull-bear,tot=filtered.length||1;
-    var bb=document.getElementById('news-bull-bar'),nb=document.getElementById('news-neut-bar'),rb=document.getElementById('news-bear-bar'),st=document.getElementById('news-sentiment-txt');
+    // Progress bar
+    var bb=document.getElementById('news-bull-bar'),nb=document.getElementById('news-neut-bar'),rb=document.getElementById('news-bear-bar');
     if(bb)bb.style.width=(bull/tot*100).toFixed(1)+'%';
     if(nb)nb.style.width=(neut/tot*100).toFixed(1)+'%';
     if(rb)rb.style.width=(bear/tot*100).toFixed(1)+'%';
-    if(st){st.textContent=bull>bear*1.5?'Bullish 📈':bear>bull*1.5?'Bearish 📉':'Neutral ↔';st.style.color=bull>bear*1.5?'var(--accent)':bear>bull*1.5?'var(--red)':'var(--muted)';}
+    // Big sentiment label
+    var st=document.getElementById('news-sentiment-txt');
+    if(st){
+      var isBull=bull>bear*1.5, isBear=bear>bull*1.5;
+      st.textContent=isBull?'Bullish 📈':isBear?'Bearish 📉':'Neutral ↔';
+      st.style.color=isBull?'var(--accent)':isBear?'var(--red)':'var(--muted)';
+    }
+    // Big number cards
     var nsTotal=document.getElementById('ns-total'),nsBull=document.getElementById('ns-bull'),nsBear=document.getElementById('ns-bear'),nsSrc=document.getElementById('ns-src');
-    if(nsTotal)nsTotal.textContent=filtered.length+' articles';
-    if(nsBull)nsBull.textContent=bull+' bullish';
-    if(nsBear)nsBear.textContent=bear+' bearish';
-    if(nsSrc)nsSrc.textContent=new Set(allArticles.map(function(a){return a.source;})).size+' sources';
+    if(nsTotal)nsTotal.textContent=filtered.length;
+    if(nsBull)nsBull.textContent=bull;
+    if(nsBear)nsBear.textContent=bear;
+    if(nsSrc)nsSrc.textContent=new Set(allArticles.map(function(a){return a.source;})).size+' эх сурвалж';
   }
 
   function applyFilter(){
