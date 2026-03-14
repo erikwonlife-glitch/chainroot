@@ -6148,79 +6148,94 @@ function setSiteLang(lang) {
 (function(){
 
 const CR_API_GA = 'https://chainroot-production.up.railway.app';
-const FH_KEY_GA = 'd0eaie9r01qgv48uo9igd0eaie9r01qgv48uo9j0';
 
-// ── Static non-crypto assets with known market caps ───────────────────────────
-// Market caps in $T — sourced from public financial data, updated periodically
-const STATIC_ASSETS = [
-  // Commodities — market caps calculated from world supply × price
-  {id:'gold',      name:'Gold',              ticker:'GOLD',   type:'Commodity', mcapT:34.9,  price:3050,  chg24:null, fhTicker:'OANDA:XAUUSD', logo:'https://assets.coingecko.com/coins/images/944/large/pax-gold.png'},
-  {id:'silver',    name:'Silver',            ticker:'SILVER', type:'Commodity', mcapT:4.5,   price:34,    chg24:null, fhTicker:'OANDA:XAGUSD', logo:'https://assets.coingecko.com/coins/images/14119/large/paxg.png'},
-  {id:'crude-oil', name:'Crude Oil',         ticker:'WTI',    type:'Commodity', mcapT:2.1,   price:68,    chg24:null, fhTicker:null,            logo:null},
-  // Major Stocks — logos via Clearbit
-  {id:'nvda', name:'NVIDIA',           ticker:'NVDA',  type:'Stock', mcapT:3.3, price:null, chg24:null, fhTicker:'NVDA',  logo:'https://logo.clearbit.com/nvidia.com'},
-  {id:'aapl', name:'Apple',            ticker:'AAPL',  type:'Stock', mcapT:3.7, price:null, chg24:null, fhTicker:'AAPL',  logo:'https://logo.clearbit.com/apple.com'},
-  {id:'msft', name:'Microsoft',        ticker:'MSFT',  type:'Stock', mcapT:3.1, price:null, chg24:null, fhTicker:'MSFT',  logo:'https://logo.clearbit.com/microsoft.com'},
-  {id:'amzn', name:'Amazon',           ticker:'AMZN',  type:'Stock', mcapT:2.3, price:null, chg24:null, fhTicker:'AMZN',  logo:'https://logo.clearbit.com/amazon.com'},
-  {id:'goog', name:'Alphabet (Google)',ticker:'GOOG',  type:'Stock', mcapT:2.0, price:null, chg24:null, fhTicker:'GOOGL', logo:'https://logo.clearbit.com/google.com'},
-  {id:'meta', name:'Meta',             ticker:'META',  type:'Stock', mcapT:1.7, price:null, chg24:null, fhTicker:'META',  logo:'https://logo.clearbit.com/meta.com'},
-  {id:'tsla', name:'Tesla',            ticker:'TSLA',  type:'Stock', mcapT:0.9, price:null, chg24:null, fhTicker:'TSLA',  logo:'https://logo.clearbit.com/tesla.com'},
-  {id:'brk',  name:'Berkshire Hath.',  ticker:'BRK.B', type:'Stock', mcapT:1.1, price:null, chg24:null, fhTicker:'BRK.B', logo:'https://logo.clearbit.com/berkshirehathaway.com'},
-  {id:'tsm',  name:'TSMC',             ticker:'TSM',   type:'Stock', mcapT:0.9, price:null, chg24:null, fhTicker:'TSM',   logo:'https://logo.clearbit.com/tsmc.com'},
-  {id:'eli',  name:'Eli Lilly',        ticker:'LLY',   type:'Stock', mcapT:0.8, price:null, chg24:null, fhTicker:'LLY',   logo:'https://logo.clearbit.com/lilly.com'},
-  {id:'jpm',  name:'JPMorgan Chase',   ticker:'JPM',   type:'Stock', mcapT:0.7, price:null, chg24:null, fhTicker:'JPM',   logo:'https://logo.clearbit.com/jpmorganchase.com'},
-  {id:'v',    name:'Visa',             ticker:'V',     type:'Stock', mcapT:0.6, price:null, chg24:null, fhTicker:'V',     logo:'https://logo.clearbit.com/visa.com'},
-  {id:'wmt',  name:'Walmart',          ticker:'WMT',   type:'Stock', mcapT:0.8, price:null, chg24:null, fhTicker:'WMT',   logo:'https://logo.clearbit.com/walmart.com'},
-  {id:'xom',  name:'ExxonMobil',       ticker:'XOM',   type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'XOM',   logo:'https://logo.clearbit.com/exxonmobil.com'},
-  {id:'nflx', name:'Netflix',          ticker:'NFLX',  type:'Stock', mcapT:0.4, price:null, chg24:null, fhTicker:'NFLX',  logo:'https://logo.clearbit.com/netflix.com'},
-  {id:'unh',  name:'UnitedHealth',     ticker:'UNH',   type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'UNH',   logo:'https://logo.clearbit.com/unitedhealthgroup.com'},
-  {id:'cost', name:'Costco',           ticker:'COST',  type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'COST',  logo:'https://logo.clearbit.com/costco.com'},
-];
+// ── Inline SVG logos for major stocks (guaranteed to render) ──────────────────
+const STOCK_LOGOS = {
+  nvda: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#76b900"/><path fill="#fff" d="M14 52V30h6l14 14.5V30h6v22h-6L20 37.5V52zm28-22h18c4 0 6 2 6 6v10c0 4-2 6-6 6H42zm6 5v12h10c1.1 0 2-.9 2-2V39c0-1.1-.9-2-2-2z"/></svg>`,
+  aapl: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#1c1c1e"/><path fill="#fff" d="M53.2 42.5c-.1-6 5-8.9 5.2-9-2.8-4.1-7.2-4.7-8.8-4.8-3.8-.4-7.3 2.2-9.2 2.2-1.9 0-4.8-2.1-7.9-2-4.1.1-7.8 2.4-9.9 6-4.2 7.3-1.1 18.2 3 24.2 2 2.9 4.4 6.2 7.5 6.1 3-.1 4.2-2 7.8-2 3.7 0 4.7 2 7.9 1.9 3.2-.1 5.3-3 7.3-6 2.3-3.4 3.2-6.8 3.3-7-.1-.1-6.3-2.4-6.3-9.6zm-5.8-17.6c1.7-2 2.8-4.8 2.5-7.6-2.4.1-5.3 1.6-7 3.6-1.5 1.8-2.9 4.6-2.5 7.3 2.7.2 5.4-1.4 7-3.3z"/></svg>`,
+  msft: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#fff"/><rect x="10" y="10" width="27" height="27" fill="#F25022"/><rect x="43" y="10" width="27" height="27" fill="#7FBA00"/><rect x="10" y="43" width="27" height="27" fill="#00A4EF"/><rect x="43" y="43" width="27" height="27" fill="#FFB900"/></svg>`,
+  amzn: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#FF9900"/><text x="8" y="46" fill="#fff" font-family="Arial" font-weight="900" font-size="22">amzn</text><path fill="#fff" d="M15 55c16-6 32-6 50 0" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+  goog: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#fff"/><path fill="#4285F4" d="M40 34h20v4H44v4h14c-.8 8-7.4 14-18 14-10 0-18-8-18-18s8-18 18-18c5 0 9 2 12 5l-3 3c-2-2-5-3-9-3-7 0-13 6-13 13s6 13 13 13c7 0 11-4 12-10H40z"/></svg>`,
+  meta: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#0082fb"/><path fill="#fff" d="M18 50c0 4 2 6 5 6 2 0 4-1 6-4l10-17 10 17c2 3 4 4 6 4 3 0 5-2 5-6V30h-6v18l-8-14h-3l-8 14V30H18z"/></svg>`,
+  tsla: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#CC0000"/><path fill="#fff" d="M40 62L28 30h6l6 18 6-18h6zm-20-38h40v5H44v5h-8v-5H20z"/></svg>`,
+  brk:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#4d6475"/><text x="14" y="50" fill="#fff" font-family="Arial" font-weight="900" font-size="28">BRK</text></svg>`,
+  tsm:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#00b4d8"/><text x="14" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="30">TSM</text></svg>`,
+  eli:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#e3145d"/><text x="20" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="30">LLY</text></svg>`,
+  jpm:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#005eb8"/><text x="16" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="28">JPM</text></svg>`,
+  v:    `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#1a1f71"/><text x="18" y="58" fill="#fff" font-family="Arial" font-weight="900" font-size="52">V</text></svg>`,
+  wmt:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#0071ce"/><text x="12" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="28">WMT</text></svg>`,
+  xom:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#e31b23"/><text x="14" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="30">XOM</text></svg>`,
+  nflx: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#e50914"/><text x="18" y="54" fill="#fff" font-family="Arial" font-weight="900" font-size="44">N</text></svg>`,
+  unh:  `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#2375bb"/><text x="14" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="28">UNH</text></svg>`,
+  cost: `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><rect width="80" height="80" rx="12" fill="#e31837"/><text x="10" y="52" fill="#fff" font-family="Arial" font-weight="900" font-size="28">COST</text></svg>`,
+};
+
+const COMMODITY_LOGOS = {
+  gold:      `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="40" fill="url(#gg)"/><defs><radialGradient id="gg" cx="35%" cy="35%"><stop offset="0%" stop-color="#ffe566"/><stop offset="60%" stop-color="#f4c542"/><stop offset="100%" stop-color="#b8860b"/></radialGradient></defs><text x="22" y="52" fill="#7a5c00" font-family="Arial" font-weight="900" font-size="28">Au</text></svg>`,
+  silver:    `<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="40" fill="url(#sg)"/><defs><radialGradient id="sg" cx="35%" cy="35%"><stop offset="0%" stop-color="#f0f0f0"/><stop offset="60%" stop-color="#c0c0c0"/><stop offset="100%" stop-color="#808080"/></radialGradient></defs><text x="22" y="52" fill="#444" font-family="Arial" font-weight="900" font-size="28">Ag</text></svg>`,
+  'crude-oil':`<svg viewBox="0 0 80 80" xmlns="http://www.w3.org/2000/svg"><circle cx="40" cy="40" r="40" fill="#1a1a2e"/><text x="18" y="48" fill="#ff7c3a" font-family="Arial" font-weight="900" font-size="22">OIL</text><path d="M28 58 Q40 48 52 58" stroke="#ff7c3a" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`,
+};
 
 const TYPE_BADGE = {
-  'Commodity': `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(244,197,66,.15);color:#f4c542;border:1px solid rgba(244,197,66,.3)">Commodity</span>`,
-  'Stock':     `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(77,100,117,.2);color:#8aa0b0;border:1px solid rgba(77,100,117,.3)">Stock</span>`,
-  'Crypto':    `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(0,232,122,.12);color:#00e87a;border:1px solid rgba(0,232,122,.25)">Crypto</span>`,
+  Commodity: `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(244,197,66,.15);color:#f4c542;border:1px solid rgba(244,197,66,.3)">Commodity</span>`,
+  Stock:     `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(77,100,117,.2);color:#8aa0b0;border:1px solid rgba(77,100,117,.3)">Stock</span>`,
+  Crypto:    `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(0,232,122,.12);color:#00e87a;border:1px solid rgba(0,232,122,.25)">Crypto</span>`,
 };
 
-// Commodity fallback SVG logos
-const COMMODITY_SVG = {
-  'gold':      `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f4c542,#b8860b);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🪙</div>`,
-  'silver':    `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d0d0d0,#888);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥈</div>`,
-  'crude-oil': `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#333,#111);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🛢</div>`,
-};
+// Base static data — prices + 24h fetched live from backend
+const BASE_ASSETS = [
+  {id:'gold',      name:'Gold',             ticker:'XAU/USD', type:'Commodity', mcapT:34.9},
+  {id:'silver',    name:'Silver',           ticker:'XAG/USD', type:'Commodity', mcapT:4.5},
+  {id:'crude-oil', name:'Crude Oil',        ticker:'WTI',     type:'Commodity', mcapT:2.1},
+  {id:'nvda', name:'NVIDIA',           ticker:'NVDA',  type:'Stock', mcapT:3.3},
+  {id:'aapl', name:'Apple',            ticker:'AAPL',  type:'Stock', mcapT:3.7},
+  {id:'msft', name:'Microsoft',        ticker:'MSFT',  type:'Stock', mcapT:3.1},
+  {id:'amzn', name:'Amazon',           ticker:'AMZN',  type:'Stock', mcapT:2.3},
+  {id:'goog', name:'Alphabet (Google)',ticker:'GOOG',  type:'Stock', mcapT:2.0},
+  {id:'meta', name:'Meta',             ticker:'META',  type:'Stock', mcapT:1.7},
+  {id:'tsla', name:'Tesla',            ticker:'TSLA',  type:'Stock', mcapT:0.9},
+  {id:'brk',  name:'Berkshire Hath.',  ticker:'BRK.B', type:'Stock', mcapT:1.1},
+  {id:'tsm',  name:'TSMC',             ticker:'TSM',   type:'Stock', mcapT:0.9},
+  {id:'eli',  name:'Eli Lilly',        ticker:'LLY',   type:'Stock', mcapT:0.8},
+  {id:'jpm',  name:'JPMorgan Chase',   ticker:'JPM',   type:'Stock', mcapT:0.7},
+  {id:'v',    name:'Visa',             ticker:'V',     type:'Stock', mcapT:0.6},
+  {id:'wmt',  name:'Walmart',          ticker:'WMT',   type:'Stock', mcapT:0.8},
+  {id:'xom',  name:'ExxonMobil',       ticker:'XOM',   type:'Stock', mcapT:0.5},
+  {id:'nflx', name:'Netflix',          ticker:'NFLX',  type:'Stock', mcapT:0.4},
+  {id:'unh',  name:'UnitedHealth',     ticker:'UNH',   type:'Stock', mcapT:0.5},
+  {id:'cost', name:'Costco',           ticker:'COST',  type:'Stock', mcapT:0.5},
+];
 
 let GA_ALL = [], GA_FILTERED = [];
 
 function fmtMcap(t) {
-  if (!t && t !== 0) return '—';
-  if (t >= 1)   return '$' + t.toFixed(2) + 'T';
-  if (t >= 0.1) return '$' + (t * 1000).toFixed(0) + 'B';
-  return '$' + (t * 1000).toFixed(1) + 'B';
+  if (!t && t!==0) return '—';
+  if (t >= 1)   return '$'+t.toFixed(2)+'T';
+  if (t >= 0.1) return '$'+(t*1000).toFixed(0)+'B';
+  return '$'+(t*1000).toFixed(1)+'B';
 }
 function fmtGaPrice(p) {
-  if (p == null) return '—';
-  if (p >= 1000) return '$' + p.toLocaleString('en-US', {maximumFractionDigits:2});
-  if (p >= 1)    return '$' + p.toFixed(2);
-  if (p >= 0.01) return '$' + p.toFixed(4);
-  return '$' + p.toFixed(6);
+  if (p==null) return '—';
+  if (p >= 1000) return '$'+p.toLocaleString('en-US',{maximumFractionDigits:2});
+  if (p >= 1)    return '$'+p.toFixed(2);
+  if (p >= 0.01) return '$'+p.toFixed(4);
+  return '$'+p.toFixed(6);
 }
 
 function getLogo(a) {
-  const size = 'width:36px;height:36px;flex-shrink:0;';
-  // Commodity SVG fallback
-  if (a.type === 'Commodity') return COMMODITY_SVG[a.id] || `<div style="${size}border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px">💎</div>`;
-  // Crypto — use CoinGecko image (already a URL)
+  const wrap = 'width:36px;height:36px;border-radius:8px;overflow:hidden;flex-shrink:0;display:flex;align-items:center;justify-content:center;';
+  if (a.type === 'Commodity') {
+    return `<div style="${wrap}border-radius:50%">${COMMODITY_LOGOS[a.id]||'💎'}</div>`;
+  }
+  if (a.type === 'Stock' && STOCK_LOGOS[a.id]) {
+    return `<div style="${wrap}">${STOCK_LOGOS[a.id]}</div>`;
+  }
   if (a.type === 'Crypto' && a.logo) {
-    return `<img src="${a.logo}" style="${size}border-radius:50%;object-fit:cover;" loading="lazy"
-      onerror="this.outerHTML='<div style=\\'${size}border-radius:50%;background:'+encodeURIComponent('#'+a.color.slice(1))+'22;display:flex;align-items:center;justify-content:center;font-family:Space Mono,monospace;font-size:11px;font-weight:700;color:${a.color}\\'>${a.ticker[0]}</div>'"/>`;
+    return `<img src="${a.logo}" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;object-fit:cover" loading="lazy" onerror="this.style.opacity='.3'"/>`;
   }
-  // Stock — Clearbit logo with letter fallback
-  if (a.logo) {
-    const fb = `<div style="${size}border-radius:8px;background:${a.color||'#333'}22;border:1px solid ${a.color||'#333'}44;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${a.color||'#aaa'}">${a.ticker.slice(0,3)}</div>`;
-    return `<img src="${a.logo}" style="${size}border-radius:8px;object-fit:contain;background:#fff;padding:2px;" loading="lazy" onerror="this.outerHTML=\`${fb.replace(/`/g,"'")}\`"/>`;
-  }
-  return `<div style="${size}border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${a.ticker.slice(0,3)}</div>`;
+  // Fallback letter badge
+  const col = a.type==='Crypto'?'#F7931A':a.type==='Stock'?'#4d6475':'#f4c542';
+  return `<div style="${wrap}background:${col}22;border:1px solid ${col}44"><span style="font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${col}">${(a.ticker||'?').slice(0,3)}</span></div>`;
 }
 
 function renderGA() {
@@ -6229,22 +6244,22 @@ function renderGA() {
   const list = GA_FILTERED.length ? GA_FILTERED : GA_ALL;
   if (!list.length) return;
   tbody.innerHTML = list.map(function(a, i) {
-    const chgColor = a.chg24 == null ? 'var(--muted)' : a.chg24 >= 0 ? '#00e87a' : '#ff4560';
-    const chgText  = a.chg24 == null ? '—' : (a.chg24 >= 0 ? '+' : '') + a.chg24.toFixed(2) + '%';
+    const chgCol  = a.chg24==null ? '#4d6475' : a.chg24>=0 ? '#00e87a' : '#ff4560';
+    const chgText = a.chg24==null ? '—' : (a.chg24>=0?'+':'')+a.chg24.toFixed(2)+'%';
     return `<tr style="border-bottom:1px solid rgba(28,45,56,.5);transition:background .12s" onmouseover="this.style.background='rgba(0,232,122,.025)'" onmouseout="this.style.background=''">
-      <td style="padding:13px 16px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);width:44px">${i+1}</td>
+      <td style="padding:13px 16px;font-family:'Space Mono',monospace;font-size:11px;color:#4d6475;width:44px">${i+1}</td>
       <td style="padding:13px 16px">
         <div style="display:flex;align-items:center;gap:14px">
           ${getLogo(a)}
           <div>
             <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.2">${a.name}</div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">${a.ticker}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;margin-top:2px">${a.ticker}</div>
           </div>
         </div>
       </td>
       <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;text-align:right;white-space:nowrap">${fmtMcap(a.mcapT)}</td>
-      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);text-align:right;white-space:nowrap">${fmtGaPrice(a.price)}</td>
-      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;color:${chgColor};text-align:right;white-space:nowrap">${chgText}</td>
+      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;color:#ccd8df;text-align:right;white-space:nowrap">${fmtGaPrice(a.price)}</td>
+      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;font-weight:600;color:${chgCol};text-align:right;white-space:nowrap">${chgText}</td>
       <td style="padding:13px 16px;text-align:center;white-space:nowrap">${TYPE_BADGE[a.type]||''}</td>
     </tr>`;
   }).join('');
@@ -6252,81 +6267,76 @@ function renderGA() {
 
 window.gaFilter = function(q) {
   const ql = (q||'').toLowerCase();
-  GA_FILTERED = ql ? GA_ALL.filter(function(a){ return a.name.toLowerCase().includes(ql)||a.ticker.toLowerCase().includes(ql); }) : [];
+  GA_FILTERED = ql ? GA_ALL.filter(function(a){return a.name.toLowerCase().includes(ql)||a.ticker.toLowerCase().includes(ql);}) : [];
   renderGA();
 };
 
 async function loadGlobalAssets() {
   const tbody = document.getElementById('gaBody');
-  if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
-    <div style="width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>
-    LOADING ASSETS…</td></tr>`;
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:60px;font-family:'Space Mono',monospace;font-size:11px;color:#4d6475;letter-spacing:2px">
+    <div style="width:18px;height:18px;border:2px solid #243844;border-top-color:#00e87a;border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
+    LOADING GLOBAL ASSETS…</td></tr>`;
 
-  const assets = STATIC_ASSETS.map(function(a){ return Object.assign({},a); });
+  // Build asset map from base
+  const assetMap = {};
+  BASE_ASSETS.forEach(function(a){ assetMap[a.id] = Object.assign({price:null,chg24:null}, a); });
 
-  // ── Step 1: Get crypto — Railway first, fall back to ALL_COINS already in memory
-  let cryptoCoins = [];
+  // ── Fetch live prices from Railway backend ────────────────────────────────────
   try {
-    const r = await fetch(CR_API_GA + '/api/crypto/markets', {signal:AbortSignal.timeout(12000)});
+    const r = await fetch(CR_API_GA + '/api/global/prices', {signal:AbortSignal.timeout(20000)});
     if (r.ok) {
       const d = await r.json();
-      if (Array.isArray(d) && d.length) cryptoCoins = d;
+      // Stocks
+      Object.keys(d.stocks||{}).forEach(function(id) {
+        if (assetMap[id]) {
+          assetMap[id].price = d.stocks[id].price;
+          assetMap[id].chg24 = d.stocks[id].chg24;
+        }
+      });
+      // Commodities
+      Object.keys(d.commodities||{}).forEach(function(id) {
+        if (assetMap[id]) {
+          assetMap[id].price = d.commodities[id].price;
+          assetMap[id].chg24 = d.commodities[id].chg24;
+        }
+      });
     }
-  } catch(e) {}
+  } catch(e) { console.warn('global/prices failed:', e.message); }
 
-  // ALL_COINS is populated by init() — guaranteed to have Bitcoin as #1
-  if (!cryptoCoins.length && typeof ALL_COINS !== 'undefined' && ALL_COINS.length) {
-    cryptoCoins = ALL_COINS;
-  }
-
-  cryptoCoins.forEach(function(c) {
-    if (!c.market_cap || c.market_cap < 1e9) return; // skip < $1B mcap
-    assets.push({
+  // ── Get crypto from ALL_COINS (already in memory) ─────────────────────────────
+  const cryptoSource = (typeof ALL_COINS !== 'undefined' && ALL_COINS.length) ? ALL_COINS : [];
+  const cryptoAssets = cryptoSource
+    .filter(function(c){ return c.market_cap && c.market_cap >= 1e9; })
+    .map(function(c){ return {
       id:    c.id,
       name:  c.name,
       ticker:(c.symbol||'').toUpperCase(),
       type:  'Crypto',
-      mcapT: +(c.market_cap / 1e12).toFixed(6),
+      mcapT: +(c.market_cap/1e12).toFixed(6),
       price: c.current_price,
-      chg24: c.price_change_percentage_24h != null ? +c.price_change_percentage_24h.toFixed(2) : null,
-      logo:  c.image || null,
-      color: '#F7931A',
-      fhTicker: null
-    });
-  });
+      chg24: c.price_change_percentage_24h!=null ? +c.price_change_percentage_24h.toFixed(2) : null,
+      logo:  c.image||null,
+    };});
 
-  // ── Step 2: Live Finnhub quotes for stocks ────────────────────────────────────
-  const stocks = assets.filter(function(a){ return a.type==='Stock' && a.fhTicker; });
-  await Promise.allSettled(stocks.map(async function(a) {
-    try {
-      const r = await fetch('https://finnhub.io/api/v1/quote?symbol='+a.fhTicker+'&token='+FH_KEY_GA, {signal:AbortSignal.timeout(6000)});
-      if (!r.ok) return;
-      const d = await r.json();
-      if (d.c && d.c > 0) {
-        a.price = d.c;
-        if (d.pc && d.pc > 0) a.chg24 = +((d.c - d.pc) / d.pc * 100).toFixed(2);
-      }
-    } catch(e) {}
-  }));
-
-  // ── Step 3: Sort by mcap, top 50 ─────────────────────────────────────────────
-  GA_ALL = assets
+  // ── Merge, sort, top 50 ───────────────────────────────────────────────────────
+  const allAssets = Object.values(assetMap).concat(cryptoAssets);
+  GA_ALL = allAssets
     .filter(function(a){ return a.mcapT && a.mcapT > 0; })
-    .sort(function(a,b){ return (b.mcapT||0) - (a.mcapT||0); })
+    .sort(function(a,b){ return (b.mcapT||0)-(a.mcapT||0); })
     .slice(0, 50);
 
   renderGA();
 
   const upd = document.getElementById('ga-updated');
-  if (upd) upd.textContent = '↻ Updated ' + new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+  if (upd) upd.textContent = '↻ Updated '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
 }
 
-// Lazy-init — only runs when panel is first opened
+// Lazy-init on first panel open
 (function(){
   const _prev = window.go;
   window.go = function(id, el) {
     if (_prev) _prev(id, el);
-    if (id === 'global-assets' && !window._gaInited) {
+    if (id==='global-assets' && !window._gaInited) {
       window._gaInited = true;
       loadGlobalAssets();
     }
