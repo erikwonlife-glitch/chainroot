@@ -500,27 +500,26 @@ app.get('/api/crypto/btc-daily', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
   try {
-    // CoinGecko free: days=max with interval=daily gives full history
-    const r = await fetch(
-      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily',
-      { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
-    if (!r.ok) throw new Error('CoinGecko ' + r.status);
+    // Try max history first, fall back to 365 days if rate limited
+    var url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily';
+    var r = await fetch(url, { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+
+    // If rate limited, try 365 days instead
+    if (!r.ok) {
+      url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily';
+      r = await fetch(url, { timeout: 20000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      if (!r.ok) throw new Error('CoinGecko ' + r.status);
+    }
+
     const data = await r.json();
     if (!data || !data.prices || !data.prices.length) throw new Error('No data');
 
-    // Convert to clean daily array: [{ts, date, price}]
     const daily = data.prices.map(function(p) {
       const d = new Date(p[0]);
-      return {
-        ts:    Math.floor(p[0] / 1000),
-        date:  d.toISOString().slice(0, 10),
-        price: +p[1].toFixed(2)
-      };
+      return { ts: Math.floor(p[0]/1000), date: d.toISOString().slice(0,10), price: +p[1].toFixed(2) };
     });
 
     const result = { daily: daily, count: daily.length, updated: Date.now() };
-    // Cache 6 hours — BTC daily data only changes once per day
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     res.json(result);
   } catch(e) {
@@ -542,40 +541,36 @@ app.get('/api/crypto/btc-halving/:cycle', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
 
-  // Halving dates (Unix timestamps in ms)
+  // Halving dates (Unix timestamps in seconds)
   const HALVINGS = [
-    new Date('2012-11-28').getTime(),
-    new Date('2016-07-09').getTime(),
-    new Date('2020-05-11').getTime(),
-    new Date('2024-04-20').getTime(),
-    Date.now() // current end for cycle 4
+    Math.floor(new Date('2012-11-28').getTime()/1000),
+    Math.floor(new Date('2016-07-09').getTime()/1000),
+    Math.floor(new Date('2020-05-11').getTime()/1000),
+    Math.floor(new Date('2024-04-20').getTime()/1000),
+    Math.floor(Date.now()/1000)
   ];
 
-  const startMs = HALVINGS[cycle - 1];
-  const endMs   = HALVINGS[cycle];
-  const days     = Math.ceil((endMs - startMs) / 86400000) + 30; // +30 buffer
+  const fromTs = HALVINGS[cycle - 1];
+  const toTs   = HALVINGS[cycle];
 
   try {
-    const r = await fetch(
-      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=' + days + '&interval=daily',
-      { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0' } }
-    );
+    // CoinGecko range endpoint returns daily granularity for ranges > 90 days
+    const url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=' + fromTs + '&to=' + toTs;
+    const r = await fetch(url, { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
     if (!r.ok) throw new Error('CoinGecko ' + r.status);
     const data = await r.json();
     if (!data || !data.prices) throw new Error('No data');
 
-    // Filter to only prices within this cycle and convert to day-offset
-    const cycleData = data.prices
-      .filter(function(p) { return p[0] >= startMs && p[0] <= endMs; })
-      .map(function(p) {
-        const dayOffset = Math.floor((p[0] - startMs) / 86400000);
-        return { day: dayOffset, ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
-      });
+    const startMs = fromTs * 1000;
+    const cycleData = data.prices.map(function(p) {
+      const dayOffset = Math.floor((p[0] - startMs) / 86400000);
+      return { day: dayOffset, ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
+    });
 
     const result = {
       cycle:   cycle,
-      start:   new Date(startMs).toISOString().slice(0, 10),
-      end:     new Date(endMs).toISOString().slice(0, 10),
+      start:   new Date(fromTs*1000).toISOString().slice(0,10),
+      end:     new Date(toTs*1000).toISOString().slice(0,10),
       days:    cycleData.length,
       prices:  cycleData,
       updated: Date.now()
