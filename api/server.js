@@ -24,10 +24,13 @@ const CACHE_TTL = 60 * 60 * 1000; // 1 hour
 function getCache(key) {
   const e = CACHE[key];
   if (!e) return null;
-  if (Date.now() - e.ts > CACHE_TTL) { delete CACHE[key]; return null; }
+  const ttl = e.ttl || CACHE_TTL;
+  if (Date.now() - e.ts > ttl) { delete CACHE[key]; return null; }
   return e.data;
 }
-function setCache(key, data) { CACHE[key] = { ts: Date.now(), data }; }
+function setCache(key, data, ttl) {
+  CACHE[key] = { ts: Date.now(), data: data, ttl: ttl || CACHE_TTL };
+}
 
 // ── DATA FETCHERS ─────────────────────────────────────────────────────────────
 async function fetchStooq(symbol, rows) {
@@ -487,6 +490,156 @@ app.get('/api/global/prices', async function(req, res) {
 
   setCache('global/prices', out);
   res.json(out);
+});
+
+// ── DAILY BTC PRICE HISTORY — full history since 2012 for all overlay charts ──
+// Fetches from CoinGecko, returns daily [{date,price}] array
+// Cached 6 hours — data only changes once per day
+app.get('/api/crypto/btc-daily', async function(req, res) {
+  const cacheKey = 'crypto/btc-daily';
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    // CoinGecko free: days=max with interval=daily gives full history
+    const r = await fetch(
+      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily',
+      { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    if (!r.ok) throw new Error('CoinGecko ' + r.status);
+    const data = await r.json();
+    if (!data || !data.prices || !data.prices.length) throw new Error('No data');
+
+    // Convert to clean daily array: [{ts, date, price}]
+    const daily = data.prices.map(function(p) {
+      const d = new Date(p[0]);
+      return {
+        ts:    Math.floor(p[0] / 1000),
+        date:  d.toISOString().slice(0, 10),
+        price: +p[1].toFixed(2)
+      };
+    });
+
+    const result = { daily: daily, count: daily.length, updated: Date.now() };
+    // Cache 6 hours — BTC daily data only changes once per day
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    res.json(result);
+  } catch(e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── BTC HALVING CYCLE DATA — daily prices per cycle ───────────────────────────
+// Returns daily BTC prices for a specific halving cycle
+// cycle=1: Nov 28 2012 → Jul 9 2016
+// cycle=2: Jul 9 2016  → May 11 2020
+// cycle=3: May 11 2020 → Apr 20 2024
+// cycle=4: Apr 20 2024 → present (live)
+app.get('/api/crypto/btc-halving/:cycle', async function(req, res) {
+  const cycle = parseInt(req.params.cycle);
+  if (cycle < 1 || cycle > 4) return res.status(400).json({ error: 'Cycle must be 1-4' });
+
+  const cacheKey = 'crypto/btc-halving/' + cycle;
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+
+  // Halving dates (Unix timestamps in ms)
+  const HALVINGS = [
+    new Date('2012-11-28').getTime(),
+    new Date('2016-07-09').getTime(),
+    new Date('2020-05-11').getTime(),
+    new Date('2024-04-20').getTime(),
+    Date.now() // current end for cycle 4
+  ];
+
+  const startMs = HALVINGS[cycle - 1];
+  const endMs   = HALVINGS[cycle];
+  const days     = Math.ceil((endMs - startMs) / 86400000) + 30; // +30 buffer
+
+  try {
+    const r = await fetch(
+      'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=' + days + '&interval=daily',
+      { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0' } }
+    );
+    if (!r.ok) throw new Error('CoinGecko ' + r.status);
+    const data = await r.json();
+    if (!data || !data.prices) throw new Error('No data');
+
+    // Filter to only prices within this cycle and convert to day-offset
+    const cycleData = data.prices
+      .filter(function(p) { return p[0] >= startMs && p[0] <= endMs; })
+      .map(function(p) {
+        const dayOffset = Math.floor((p[0] - startMs) / 86400000);
+        return { day: dayOffset, ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
+      });
+
+    const result = {
+      cycle:   cycle,
+      start:   new Date(startMs).toISOString().slice(0, 10),
+      end:     new Date(endMs).toISOString().slice(0, 10),
+      days:    cycleData.length,
+      prices:  cycleData,
+      updated: Date.now()
+    };
+
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    res.json(result);
+  } catch(e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── DXY DAILY — Trade Weighted USD Index from Stooq ──────────────────────────
+// Returns daily DXY values going back as far as Stooq provides
+app.get('/api/market/dxy', async function(req, res) {
+  const cacheKey = 'market/dxy';
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    // DTWEXBGS = Broad Trade Weighted Dollar Index from Stooq
+    const r = await fetch('https://stooq.com/q/d/l/?s=dxy&i=d&d1=20100101', { timeout: 15000 });
+    if (!r.ok) throw new Error('Stooq ' + r.status);
+    const csv = (await r.text()).trim();
+    if (!csv || csv.length < 50) throw new Error('No data');
+
+    const rows = csv.split('\n').slice(1).filter(Boolean).map(function(ln) {
+      const p = ln.split(',');
+      const c = parseFloat(p[4]);
+      if (!isNaN(c) && c > 0) return { date: p[0], price: +c.toFixed(4) };
+      return null;
+    }).filter(Boolean);
+
+    const result = { daily: rows, count: rows.length, updated: Date.now() };
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    res.json(result);
+  } catch(e) {
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── GOLD DAILY — XAU/USD daily prices from Stooq ─────────────────────────────
+app.get('/api/market/gold', async function(req, res) {
+  const cacheKey = 'market/gold';
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    const r = await fetch('https://stooq.com/q/d/l/?s=xauusd&i=d&d1=20100101', { timeout: 15000 });
+    if (!r.ok) throw new Error('Stooq ' + r.status);
+    const csv = (await r.text()).trim();
+    if (!csv || csv.length < 50) throw new Error('No data');
+
+    const rows = csv.split('\n').slice(1).filter(Boolean).map(function(ln) {
+      const p = ln.split(',');
+      const c = parseFloat(p[4]);
+      if (!isNaN(c) && c > 0) return { date: p[0], price: +c.toFixed(2) };
+      return null;
+    }).filter(Boolean);
+
+    const result = { daily: rows, count: rows.length, updated: Date.now() };
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    res.json(result);
+  } catch(e) {
+    res.status(502).json({ error: e.message });
+  }
 });
 
 // GENERIC ROUTES — MUST COME AFTER ALL SPECIFIC /api/crypto/* ROUTES
