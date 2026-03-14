@@ -638,6 +638,110 @@ app.get('/api/market/gold', async function(req, res) {
   }
 });
 
+// ── LIVE TWEET FEEDS — via Nitter RSS proxy ───────────────────────────────────
+// Nitter is an open-source Twitter frontend that provides RSS feeds
+// We use multiple Nitter instances as fallbacks since they go up/down
+const NITTER_INSTANCES = [
+  'https://nitter.poast.org',
+  'https://nitter.privacydev.net',
+  'https://nitter.1d4.us',
+  'https://nitter.kavin.rocks'
+];
+
+// Accounts to follow
+const TWEET_ACCOUNTS = {
+  crypto:  'WatcherGuru',   // Fast-breaking crypto news
+  tradfi:  'zerohedge'      // Macro/TradFi news
+};
+
+async function fetchNitterRSS(username) {
+  for (var i = 0; i < NITTER_INSTANCES.length; i++) {
+    try {
+      var url = NITTER_INSTANCES[i] + '/' + username + '/rss';
+      var r = await fetch(url, { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      if (!r.ok) continue;
+      var xml = await r.text();
+      if (!xml || xml.length < 100) continue;
+      // Parse RSS items
+      var items = [];
+      var itemRe = /<item>([\s\S]*?)<\/item>/g;
+      var match;
+      while ((match = itemRe.exec(xml)) !== null && items.length < 15) {
+        var block = match[1];
+        var title = (block.match(/<title><!\[CDATA\[(.*?)\]\]><\/title>/) || block.match(/<title>(.*?)<\/title>/)|| [])[1] || '';
+        var link  = (block.match(/<link>(.*?)<\/link>/) || [])[1] || '';
+        var pubDate= (block.match(/<pubDate>(.*?)<\/pubDate>/) || [])[1] || '';
+        var desc  = (block.match(/<description><!\[CDATA\[([\s\S]*?)\]\]><\/description>/) || [])[1] || '';
+        // Clean HTML from description
+        desc = desc.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim().slice(0, 280);
+        title = title.replace(/<[^>]+>/g, '').trim();
+        if (title && title !== username) {
+          items.push({
+            id:      'tw_' + username + '_' + i + '_' + items.length,
+            user:    '@' + username,
+            text:    title.length > 30 ? title : (desc || title),
+            url:     link.replace('nitter.poast.org', 'twitter.com').replace(/nitter\.[^/]+/, 'twitter.com'),
+            time:    pubDate ? new Date(pubDate).getTime() : Date.now() - items.length * 600000,
+            source:  NITTER_INSTANCES[i].split('/')[2]
+          });
+        }
+      }
+      if (items.length > 0) return items;
+    } catch(e) { continue; }
+  }
+  return [];
+}
+
+// GET /api/tweets/crypto — latest tweets from crypto account
+app.get('/api/tweets/crypto', async function(req, res) {
+  var cacheKey = 'tweets/crypto';
+  var cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    var tweets = await fetchNitterRSS(TWEET_ACCOUNTS.crypto);
+    var result = { account: TWEET_ACCOUNTS.crypto, tweets: tweets, updated: Date.now() };
+    setCache(cacheKey, result, 15 * 60 * 1000); // cache 15 min
+    res.json(result);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// GET /api/tweets/tradfi — latest tweets from tradfi account
+app.get('/api/tweets/tradfi', async function(req, res) {
+  var cacheKey = 'tweets/tradfi';
+  var cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    var tweets = await fetchNitterRSS(TWEET_ACCOUNTS.tradfi);
+    var result = { account: TWEET_ACCOUNTS.tradfi, tweets: tweets, updated: Date.now() };
+    setCache(cacheKey, result, 15 * 60 * 1000);
+    res.json(result);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// GET /api/translate — translate text to Mongolian using MyMemory (free, no key needed)
+// MyMemory: 5000 chars/day free, no API key required
+app.get('/api/translate', async function(req, res) {
+  var text = (req.query.text || '').slice(0, 500);
+  if (!text) return res.json({ translation: '' });
+  var cacheKey = 'translate/' + Buffer.from(text).toString('base64').slice(0, 40);
+  var cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=en|mn';
+    var r = await fetch(url, { timeout: 10000 });
+    if (!r.ok) throw new Error('MyMemory ' + r.status);
+    var d = await r.json();
+    var translation = (d.responseData && d.responseData.translatedText) || text;
+    // MyMemory sometimes returns the original if quality is low
+    if (translation === text || d.responseStatus !== 200) {
+      translation = null; // signal: no translation available
+    }
+    var result = { original: text, translation: translation, quality: d.responseData?.match || 0 };
+    setCache(cacheKey, result, 24 * 60 * 60 * 1000); // cache 24 hours
+    res.json(result);
+  } catch(e) { res.status(502).json({ error: e.message, translation: null }); }
+});
+
 // GENERIC ROUTES — MUST COME AFTER ALL SPECIFIC /api/crypto/* ROUTES
 // ══════════════════════════════════════════════════════════════════
 
