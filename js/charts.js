@@ -2232,6 +2232,18 @@ async function drawAllCharts(){
     var legend = document.getElementById('halvingLegend');
     if (legend) legend.innerHTML = '';
 
+    // Helper: get best available data for a cycle
+    function getCycleData(idx) {
+      var cycleNum = idx + 1;
+      var realData = window.BTC_HALVING_CYCLES && window.BTC_HALVING_CYCLES[cycleNum];
+      if (realData && realData.length > 30) {
+        // Use real daily data from backend
+        return realData.map(function(p){ return {time: p.day, value: p.price}; });
+      }
+      // Fall back to hardcoded weekly samples
+      return CYCLES[idx].prices.map(function(p){ return {time: p[0], value: p[1]}; });
+    }
+
     CYCLES.forEach(function(cycle, idx) {
       var series = chart.addLineSeries({
         color: cycle.color, lineWidth: idx === 3 ? 2.5 : 1.8,
@@ -2239,9 +2251,7 @@ async function drawAllCharts(){
         crosshairMarkerVisible: true, crosshairMarkerRadius: 4,
       });
 
-      series.setData(cycle.prices.map(function(p){
-        return { time: p[0], value: p[1] };
-      }));
+      series.setData(getCycleData(idx));
       window._halvingSeries[idx] = series;
 
       var lastPrice = cycle.prices[cycle.prices.length - 1][1];
@@ -2304,21 +2314,46 @@ async function drawAllCharts(){
     var upd = document.getElementById('halvingUpdated');
     if (upd) upd.textContent = '↻ Updated ' + new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
 
-    // Update live price daily
+    // Update live price daily + upgrade to real data when available
     window._halvingRefresh = function() {
-      if (!window.BTC_CURRENT || !window._halvingSeries[3]) return;
-      var day = Math.floor((new Date() - HALVING4_DATE) / 86400000);
-      var series = window._halvingSeries[3];
-      var existing = CYCLES[3].prices;
-      var lastEntry = existing[existing.length - 1];
-      if (lastEntry && lastEntry[0] === day) {
-        lastEntry[1] = Math.round(window.BTC_CURRENT);
-      } else {
-        existing.push([day, Math.round(window.BTC_CURRENT)]);
+      if (!window._halvingSeries) return;
+
+      // Upgrade any cycle that now has real daily data
+      CYCLES.forEach(function(cycle, idx) {
+        var cycleNum = idx + 1;
+        var realData = window.BTC_HALVING_CYCLES && window.BTC_HALVING_CYCLES[cycleNum];
+        if (realData && realData.length > 30 && window._halvingSeries[idx]) {
+          var tvData = realData.map(function(p){ return {time:p.day, value:p.price}; });
+          // For current cycle, inject live price
+          if (idx === 3 && window.BTC_CURRENT) {
+            var day = Math.floor((new Date() - HALVING4_DATE) / 86400000);
+            var last = tvData[tvData.length-1];
+            if (last && last.time < day) tvData.push({time:day, value:Math.round(window.BTC_CURRENT)});
+            else if (last) last.value = Math.round(window.BTC_CURRENT);
+          }
+          window._halvingSeries[idx].setData(tvData);
+        }
+      });
+
+      // Always update cycle 4 live price endpoint
+      if (window.BTC_CURRENT && window._halvingSeries[3]) {
+        var day = Math.floor((new Date() - HALVING4_DATE) / 86400000);
+        var existing = (window.BTC_HALVING_CYCLES && window.BTC_HALVING_CYCLES[4])
+          ? window.BTC_HALVING_CYCLES[4].map(function(p){ return {time:p.day, value:p.price}; })
+          : CYCLES[3].prices.map(function(p){ return {time:p[0], value:p[1]}; });
+        var last = existing[existing.length-1];
+        if (last && last.time < day) existing.push({time:day, value:Math.round(window.BTC_CURRENT)});
+        else if (last) last.value = Math.round(window.BTC_CURRENT);
+        window._halvingSeries[3].setData(existing);
       }
-      series.setData(existing.map(function(p){ return {time:p[0], value:p[1]}; }));
+
       var el = document.getElementById('halvingCurrentPrice');
-      if (el) el.textContent = '$' + Math.round(window.BTC_CURRENT).toLocaleString();
+      if (el && window.BTC_CURRENT) el.textContent = '$' + Math.round(window.BTC_CURRENT).toLocaleString();
+      var cycDayEl = document.getElementById('halvingCycleDay');
+      if (cycDayEl) cycDayEl.textContent = Math.floor((new Date() - HALVING4_DATE) / 86400000) + ' days';
+      var upd2 = document.getElementById('halvingUpdated');
+      if (upd2) upd2.textContent = '↻ Updated ' + new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+    };
       var upd2 = document.getElementById('halvingUpdated');
       if (upd2) upd2.textContent = '↻ Updated ' + new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
     };
