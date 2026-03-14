@@ -217,6 +217,8 @@ const NEWS = (function(){
     results.forEach(function(r){if(r.status==='fulfilled')fresh=fresh.concat(r.value);});
     if(fresh.length){
       allArticles=dedupe(fresh).sort(function(a,b){return b.time-a.time;});
+      window._lastNewsArticles = allArticles; // save for side feed renderer
+      window._renderSideFeeds && window._renderSideFeeds(allArticles);
       applyFilter();
       var upd=document.getElementById('news-last-updated');
       if(upd)upd.textContent='Updated '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
@@ -243,4 +245,77 @@ function newsLoadMore(){NEWS.loadMore();}
 // Called from go() in auth.js when news panel opens
 window._newsInit = function(){
   if(!window._newsInited){ window._newsInited=true; NEWS.init(); TWEETS.init(); }
+};
+
+// ── SIDE FEED RENDERER — populates feed-grid-crypto and feed-grid-macro ───────
+window._renderSideFeeds = function(articles) {
+  if (!articles || !articles.length) return;
+
+  function timeAgo(ms) {
+    var m = Math.floor((Date.now()-ms)/60000);
+    if (m<1) return 'Одоо'; if (m<60) return m+'мин өмнө';
+    var h=Math.floor(m/60); if (h<24) return h+'ц өмнө';
+    return Math.floor(h/24)+'өдр өмнө';
+  }
+
+  function renderCard(a, color) {
+    var mn = window._sideTranslated && window._sideTranslated[a.id] || '';
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">'
+      +   '<span style="font-family:Space Mono,monospace;font-size:9px;color:'+color+';font-weight:700">' + (a.source||'') + '</span>'
+      +   '<span style="font-family:Space Mono,monospace;font-size:9px;color:var(--muted)">' + timeAgo(a.time) + '</span>'
+      + '</div>'
+      + '<a href="' + (a.url||'#') + '" target="_blank" rel="noopener" style="font-size:13px;color:var(--text);line-height:1.55;display:block;text-decoration:none;margin-bottom:' + (mn?'8px':'4px') + '">' + (a.title||'') + '</a>'
+      + (mn
+        ? '<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:6px 10px;background:rgba(255,255,255,.03);border-left:2px solid '+color+'55;border-radius:0 4px 4px 0">'
+        +   '<span style="font-family:Space Mono,monospace;font-size:8px;color:'+color+';letter-spacing:1.5px;display:block;margin-bottom:3px">МН ·</span>' + mn + '</div>'
+        : '<button onclick="window._translateSide(\''+a.id+'\',\''+encodeURIComponent((a.title||'').slice(0,300))+'\')" style="padding:3px 9px;background:transparent;border:1px solid var(--border);border-radius:3px;font-family:Space Mono,monospace;font-size:9px;color:var(--muted);cursor:pointer">🇲🇳 Монголоор харах</button>'
+        )
+      + '</div>';
+  }
+
+  var cryptoItems = articles.filter(function(a){return a.cat==='crypto'||a.cat==='defi';}).slice(0,10);
+  var macroItems  = articles.filter(function(a){return a.cat==='macro'||a.cat==='stocks'||a.cat==='commodities';}).slice(0,10);
+
+  var gc = document.getElementById('feed-grid-crypto');
+  var gm = document.getElementById('feed-grid-macro');
+  if (gc) gc.innerHTML = cryptoItems.length
+    ? cryptoItems.map(function(a){return renderCard(a,'var(--accent)');}).join('')
+    : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">Мэдээ олдсонгүй</div>';
+  if (gm) gm.innerHTML = macroItems.length
+    ? macroItems.map(function(a){return renderCard(a,'var(--blue)');}).join('')
+    : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">Мэдээ олдсонгүй</div>';
+
+  // Auto-translate first 3 of each
+  if (!window._sideTranslated) window._sideTranslated = {};
+  var toTr = cryptoItems.slice(0,3).concat(macroItems.slice(0,3));
+  (async function(){
+    for (var i=0;i<toTr.length;i++) {
+      var a = toTr[i];
+      if (window._sideTranslated[a.id] || !a.title) continue;
+      try {
+        var r = await fetch(CR_API_NEWS+'/api/translate?text='+encodeURIComponent(a.title.slice(0,300)),{signal:AbortSignal.timeout(7000)});
+        if (r.ok) {
+          var d = await r.json();
+          if (d.translation && d.translation !== a.title) window._sideTranslated[a.id] = d.translation;
+        }
+      } catch(e){}
+      await new Promise(function(res){setTimeout(res,300);});
+    }
+    // Re-render with translations
+    if (gc) gc.innerHTML = cryptoItems.map(function(a){return renderCard(a,'var(--accent)');}).join('');
+    if (gm) gm.innerHTML = macroItems.map(function(a){return renderCard(a,'var(--blue)');}).join('');
+  })();
+};
+
+window._translateSide = async function(id, enc) {
+  var btn = event && event.currentTarget;
+  if (btn) { btn.textContent='⟳ Орчуулж байна…'; btn.disabled=true; }
+  if (!window._sideTranslated) window._sideTranslated = {};
+  try {
+    var r = await fetch(CR_API_NEWS+'/api/translate?text='+enc,{signal:AbortSignal.timeout(8000)});
+    if (r.ok) { var d=await r.json(); if(d.translation&&d.translation!==decodeURIComponent(enc)) window._sideTranslated[id]=d.translation; }
+  } catch(e){}
+  // trigger re-render by calling news init hook
+  if (window._lastNewsArticles) window._renderSideFeeds(window._lastNewsArticles);
 };
