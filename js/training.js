@@ -274,8 +274,9 @@ var WALLETS = {
 var _currentToken = 'usdt';
 var _currentPlan  = 'monthly';
 var PRICES = {
-  monthly: {usdt: '9 USDT', sol: '0.09 SOL', label: 'Сарын захиалга · $9/сар'},
-  annual:  {usdt: '69 USDT', sol: '0.7 SOL',  label: 'Жилийн захиалга · $69/жил'}
+  monthly:  {usdt: '40 USDT',  sol: '0.57 SOL',  label: 'Сарын захиалга · $40/сар'},
+  biannual: {usdt: '150 USDT', sol: '2.13 SOL',   label: '6 Сарын захиалга · $150'},
+  annual:   {usdt: '250 USDT', sol: '3.54 SOL',   label: 'Жилийн захиалга · $250/жил'}
 };
 
 function openCryptoPayment(plan) {
