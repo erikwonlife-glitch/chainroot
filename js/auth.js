@@ -421,6 +421,7 @@ function go(id,el){
   if(t){t.classList.add('on');document.getElementById('main').scrollTop=0;}
   document.querySelectorAll('.nl').forEach(l=>l.classList.remove('on'));
   if(el)el.classList.add('on');
+  if(id==='news' && typeof window._newsInit==='function') window._newsInit();
 }
 function tog(id){const g=document.getElementById(id);if(g)g.classList.toggle('closed');}
 
