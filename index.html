@@ -2803,13 +2803,14 @@ async function fetchJSON(url){
 }
 
 // ── MAIN INITIALISER — runs on load and every 60s ────────────────────────────
+const CR_API = 'https://chainroot-production.up.railway.app';
 async function init(){
-  // 1. Fetch all live data in parallel
+  // 1. Fetch all live data — route CoinGecko through Railway to avoid CORS
   const [markets, global, fg, btcChart] = await Promise.all([
-    fetchJSON(`${CG}/coins/markets?vs_currency=usd&ids=bitcoin,ethereum,tether,binancecoin,ripple,usd-coin,solana,tron,avalanche-2,chainlink,polkadot,dogecoin,shiba-inu,matic-network,litecoin,uniswap,cardano,stellar,monero,cosmos&order=market_cap_desc&per_page=20&page=1&sparkline=true&price_change_percentage=1h,24h,7d,30d`),
-    fetchJSON(`${CG}/global`),
-    fetchJSON('https://api.alternative.me/fng/?limit=90'),
-    fetchJSON(`${CG}/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily`)
+    fetchJSON(`${CR_API}/api/crypto/markets`),
+    fetchJSON(`${CR_API}/api/crypto/global`),
+    fetchJSON(`${CR_API}/api/crypto/feargreed`),
+    fetchJSON(`${CR_API}/api/crypto/btcchart`)
   ]);
 
   // 2. Process BTC price history — everything else reads from these shared arrays
@@ -3076,6 +3077,15 @@ async function drawAllCharts(){
 
     // Fetch full 60-day daily RSI history for a coin (returns {vals, labels, high, low})
     async function getRSIHistory(id){
+      // Route through Railway API to avoid CoinGecko CORS block
+      try{
+        const r = await fetch(`${API_BASE}/api/crypto/rsi/${id}`, {signal:AbortSignal.timeout(15000)});
+        if(r.ok){
+          const d = await r.json();
+          if(d&&d.vals30) return d;
+        }
+      }catch(e){}
+      // Fallback: try CoinGecko direct (works in some browsers/regions)
       const d = await fetchJSON(`${CG}/coins/${id}/market_chart?vs_currency=usd&days=60&interval=daily`);
       if(!d) return null;
       const prices = d.prices.map(p=>p[1]);
@@ -5523,7 +5533,7 @@ function renderDetail(bodyId,inst,color){
     </div>
   </div>
   <div class="mkt-box">
-    <div class="mkt-box-title">${inst.name} — ${W} Days · Price + MA Overlay</div>
+    <div class="mkt-box-title">${inst.name} — ${cLabels.length} Days · Price + MA Overlay</div>
     <div class="mkt-chart-wrap" style="height:268px"><canvas id="${pC}"></canvas></div>
   </div>
   <div class="mkt-box">
