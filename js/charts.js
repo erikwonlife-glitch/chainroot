@@ -2199,7 +2199,8 @@ async function drawAllCharts(){
     CYCLES[3].prices = CYCLES[3].prices.filter(function(p){ return p[0] <= currentCycleDay; });
     if (currentCycleDay > 0) {
       var last4 = CYCLES[3].prices[CYCLES[3].prices.length - 1];
-      var livePrice = window.BTC_CURRENT ? Math.round(window.BTC_CURRENT) : 83000;
+      // Always use BTC_CURRENT — it comes from CoinGecko via Railway
+      var livePrice = window.BTC_CURRENT ? Math.round(window.BTC_CURRENT) : (last4 ? last4[1] : 84000);
       if (!last4 || last4[0] < currentCycleDay) {
         CYCLES[3].prices.push([currentCycleDay, livePrice]);
       } else {
@@ -2254,7 +2255,10 @@ async function drawAllCharts(){
       series.setData(getCycleData(idx));
       window._halvingSeries[idx] = series;
 
-      var lastPrice = cycle.prices[cycle.prices.length - 1][1];
+      // For 4th halving use live price, for others use last hardcoded price
+      var lastPrice = idx === 3
+        ? (window.BTC_CURRENT ? Math.round(window.BTC_CURRENT) : cycle.prices[cycle.prices.length-1][1])
+        : cycle.prices[cycle.prices.length - 1][1];
       var priceStr = '$' + lastPrice.toLocaleString();
       var isLive = idx === 3 ? ' ●' : '';
 
@@ -2262,7 +2266,7 @@ async function drawAllCharts(){
         legend.innerHTML +=
           '<div style="display:flex;align-items:center;gap:4px">' +
           '<span style="background:' + cycle.color + ';color:#000;font-family:Space Mono,monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:70px;text-align:center">' + cycle.label + isLive + '</span>' +
-          '<span style="background:' + cycle.color + ';color:#000;font-family:Space Mono,monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:72px;text-align:center">' + priceStr + '</span>' +
+          '<span id="halvLegendPrice_' + idx + '" style="background:' + cycle.color + ';color:#000;font-family:Space Mono,monospace;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;min-width:72px;text-align:center">' + priceStr + '</span>' +
           '</div>';
       }
     });
@@ -2349,6 +2353,9 @@ async function drawAllCharts(){
 
       var el = document.getElementById('halvingCurrentPrice');
       if (el && window.BTC_CURRENT) el.textContent = '$' + Math.round(window.BTC_CURRENT).toLocaleString();
+      // Update legend price badge for 4th halving
+      var legendPrice = document.getElementById('halvLegendPrice_3');
+      if (legendPrice && window.BTC_CURRENT) legendPrice.textContent = '$' + Math.round(window.BTC_CURRENT).toLocaleString();
       var cycDayEl = document.getElementById('halvingCycleDay');
       if (cycDayEl) cycDayEl.textContent = Math.floor((new Date() - HALVING4_DATE) / 86400000) + ' days';
       var upd2 = document.getElementById('halvingUpdated');
