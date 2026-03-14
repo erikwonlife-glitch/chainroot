@@ -251,7 +251,8 @@ app.get('/api/crypto/btc-monthly', async function(req, res) {
   } catch(e) { res.status(502).json({error:e.message}); }
 });
 
-
+// Any coin chart
+app.get('/api/crypto/coin/:id/chart', async function(req, res) {
   const id = req.params.id, days = req.query.days||365;
   const cacheKey = 'crypto/coin/'+id+'/chart/'+days;
   const cached = getCache(cacheKey);
