@@ -32,20 +32,29 @@ function setCache(key, data) {
   CACHE[key] = { ts: Date.now(), data };
 }
 
+// ── TIMEOUT HELPER (node-fetch v2 doesn't support timeout option natively) ────
+function fetchWithTimeout(url, opts, ms) {
+  ms = ms || 15000;
+  var controller = new AbortController();
+  var timer = setTimeout(function() { controller.abort(); }, ms);
+  var options = Object.assign({}, opts || {}, { signal: controller.signal });
+  return fetch(url, options).finally(function() { clearTimeout(timer); });
+}
+
 // ── STOOQ FETCH ───────────────────────────────────────────────────────────────
 async function fetchStooq(symbol, rows) {
   rows = rows || 400;
   try {
-    const url = 'https://stooq.com/q/d/l/?s=' + symbol.toLowerCase() + '&i=d';
-    const res = await fetch(url, { timeout: 15000 });
+    var url = 'https://stooq.com/q/d/l/?s=' + symbol.toLowerCase() + '&i=d';
+    var res = await fetchWithTimeout(url, {}, 15000);
     if (!res.ok) return null;
-    const csv = (await res.text()).trim();
+    var csv = (await res.text()).trim();
     if (!csv || csv.includes('No data') || csv.includes('Przekroczon') || csv.length < 30) return null;
-    const lines = csv.split('\n').slice(1).filter(Boolean);
-    const out = [];
-    for (const ln of lines) {
-      const p = ln.split(',');
-      const c = parseFloat(p[4]);
+    var lines = csv.split('\n').slice(1).filter(Boolean);
+    var out = [];
+    for (var i = 0; i < lines.length; i++) {
+      var p = lines[i].split(',');
+      var c = parseFloat(p[4]);
       if (!isNaN(c) && c > 0)
         out.push({ date: p[0], open: parseFloat(p[1]) || c, high: parseFloat(p[2]) || c, low: parseFloat(p[3]) || c, close: c, volume: parseFloat(p[5]) || 0 });
     }
@@ -57,19 +66,19 @@ async function fetchStooq(symbol, rows) {
 async function fetchYahoo(symbol, rows) {
   rows = rows || 400;
   try {
-    const now  = Math.floor(Date.now() / 1000);
-    const from = now - rows * 86400 * 2;
-    const url  = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=1d&period1=' + from + '&period2=' + now;
-    const res  = await fetch(url, { timeout: 15000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+    var now  = Math.floor(Date.now() / 1000);
+    var from = now - rows * 86400 * 2;
+    var url  = 'https://query1.finance.yahoo.com/v8/finance/chart/' + encodeURIComponent(symbol) + '?interval=1d&period1=' + from + '&period2=' + now;
+    var res  = await fetchWithTimeout(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 15000);
     if (!res.ok) return null;
-    const json   = await res.json();
-    const result = json && json.chart && json.chart.result && json.chart.result[0];
+    var json   = await res.json();
+    var result = json && json.chart && json.chart.result && json.chart.result[0];
     if (!result) return null;
-    const ts  = result.timestamp || [];
-    const q   = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
-    const out = [];
+    var ts  = result.timestamp || [];
+    var q   = (result.indicators && result.indicators.quote && result.indicators.quote[0]) || {};
+    var out = [];
     ts.forEach(function(t, i) {
-      const c = q.close && q.close[i];
+      var c = q.close && q.close[i];
       if (c != null && !isNaN(c) && c > 0)
         out.push({ date: new Date(t * 1000).toISOString().slice(0, 10), open: (q.open && q.open[i]) || c, high: (q.high && q.high[i]) || c, low: (q.low && q.low[i]) || c, close: c, volume: (q.volume && q.volume[i]) || 0 });
     });
@@ -81,9 +90,9 @@ async function fetchYahoo(symbol, rows) {
 async function fetchFinnhubQuote(symbol) {
   if (!FH_KEY) return null;
   try {
-    const res = await fetch('https://finnhub.io/api/v1/quote?symbol=' + symbol + '&token=' + FH_KEY, { timeout: 8000 });
+    var res = await fetchWithTimeout('https://finnhub.io/api/v1/quote?symbol=' + symbol + '&token=' + FH_KEY, {}, 8000);
     if (!res.ok) return null;
-    const d = await res.json();
+    var d = await res.json();
     return (d.c && d.c > 0) ? d : null;
   } catch (e) { return null; }
 }
