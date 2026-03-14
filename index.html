@@ -2171,7 +2171,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       <!-- Filter tabs -->
       <div style="border-bottom:1px solid var(--border);background:var(--bg1);padding:0 40px;display:flex;align-items:center;gap:0;overflow-x:auto">
         <button class="coin-tab on" data-filter="top200" onclick="setCoinFilter('top200',this)">🏆 Top 200</button>
-        <button class="coin-tab" data-filter="top400" onclick="setCoinFilter('top400',this)">📈 Top 400</button>
+        <button class="coin-tab" data-filter="top400" onclick="setCoinFilter('top400',this)">📈 201 – 400</button>
         <button class="coin-tab" data-filter="defi" onclick="setCoinFilter('defi',this)">⬡ DeFi</button>
         <button class="coin-tab" data-filter="layer1" onclick="setCoinFilter('layer1',this)">🔷 Layer 1</button>
         <button class="coin-tab" data-filter="binance" onclick="setCoinFilter('binance',this)">🟡 Binance</button>
@@ -2210,7 +2210,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         <div id="coin-source-badge" style="display:flex;align-items:center;gap:10px;margin-bottom:14px">
           <span id="coin-source-label" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px">LOADING…</span>
           <span id="coin-load-more-btn" style="display:none">
-            <button onclick="loadMoreCoins()" style="background:transparent;border:1px solid var(--border2);color:var(--text);padding:4px 12px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">Load 201–400 →</button>
+            <button onclick="loadMoreCoins()" style="background:transparent;border:1px solid var(--border2);color:var(--text);padding:4px 12px;border-radius:4px;font-family:'Space Mono',monospace;font-size:9px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='var(--accent)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text)'">View Coins 201–400 →</button>
           </span>
         </div>
 
@@ -3027,22 +3027,13 @@ function setCoinFilter(filter, el) {
 
 function loadMoreCoins() {
   const lmb = document.getElementById('coin-load-more-btn');
-  if (lmb) lmb.innerHTML = '<span style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted)">⟳ Loading 201–400…</span>';
-  fetchCoinFilter('top400').then(() => {
-    // Merge pages into top400 store
-    const seen = new Set();
-    const merged = [...COIN_STORE.top200, ...COIN_STORE.top400].filter(c => {
-      const k = c.id || c.symbol;
-      if (seen.has(k)) return false;
-      seen.add(k); return true;
-    });
-    COIN_STORE.top400 = merged;
-    COIN_FILTER = 'top400';
-    document.querySelectorAll('.coin-tab').forEach(t => t.classList.remove('on'));
-    document.querySelector('[data-filter="top400"]')?.classList.add('on');
-    if (lmb) lmb.style.display = 'none';
-    renderCoinTable();
-  });
+  if (lmb) lmb.style.display = 'none';
+  // Switch to 201-400 tab immediately and fetch
+  COIN_FILTER = 'top400';
+  document.querySelectorAll('.coin-tab').forEach(t => t.classList.remove('on'));
+  document.querySelector('[data-filter="top400"]')?.classList.add('on');
+  renderCoinTable(); // shows loading spinner
+  fetchCoinFilter('top400');
 }
 
 function renderCoinTable() {
@@ -3059,7 +3050,7 @@ function renderCoinTable() {
 
   const srcMap = {
     top200:      'CoinGecko · Top 200 by Market Cap',
-    top400:      'CoinGecko · Top 400 by Market Cap',
+    top400:      'CoinGecko · Coins 201 – 400 by Market Cap',
     defi:        'CoinGecko · DeFi Tokens',
     layer1:      'CoinGecko · Layer 1 Blockchains',
     binance:     'Binance · Top USDT Pairs',
