@@ -542,45 +542,52 @@ app.get('/api/crypto/btc-halving/:cycle', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
 
-  // Halving dates (Unix timestamps in seconds)
+  // Halving dates in ms
   const HALVINGS = [
-    Math.floor(new Date('2012-11-28').getTime()/1000),
-    Math.floor(new Date('2016-07-09').getTime()/1000),
-    Math.floor(new Date('2020-05-11').getTime()/1000),
-    Math.floor(new Date('2024-04-20').getTime()/1000),
-    Math.floor(Date.now()/1000)
+    new Date('2012-11-28').getTime(),
+    new Date('2016-07-09').getTime(),
+    new Date('2020-05-11').getTime(),
+    new Date('2024-04-20').getTime(),
+    Date.now()
   ];
-
-  const fromTs = HALVINGS[cycle - 1];
-  const toTs   = HALVINGS[cycle];
+  const startMs = HALVINGS[cycle - 1];
+  const endMs   = HALVINGS[cycle];
 
   try {
-    // CoinGecko range endpoint returns daily granularity for ranges > 90 days
-    const url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from=' + fromTs + '&to=' + toTs;
+    // First try: slice from btc-daily cache (avoids extra CoinGecko call)
+    const dailyCached = getCache('crypto/btc-daily');
+    if (dailyCached && dailyCached.daily && dailyCached.daily.length > 100) {
+      const cycleData = dailyCached.daily
+        .filter(function(p) { return p.ts * 1000 >= startMs && p.ts * 1000 <= endMs; })
+        .map(function(p) {
+          return { day: Math.floor((p.ts * 1000 - startMs) / 86400000), ts: p.ts, price: p.price };
+        });
+      if (cycleData.length > 30) {
+        const result = { cycle, start: new Date(startMs).toISOString().slice(0,10), end: new Date(endMs).toISOString().slice(0,10), days: cycleData.length, prices: cycleData, updated: Date.now() };
+        setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+        return res.json(result);
+      }
+    }
+
+    // Fallback: fetch from CoinGecko range endpoint with delay to avoid rate limit
+    await new Promise(function(r){ setTimeout(r, cycle * 500); }); // stagger requests
+    const url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from='
+      + Math.floor(startMs/1000) + '&to=' + Math.floor(endMs/1000);
     const r = await fetch(url, { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
     if (!r.ok) throw new Error('CoinGecko ' + r.status);
     const data = await r.json();
-    if (!data || !data.prices) throw new Error('No data');
+    if (!data || !data.prices || !data.prices.length) throw new Error('No data');
 
-    const startMs = fromTs * 1000;
     const cycleData = data.prices.map(function(p) {
-      const dayOffset = Math.floor((p[0] - startMs) / 86400000);
-      return { day: dayOffset, ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
+      return { day: Math.floor((p[0] - startMs) / 86400000), ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
     });
 
-    const result = {
-      cycle:   cycle,
-      start:   new Date(fromTs*1000).toISOString().slice(0,10),
-      end:     new Date(toTs*1000).toISOString().slice(0,10),
-      days:    cycleData.length,
-      prices:  cycleData,
-      updated: Date.now()
-    };
-
+    const result = { cycle, start: new Date(startMs).toISOString().slice(0,10), end: new Date(endMs).toISOString().slice(0,10), days: cycleData.length, prices: cycleData, updated: Date.now() };
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     res.json(result);
   } catch(e) {
-    res.status(502).json({ error: e.message });
+    // Return empty but valid response so frontend uses hardcoded fallback
+    res.json({ cycle, prices: [], days: 0, error: e.message });
   }
 });
 
@@ -638,6 +645,45 @@ app.get('/api/market/gold', async function(req, res) {
   }
 });
 
+// ── RSS PROXY — fetches RSS feeds server-side to bypass browser CORS ──────────
+app.get('/api/news/rss', async function(req, res) {
+  var feedUrl = req.query.url;
+  if (!feedUrl) return res.status(400).json({error:'Missing url'});
+  var cacheKey = 'rss/' + Buffer.from(feedUrl).toString('base64').slice(0,40);
+  var cached = getCache(cacheKey);
+  if (cached) return res.set('Content-Type','application/json').json(cached);
+  try {
+    var r = await fetch(feedUrl, {
+      timeout: 14000,
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ChainRoot/1.0)', 'Accept': 'application/rss+xml, application/xml, text/xml' }
+    });
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    var xml = await r.text();
+    if (!xml || xml.length < 50) throw new Error('Empty response');
+    var result = { contents: xml, url: feedUrl };
+    setCache(cacheKey, result, 10 * 60 * 1000); // cache 10 min
+    res.json(result);
+  } catch(e) {
+    res.status(502).json({ error: e.message, contents: '' });
+  }
+});
+
+// ── CRYPTO COMPARE NEWS — server-side to avoid CORS ──────────────────────────
+app.get('/api/news/crypto', async function(req, res) {
+  var cacheKey = 'news/crypto';
+  var cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    var r = await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest', {
+      timeout: 12000, headers: { 'User-Agent': 'Mozilla/5.0' }
+    });
+    if (!r.ok) throw new Error('CryptoCompare ' + r.status);
+    var d = await r.json();
+    setCache(cacheKey, d, 10 * 60 * 1000);
+    res.json(d);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
 // ── LIVE TWEET FEEDS — via Nitter RSS proxy ───────────────────────────────────
 // Nitter is an open-source Twitter frontend that provides RSS feeds
 // We use multiple Nitter instances as fallbacks since they go up/down
@@ -645,7 +691,10 @@ const NITTER_INSTANCES = [
   'https://nitter.poast.org',
   'https://nitter.privacydev.net',
   'https://nitter.1d4.us',
-  'https://nitter.kavin.rocks'
+  'https://nitter.kavin.rocks',
+  'https://nitter.cz',
+  'https://nitter.net',
+  'https://xcancel.com'
 ];
 
 // Accounts to follow
