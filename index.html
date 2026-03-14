@@ -2376,6 +2376,46 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         </div>
       </div>
 
+      <!-- LIVE TWEETS SECTION -->
+      <div style="padding:20px 40px 0;background:var(--bg1);border-bottom:1px solid var(--border)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+
+          <!-- Crypto Tweets -->
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite"></div>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase">Crypto Twitter</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">@WatcherGuru</span>
+            </div>
+            <div id="tweet-grid-crypto" style="max-height:420px;overflow-y:auto;padding-right:4px">
+              <div style="padding:20px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">
+                <div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px"></div>
+                Твит ачаалж байна…
+              </div>
+            </div>
+          </div>
+
+          <!-- TradFi Tweets -->
+          <div>
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
+              <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite 0.5s"></div>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase">TradFi Twitter</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">@zerohedge</span>
+            </div>
+            <div id="tweet-grid-tradfi" style="max-height:420px;overflow-y:auto;padding-right:4px">
+              <div style="padding:20px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">
+                <div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px"></div>
+                Твит ачаалж байна…
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);padding:8px 0;text-align:center;letter-spacing:1px">
+          🇲🇳 МОНГОЛ ОРЧУУЛГА БОЛОМЖТОЙ · CLICK TO TRANSLATE · REFRESHES EVERY 15 MIN
+        </div>
+      </div>
+
       <!-- Sentiment bar -->
       <div style="padding:12px 40px;border-bottom:1px solid var(--border);background:var(--bg1);display:flex;align-items:center;gap:20px;flex-wrap:wrap">
         <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;flex-shrink:0">Market Mood</div>
