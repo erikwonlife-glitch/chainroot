@@ -235,25 +235,7 @@ function initTVYearly() {
   });
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// HOOK INTO go() — lazy-init widgets when panel opens
-// ══════════════════════════════════════════════════════════════════════════════
-(function() {
-  var _prevGo = window.go;
-  window.go = function(id, el) {
-    if (_prevGo) _prevGo(id, el);
-    // Small delay to let panel become visible first
-    setTimeout(function() {
-      switch(id) {
-        case 'halving':     initTVHalving(); break;
-        case 'fed':         initTVFed();     break;
-        case 'dxy':         initTVDxy();     break;
-        case 'liquidity':   initTVLiq();     break;
-        case 'ism':         initTVIsm();     break;
-        case 'social-risk': initTVSocial();  break;
-        case 'low-cycles':  initTVEpoch();   break;
-        case 'perf-year':   initTVYearly();  break;
-      }
-    }, 150);
-  };
-})();
+// ── Charts are now initialized via go() in auth.js ───────────────────────────
+// initTVHalving(), initTVFed(), initTVDxy(), initTVLiq(),
+// initTVIsm(), initTVSocial(), initTVEpoch(), initTVYearly()
+// are all called directly from go() when the panel opens
