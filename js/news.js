@@ -1,12 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   CHAINROOT LIVE NEWS ENGINE v2
-   Sources: CryptoCompare · CoinTelegraph · CoinDesk · Reuters RSS
-   Tweets: @WatcherGuru (Crypto) · @zerohedge (TradFi) via Railway
-   Translation: MyMemory API → Mongolian
-   Auto-refresh: 10 min news · 15 min tweets
+   CHAINROOT LIVE NEWS ENGINE v3
+   ALL sources routed through Railway to avoid CORS
+   Tweets: @WatcherGuru (Crypto) · @zerohedge (TradFi)
+   Translation: MyMemory → Mongolian
 ═══════════════════════════════════════════════════════════════ */
 
-const CR_NEWS_API = 'https://chainroot-production.up.railway.app';
+const CR_API_NEWS = 'https://chainroot-production.up.railway.app';
 
 // ── TWEET ENGINE ─────────────────────────────────────────────────────────────
 const TWEETS = (function(){
@@ -16,7 +15,7 @@ const TWEETS = (function(){
   async function _translate(id, text) {
     if (_translated[id]) return _translated[id];
     try {
-      var r = await fetch(CR_NEWS_API + '/api/translate?text=' + encodeURIComponent(text.slice(0, 400)), {signal: AbortSignal.timeout(8000)});
+      var r = await fetch(CR_API_NEWS + '/api/translate?text=' + encodeURIComponent(text.slice(0,400)), {signal:AbortSignal.timeout(8000)});
       if (!r.ok) return null;
       var d = await r.json();
       if (d.translation && d.translation !== text) { _translated[id] = d.translation; return d.translation; }
@@ -38,18 +37,19 @@ const TWEETS = (function(){
     var color = type === 'crypto' ? 'var(--accent)' : 'var(--blue)';
     var account = type === 'crypto' ? '@WatcherGuru' : '@zerohedge';
     var mn = _translated[tw.id] || '';
-    return '<div class="tweet-card" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:10px;">'
-      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">'
-      +   '<div style="width:32px;height:32px;border-radius:50%;background:' + color + '22;border:1px solid ' + color + '44;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:' + color + ';font-family:Space Mono,monospace">𝕏</div>'
-      +   '<div><div style="font-family:Space Grotesk,sans-serif;font-size:12px;font-weight:700;color:var(--text)">' + account + '</div>'
+    var safeText = (tw.text || '').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    return '<div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:14px;margin-bottom:10px">'
+      + '<div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">'
+      +   '<div style="width:28px;height:28px;border-radius:50%;background:' + color + '22;border:1px solid ' + color + '44;display:flex;align-items:center;justify-content:center;font-size:11px;color:' + color + ';font-family:Space Mono,monospace;font-weight:700;flex-shrink:0">𝕏</div>'
+      +   '<div style="flex:1;min-width:0"><div style="font-family:Space Grotesk,sans-serif;font-size:12px;font-weight:700;color:var(--text)">' + account + '</div>'
       +   '<div style="font-family:Space Mono,monospace;font-size:9px;color:var(--muted)">' + _timeAgo(tw.time) + '</div></div>'
-      +   '<a href="' + (tw.url||'#') + '" target="_blank" rel="noopener" style="margin-left:auto;color:var(--muted);font-size:12px;text-decoration:none">↗</a>'
+      +   (tw.url ? '<a href="' + tw.url + '" target="_blank" rel="noopener" style="color:var(--muted);font-size:12px;text-decoration:none;flex-shrink:0">↗</a>' : '')
       + '</div>'
-      + '<div style="font-family:Inter,sans-serif;font-size:13px;color:var(--text);line-height:1.65;margin-bottom:' + (mn ? '8px' : '4px') + '">' + (tw.text || '') + '</div>'
+      + '<div style="font-size:13px;color:var(--text);line-height:1.65;margin-bottom:' + (mn?'8px':'4px') + '">' + safeText + '</div>'
       + (mn
-        ? '<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:8px 12px;background:rgba(255,255,255,.03);border-left:2px solid ' + color + '44;border-radius:0 4px 4px 0">'
-        +   '<span style="font-family:Space Mono,monospace;font-size:8px;color:' + color + ';letter-spacing:1.5px;display:block;margin-bottom:4px">МН ·</span>' + mn + '</div>'
-        : '<button onclick="TWEETS.translateOne(\'' + tw.id + '\',\'' + encodeURIComponent((tw.text||'').slice(0,400)) + '\')" style="margin-top:4px;padding:4px 10px;background:transparent;border:1px solid var(--border);border-radius:4px;font-family:Space Mono,monospace;font-size:9px;color:var(--muted);cursor:pointer">🇲🇳 Монголоор уншмаар байна уу?</button>'
+        ? '<div style="font-size:12px;color:var(--muted);line-height:1.6;padding:7px 11px;background:rgba(255,255,255,.03);border-left:2px solid ' + color + '55;border-radius:0 4px 4px 0">'
+        +   '<span style="font-family:Space Mono,monospace;font-size:8px;color:' + color + ';letter-spacing:1.5px;display:block;margin-bottom:3px">МН ·</span>' + mn + '</div>'
+        : '<button onclick="TWEETS.translateOne(\'' + tw.id + '\',this)" data-text="' + encodeURIComponent(safeText) + '" style="margin-top:4px;padding:3px 9px;background:transparent;border:1px solid var(--border);border-radius:3px;font-family:Space Mono,monospace;font-size:9px;color:var(--muted);cursor:pointer">🇲🇳 Монголоор харах</button>'
         )
       + '</div>';
   }
@@ -59,89 +59,98 @@ const TWEETS = (function(){
     var gt = document.getElementById('tweet-grid-tradfi');
     if (gc) gc.innerHTML = _cache.crypto.length
       ? _cache.crypto.map(function(tw){ return _renderTweet(tw,'crypto'); }).join('')
-      : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">Твит ачаалж байна…</div>';
+      : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">X пост олдсонгүй</div>';
     if (gt) gt.innerHTML = _cache.tradfi.length
       ? _cache.tradfi.map(function(tw){ return _renderTweet(tw,'tradfi'); }).join('')
-      : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">Твит ачаалж байна…</div>';
+      : '<div style="padding:20px;text-align:center;font-family:Space Mono,monospace;font-size:10px;color:var(--muted)">X пост олдсонгүй</div>';
   }
 
   async function _fetch() {
     try {
       var [rc, rt] = await Promise.allSettled([
-        fetch(CR_NEWS_API + '/api/tweets/crypto', {signal:AbortSignal.timeout(15000)}).then(function(r){return r.json();}),
-        fetch(CR_NEWS_API + '/api/tweets/tradfi',  {signal:AbortSignal.timeout(15000)}).then(function(r){return r.json();})
+        fetch(CR_API_NEWS + '/api/tweets/crypto', {signal:AbortSignal.timeout(15000)}).then(function(r){return r.json();}),
+        fetch(CR_API_NEWS + '/api/tweets/tradfi',  {signal:AbortSignal.timeout(15000)}).then(function(r){return r.json();})
       ]);
-      if (rc.status==='fulfilled' && rc.value.tweets) _cache.crypto = rc.value.tweets.slice(0,10);
-      if (rt.status==='fulfilled' && rt.value.tweets) _cache.tradfi  = rt.value.tweets.slice(0,10);
+      if (rc.status==='fulfilled' && rc.value && rc.value.tweets) _cache.crypto = rc.value.tweets.slice(0,10);
+      if (rt.status==='fulfilled' && rt.value && rt.value.tweets) _cache.tradfi  = rt.value.tweets.slice(0,10);
       _renderAll();
       // Auto-translate first 3 of each
       var toTr = _cache.crypto.slice(0,3).concat(_cache.tradfi.slice(0,3));
       for (var i = 0; i < toTr.length; i++) {
-        await _translate(toTr[i].id, toTr[i].text||'');
-        await new Promise(function(r){setTimeout(r,300);});
+        if (toTr[i] && toTr[i].text) {
+          await _translate(toTr[i].id, toTr[i].text);
+          await new Promise(function(res){setTimeout(res,350);});
+        }
       }
       _renderAll();
-    } catch(e){ console.warn('[ChainRoot] Tweets:', e.message); }
+    } catch(e) { console.warn('[ChainRoot] Tweets failed:', e.message); }
   }
 
   return {
     init: function(){ _fetch(); setInterval(_fetch, 15*60*1000); },
     refresh: _fetch,
-    translateOne: async function(id, enc) {
-      var btn = event && event.currentTarget;
-      if (btn) { btn.textContent='⟳ Орчуулж байна…'; btn.disabled=true; }
-      var mn = await _translate(id, decodeURIComponent(enc));
-      if (mn) { _renderAll(); } else if (btn) { btn.textContent='⚠ Орчуулга олдсонгүй'; }
+    translateOne: async function(id, btn) {
+      var text = decodeURIComponent(btn.dataset.text || '');
+      if (!text) return;
+      btn.textContent = '⟳ Орчуулж байна…';
+      btn.disabled = true;
+      var mn = await _translate(id, text);
+      if (mn) { _renderAll(); } else { btn.textContent = '⚠ Олдсонгүй'; }
     }
   };
 })();
 
 // ── NEWS ENGINE ───────────────────────────────────────────────────────────────
 const NEWS = (function(){
-  const PROXY  = 'https://api.allorigins.win/get?url=';
   const PAGE_SZ = 20;
-  let allArticles=[], filtered=[], currentCat='all', displayCount=PAGE_SZ;
+  var allArticles=[], filtered=[], currentCat='all', displayCount=PAGE_SZ;
 
+  // All RSS fetched through Railway proxy to avoid CORS
   async function fetchRSS(feedUrl, defaultCat) {
     try {
-      var r = await fetch(PROXY + encodeURIComponent(feedUrl), {signal:AbortSignal.timeout(14000)});
+      var r = await fetch(CR_API_NEWS + '/api/news/rss?url=' + encodeURIComponent(feedUrl), {signal:AbortSignal.timeout(16000)});
       if (!r.ok) return [];
       var j = await r.json();
-      var doc = new DOMParser().parseFromString(j.contents||'','text/xml');
-      var srcName = doc.querySelector('channel > title')?.textContent?.trim().split('|')[0].trim() || feedUrl.split('/')[2];
+      var xml = j.contents || '';
+      if (!xml || xml.length < 50) return [];
+      var doc = new DOMParser().parseFromString(xml, 'text/xml');
+      var srcName = doc.querySelector('channel > title')?.textContent?.trim().split('|')[0].trim() || feedUrl.split('/')[2] || 'News';
       return Array.from(doc.querySelectorAll('item')).slice(0,15).map(function(item,i){
         var title  = item.querySelector('title')?.textContent?.replace(/<[^>]+>/g,'').trim()||'';
         var desc   = item.querySelector('description')?.textContent?.replace(/<[^>]+>/g,'').slice(0,260).trim()||'';
         var link   = item.querySelector('link')?.textContent?.trim()||'#';
         var pub    = item.querySelector('pubDate')?.textContent?.trim()||'';
         var img    = item.querySelector('enclosure[type^="image"]')?.getAttribute('url')||item.querySelector('thumbnail')?.getAttribute('url')||'';
-        return {id:'rss_'+i+'_'+Date.now(), title, body:desc, url:link, source:srcName,
+        return {id:'rss_'+i+'_'+Date.now(),title,body:desc,url:link,source:srcName,
           time:pub?new Date(pub).getTime():Date.now()-i*300000,
-          cat:catFromText(defaultCat,title), sentiment:sentFromText(title+' '+desc), imageUrl:img};
+          cat:catFromText(defaultCat,title),sentiment:sentFromText(title+' '+desc),imageUrl:img};
       }).filter(function(a){return a.title;});
     } catch(e){ return []; }
   }
 
+  // CryptoCompare through Railway
+  async function fetchCryptoCompare() {
+    try {
+      var r = await fetch(CR_API_NEWS + '/api/news/crypto', {signal:AbortSignal.timeout(12000)});
+      if (!r.ok) return [];
+      var d = await r.json();
+      return (d.Data||[]).slice(0,30).map(function(a){ return {
+        id:'cc_'+a.id, title:a.title, body:(a.body||'').replace(/<[^>]+>/g,'').slice(0,260),
+        url:a.url, source:a.source_info?.name||'CryptoCompare',
+        time:(a.published_on||0)*1000, cat:catFromText(a.categories||'',a.title),
+        sentiment:sentVotes(a.upvotes,a.downvotes), imageUrl:a.imageurl||''};});
+    } catch(e){ return []; }
+  }
+
   const SOURCES = [
-    {id:'cryptocompare', async fetch(){
-      try {
-        var r=await fetch('https://min-api.cryptocompare.com/data/v2/news/?lang=EN&sortOrder=latest',{signal:AbortSignal.timeout(12000)});
-        if(!r.ok)return[];
-        var d=await r.json();
-        return (d.Data||[]).slice(0,30).map(function(a){return{
-          id:'cc_'+a.id, title:a.title, body:(a.body||'').replace(/<[^>]+>/g,'').slice(0,260),
-          url:a.url, source:a.source_info?.name||'CryptoCompare',
-          time:(a.published_on||0)*1000, cat:catFromText(a.categories||'',a.title),
-          sentiment:sentVotes(a.upvotes,a.downvotes), imageUrl:a.imageurl||''};});
-      } catch(e){return[];}
-    }},
-    {id:'cointelegraph', async fetch(){return fetchRSS('https://cointelegraph.com/rss','crypto');}},
-    {id:'coindesk',      async fetch(){return fetchRSS('https://www.coindesk.com/arc/outboundfeeds/rss/','crypto');}},
-    {id:'decrypt',       async fetch(){return fetchRSS('https://decrypt.co/feed','crypto');}},
-    {id:'cnbc-markets',  async fetch(){return fetchRSS('https://www.cnbc.com/id/20910258/device/rss/rss.html','macro');}},
-    {id:'reuters-biz',   async fetch(){return fetchRSS('https://feeds.reuters.com/reuters/businessNews','macro');}},
-    {id:'investing',     async fetch(){return fetchRSS('https://www.investing.com/rss/news.rss','macro');}},
-    {id:'invest-eq',     async fetch(){return fetchRSS('https://www.investing.com/rss/news_25.rss','stocks');}},
+    {id:'cryptocompare', fetch: fetchCryptoCompare},
+    {id:'cointelegraph', fetch: function(){ return fetchRSS('https://cointelegraph.com/rss','crypto'); }},
+    {id:'coindesk',      fetch: function(){ return fetchRSS('https://www.coindesk.com/arc/outboundfeeds/rss/','crypto'); }},
+    {id:'decrypt',       fetch: function(){ return fetchRSS('https://decrypt.co/feed','crypto'); }},
+    {id:'cnbc-markets',  fetch: function(){ return fetchRSS('https://www.cnbc.com/id/20910258/device/rss/rss.html','macro'); }},
+    {id:'reuters-biz',   fetch: function(){ return fetchRSS('https://feeds.reuters.com/reuters/businessNews','macro'); }},
+    {id:'investing',     fetch: function(){ return fetchRSS('https://www.investing.com/rss/news.rss','macro'); }},
+    {id:'invest-eq',     fetch: function(){ return fetchRSS('https://www.investing.com/rss/news_25.rss','stocks'); }},
   ];
 
   function catFromText(hint,title){
@@ -213,7 +222,7 @@ const NEWS = (function(){
       if(upd)upd.textContent='Updated '+new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
     } else if(!allArticles.length){
       var grid=document.getElementById('news-grid');
-      if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--muted)">⚠ Could not load news — check connection</div>';
+      if(grid)grid.innerHTML='<div style="grid-column:1/-1;text-align:center;padding:60px;font-family:\'Space Mono\',monospace;font-size:11px;color:var(--muted)">⚠ Could not load news</div>';
     }
   }
 
@@ -231,7 +240,7 @@ function newsSetCat(cat,el){document.querySelectorAll('.news-tab').forEach(funct
 function newsFilter(){NEWS.filter();}
 function newsLoadMore(){NEWS.loadMore();}
 
-// Lazy-init via go() in auth.js — called when news panel opens
+// Called from go() in auth.js when news panel opens
 window._newsInit = function(){
-  if(!window._newsInited){window._newsInited=true;NEWS.init();TWEETS.init();}
+  if(!window._newsInited){ window._newsInited=true; NEWS.init(); TWEETS.init(); }
 };
