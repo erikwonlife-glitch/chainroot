@@ -2251,22 +2251,46 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <!-- GLOBAL ASSETS -->
     <div class="pnl" id="P-global-assets">
-      <div class="ph"><div><div class="pht"><span data-mn="Дэлхийн Хөрөнгийн Жагсаалт" data-en="Global Asset Ranking">Дэлхийн Хөрөнгийн Жагсаалт</span> <span class="pbg c">CeFi</span></div><div class="phs"><span data-mn="Бүх хөрөнгийн ангилал зах зээлийн капиталаар эрэмбэлэгдсэн" data-en="All asset classes ranked by market cap — crypto figures live from CoinGecko">Бүх хөрөнгийн ангилал зах зээлийн капиталаар эрэмбэлэгдсэн</span></div></div></div>
-      <div class="pc">
-        <div class="mg" id="globalAssetGrid">
-          <div class="mc2"><div class="mcl">US Equities</div><div class="mcv">$48.2T</div><div class="mcs dn">↓ −0.21%</div><div class="mcb"><div class="mcf" style="width:100%;background:var(--blue)"></div></div></div>
-          <div class="mc2"><div class="mcl">Real Estate (US)</div><div class="mcv">$43.4T</div><div class="mcs" style="color:var(--muted)">→ flat</div><div class="mcb"><div class="mcf" style="width:100%;background:#ff6b35"></div></div></div>
-          <div class="mc2"><div class="mcl">Gold</div><div class="mcv" id="gaGold">$20.8T</div><div class="mcs up" id="gaGoldChg">↑ live</div><div class="mcb"><div class="mcf" style="width:100%;background:var(--gold)"></div></div></div>
-          <div class="mc2"><div class="mcl">Crypto Total</div><div class="mcv" id="gaCrypto">$—</div><div class="mcs" id="gaCryptoChg">loading…</div><div class="mcb"><div class="mcf" style="width:100%;background:var(--accent)"></div></div></div>
-          <div class="mc2"><div class="mcl">Bitcoin</div><div class="mcv" id="gaBTC">$—</div><div class="mcs" id="gaBTCChg">loading…</div><div class="mcb"><div class="mcf" style="width:100%;background:#F7931A"></div></div></div>
-          <div class="mc2"><div class="mcl">Ethereum</div><div class="mcv" id="gaETH">$—</div><div class="mcs" id="gaETHChg">loading…</div><div class="mcb"><div class="mcf" style="width:100%;background:#627EEA"></div></div></div>
-          <div class="mc2"><div class="mcl">Silver</div><div class="mcv">$1.72T</div><div class="mcs up">↑ +0.3%</div><div class="mcb"><div class="mcf" style="width:100%;background:#aaa"></div></div></div>
-          <div class="mc2"><div class="mcl">Solana</div><div class="mcv" id="gaSOL">$—</div><div class="mcs" id="gaSOLChg">loading…</div><div class="mcb"><div class="mcf" style="width:100%;background:#9945FF"></div></div></div>
+      <div class="ph">
+        <div>
+          <div class="pht"><span data-mn="Дэлхийн Хөрөнгийн Жагсаалт" data-en="Global Asset Ranking">Дэлхийн Хөрөнгийн Жагсаалт</span> <span class="pbg c">CeFi</span></div>
+          <div class="phs"><span data-mn="Зах зээлийн капиталаар эрэмбэлэгдсэн дэлхийн шилдэг 50 хөрөнгө" data-en="Top global assets ranked by market capitalization — stocks, commodities, and cryptocurrencies">Top global assets ranked by market capitalization — stocks, commodities, and cryptocurrencies</span></div>
         </div>
-        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:20px;margin-top:14px">
-          <div class="st" style="margin-bottom:16px"><span data-mn="Зах зээлийн Кап Харьцуулалт" data-en="Market Cap Comparison">Зах зээлийн Кап Харьцуулалт</span></div>
-          <canvas id="globalAssetsChart" height="90"></canvas>
+        <div class="phst">
+          <div id="ga-updated" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">Loading…</div>
         </div>
+      </div>
+      <div class="pc" style="padding-top:20px">
+
+        <!-- Search -->
+        <div class="sr" style="margin-bottom:20px;max-width:360px">
+          <span class="si">⌕</span>
+          <input type="text" placeholder="Search assets..." id="gaSearch" oninput="gaFilter(this.value)"
+            style="background:transparent;border:none;outline:none;font-family:'Space Mono',monospace;font-size:13px;color:var(--text);width:100%"/>
+        </div>
+
+        <!-- Table -->
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;overflow:hidden">
+          <table style="width:100%;border-collapse:collapse" id="gaTable">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border)">
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:left;width:40px">#</th>
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:left">Asset</th>
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:right">Market Cap</th>
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:right">Price</th>
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:right">24h</th>
+                <th style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;padding:12px 16px;text-align:center">Type</th>
+              </tr>
+            </thead>
+            <tbody id="gaBody">
+              <tr><td colspan="6" style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
+                <div style="width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>
+                LOADING ASSETS…
+              </td></tr>
+            </tbody>
+          </table>
+        </div>
+
       </div>
     </div>
 
@@ -6120,6 +6144,197 @@ function setSiteLang(lang) {
 })();
 
 // Expose globally
+// ── GLOBAL ASSET RANKING ──────────────────────────────────────────────────────
+(function(){
+
+const CR_API_GA = 'https://chainroot-production.up.railway.app';
+const FH_KEY_GA = 'd0eaie9r01qgv48uo9igd0eaie9r01qgv48uo9j0';
+
+// ── Static non-crypto assets with known market caps ───────────────────────────
+// Market caps in $T — sourced from public financial data, updated periodically
+const STATIC_ASSETS = [
+  // Commodities — market caps calculated from world supply × price
+  {id:'gold',      name:'Gold',              ticker:'GOLD',   type:'Commodity', mcapT:34.9,  price:3050,  chg24:null, fhTicker:'OANDA:XAUUSD', logo:'https://assets.coingecko.com/coins/images/944/large/pax-gold.png'},
+  {id:'silver',    name:'Silver',            ticker:'SILVER', type:'Commodity', mcapT:4.5,   price:34,    chg24:null, fhTicker:'OANDA:XAGUSD', logo:'https://assets.coingecko.com/coins/images/14119/large/paxg.png'},
+  {id:'crude-oil', name:'Crude Oil',         ticker:'WTI',    type:'Commodity', mcapT:2.1,   price:68,    chg24:null, fhTicker:null,            logo:null},
+  // Major Stocks — logos via Clearbit
+  {id:'nvda', name:'NVIDIA',           ticker:'NVDA',  type:'Stock', mcapT:3.3, price:null, chg24:null, fhTicker:'NVDA',  logo:'https://logo.clearbit.com/nvidia.com'},
+  {id:'aapl', name:'Apple',            ticker:'AAPL',  type:'Stock', mcapT:3.7, price:null, chg24:null, fhTicker:'AAPL',  logo:'https://logo.clearbit.com/apple.com'},
+  {id:'msft', name:'Microsoft',        ticker:'MSFT',  type:'Stock', mcapT:3.1, price:null, chg24:null, fhTicker:'MSFT',  logo:'https://logo.clearbit.com/microsoft.com'},
+  {id:'amzn', name:'Amazon',           ticker:'AMZN',  type:'Stock', mcapT:2.3, price:null, chg24:null, fhTicker:'AMZN',  logo:'https://logo.clearbit.com/amazon.com'},
+  {id:'goog', name:'Alphabet (Google)',ticker:'GOOG',  type:'Stock', mcapT:2.0, price:null, chg24:null, fhTicker:'GOOGL', logo:'https://logo.clearbit.com/google.com'},
+  {id:'meta', name:'Meta',             ticker:'META',  type:'Stock', mcapT:1.7, price:null, chg24:null, fhTicker:'META',  logo:'https://logo.clearbit.com/meta.com'},
+  {id:'tsla', name:'Tesla',            ticker:'TSLA',  type:'Stock', mcapT:0.9, price:null, chg24:null, fhTicker:'TSLA',  logo:'https://logo.clearbit.com/tesla.com'},
+  {id:'brk',  name:'Berkshire Hath.',  ticker:'BRK.B', type:'Stock', mcapT:1.1, price:null, chg24:null, fhTicker:'BRK.B', logo:'https://logo.clearbit.com/berkshirehathaway.com'},
+  {id:'tsm',  name:'TSMC',             ticker:'TSM',   type:'Stock', mcapT:0.9, price:null, chg24:null, fhTicker:'TSM',   logo:'https://logo.clearbit.com/tsmc.com'},
+  {id:'eli',  name:'Eli Lilly',        ticker:'LLY',   type:'Stock', mcapT:0.8, price:null, chg24:null, fhTicker:'LLY',   logo:'https://logo.clearbit.com/lilly.com'},
+  {id:'jpm',  name:'JPMorgan Chase',   ticker:'JPM',   type:'Stock', mcapT:0.7, price:null, chg24:null, fhTicker:'JPM',   logo:'https://logo.clearbit.com/jpmorganchase.com'},
+  {id:'v',    name:'Visa',             ticker:'V',     type:'Stock', mcapT:0.6, price:null, chg24:null, fhTicker:'V',     logo:'https://logo.clearbit.com/visa.com'},
+  {id:'wmt',  name:'Walmart',          ticker:'WMT',   type:'Stock', mcapT:0.8, price:null, chg24:null, fhTicker:'WMT',   logo:'https://logo.clearbit.com/walmart.com'},
+  {id:'xom',  name:'ExxonMobil',       ticker:'XOM',   type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'XOM',   logo:'https://logo.clearbit.com/exxonmobil.com'},
+  {id:'nflx', name:'Netflix',          ticker:'NFLX',  type:'Stock', mcapT:0.4, price:null, chg24:null, fhTicker:'NFLX',  logo:'https://logo.clearbit.com/netflix.com'},
+  {id:'unh',  name:'UnitedHealth',     ticker:'UNH',   type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'UNH',   logo:'https://logo.clearbit.com/unitedhealthgroup.com'},
+  {id:'cost', name:'Costco',           ticker:'COST',  type:'Stock', mcapT:0.5, price:null, chg24:null, fhTicker:'COST',  logo:'https://logo.clearbit.com/costco.com'},
+];
+
+const TYPE_BADGE = {
+  'Commodity': `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(244,197,66,.15);color:#f4c542;border:1px solid rgba(244,197,66,.3)">Commodity</span>`,
+  'Stock':     `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(77,100,117,.2);color:#8aa0b0;border:1px solid rgba(77,100,117,.3)">Stock</span>`,
+  'Crypto':    `<span style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;padding:3px 10px;border-radius:4px;background:rgba(0,232,122,.12);color:#00e87a;border:1px solid rgba(0,232,122,.25)">Crypto</span>`,
+};
+
+// Commodity fallback SVG logos
+const COMMODITY_SVG = {
+  'gold':      `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#f4c542,#b8860b);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🪙</div>`,
+  'silver':    `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#d0d0d0,#888);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🥈</div>`,
+  'crude-oil': `<div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#333,#111);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:18px">🛢</div>`,
+};
+
+let GA_ALL = [], GA_FILTERED = [];
+
+function fmtMcap(t) {
+  if (!t && t !== 0) return '—';
+  if (t >= 1)   return '$' + t.toFixed(2) + 'T';
+  if (t >= 0.1) return '$' + (t * 1000).toFixed(0) + 'B';
+  return '$' + (t * 1000).toFixed(1) + 'B';
+}
+function fmtGaPrice(p) {
+  if (p == null) return '—';
+  if (p >= 1000) return '$' + p.toLocaleString('en-US', {maximumFractionDigits:2});
+  if (p >= 1)    return '$' + p.toFixed(2);
+  if (p >= 0.01) return '$' + p.toFixed(4);
+  return '$' + p.toFixed(6);
+}
+
+function getLogo(a) {
+  const size = 'width:36px;height:36px;flex-shrink:0;';
+  // Commodity SVG fallback
+  if (a.type === 'Commodity') return COMMODITY_SVG[a.id] || `<div style="${size}border-radius:50%;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-size:18px">💎</div>`;
+  // Crypto — use CoinGecko image (already a URL)
+  if (a.type === 'Crypto' && a.logo) {
+    return `<img src="${a.logo}" style="${size}border-radius:50%;object-fit:cover;" loading="lazy"
+      onerror="this.outerHTML='<div style=\\'${size}border-radius:50%;background:'+encodeURIComponent('#'+a.color.slice(1))+'22;display:flex;align-items:center;justify-content:center;font-family:Space Mono,monospace;font-size:11px;font-weight:700;color:${a.color}\\'>${a.ticker[0]}</div>'"/>`;
+  }
+  // Stock — Clearbit logo with letter fallback
+  if (a.logo) {
+    const fb = `<div style="${size}border-radius:8px;background:${a.color||'#333'}22;border:1px solid ${a.color||'#333'}44;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:${a.color||'#aaa'}">${a.ticker.slice(0,3)}</div>`;
+    return `<img src="${a.logo}" style="${size}border-radius:8px;object-fit:contain;background:#fff;padding:2px;" loading="lazy" onerror="this.outerHTML=\`${fb.replace(/`/g,"'")}\`"/>`;
+  }
+  return `<div style="${size}border-radius:8px;background:var(--bg3);display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${a.ticker.slice(0,3)}</div>`;
+}
+
+function renderGA() {
+  const tbody = document.getElementById('gaBody');
+  if (!tbody) return;
+  const list = GA_FILTERED.length ? GA_FILTERED : GA_ALL;
+  if (!list.length) return;
+  tbody.innerHTML = list.map(function(a, i) {
+    const chgColor = a.chg24 == null ? 'var(--muted)' : a.chg24 >= 0 ? '#00e87a' : '#ff4560';
+    const chgText  = a.chg24 == null ? '—' : (a.chg24 >= 0 ? '+' : '') + a.chg24.toFixed(2) + '%';
+    return `<tr style="border-bottom:1px solid rgba(28,45,56,.5);transition:background .12s" onmouseover="this.style.background='rgba(0,232,122,.025)'" onmouseout="this.style.background=''">
+      <td style="padding:13px 16px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);width:44px">${i+1}</td>
+      <td style="padding:13px 16px">
+        <div style="display:flex;align-items:center;gap:14px">
+          ${getLogo(a)}
+          <div>
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:700;color:#fff;line-height:1.2">${a.name}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted);margin-top:2px">${a.ticker}</div>
+          </div>
+        </div>
+      </td>
+      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:13px;font-weight:700;color:#fff;text-align:right;white-space:nowrap">${fmtMcap(a.mcapT)}</td>
+      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);text-align:right;white-space:nowrap">${fmtGaPrice(a.price)}</td>
+      <td style="padding:13px 20px;font-family:'Space Mono',monospace;font-size:12px;color:${chgColor};text-align:right;white-space:nowrap">${chgText}</td>
+      <td style="padding:13px 16px;text-align:center;white-space:nowrap">${TYPE_BADGE[a.type]||''}</td>
+    </tr>`;
+  }).join('');
+}
+
+window.gaFilter = function(q) {
+  const ql = (q||'').toLowerCase();
+  GA_FILTERED = ql ? GA_ALL.filter(function(a){ return a.name.toLowerCase().includes(ql)||a.ticker.toLowerCase().includes(ql); }) : [];
+  renderGA();
+};
+
+async function loadGlobalAssets() {
+  const tbody = document.getElementById('gaBody');
+  if (tbody) tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
+    <div style="width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 12px"></div>
+    LOADING ASSETS…</td></tr>`;
+
+  const assets = STATIC_ASSETS.map(function(a){ return Object.assign({},a); });
+
+  // ── Step 1: Get crypto — Railway first, fall back to ALL_COINS already in memory
+  let cryptoCoins = [];
+  try {
+    const r = await fetch(CR_API_GA + '/api/crypto/markets', {signal:AbortSignal.timeout(12000)});
+    if (r.ok) {
+      const d = await r.json();
+      if (Array.isArray(d) && d.length) cryptoCoins = d;
+    }
+  } catch(e) {}
+
+  // ALL_COINS is populated by init() — guaranteed to have Bitcoin as #1
+  if (!cryptoCoins.length && typeof ALL_COINS !== 'undefined' && ALL_COINS.length) {
+    cryptoCoins = ALL_COINS;
+  }
+
+  cryptoCoins.forEach(function(c) {
+    if (!c.market_cap || c.market_cap < 1e9) return; // skip < $1B mcap
+    assets.push({
+      id:    c.id,
+      name:  c.name,
+      ticker:(c.symbol||'').toUpperCase(),
+      type:  'Crypto',
+      mcapT: +(c.market_cap / 1e12).toFixed(6),
+      price: c.current_price,
+      chg24: c.price_change_percentage_24h != null ? +c.price_change_percentage_24h.toFixed(2) : null,
+      logo:  c.image || null,
+      color: '#F7931A',
+      fhTicker: null
+    });
+  });
+
+  // ── Step 2: Live Finnhub quotes for stocks ────────────────────────────────────
+  const stocks = assets.filter(function(a){ return a.type==='Stock' && a.fhTicker; });
+  await Promise.allSettled(stocks.map(async function(a) {
+    try {
+      const r = await fetch('https://finnhub.io/api/v1/quote?symbol='+a.fhTicker+'&token='+FH_KEY_GA, {signal:AbortSignal.timeout(6000)});
+      if (!r.ok) return;
+      const d = await r.json();
+      if (d.c && d.c > 0) {
+        a.price = d.c;
+        if (d.pc && d.pc > 0) a.chg24 = +((d.c - d.pc) / d.pc * 100).toFixed(2);
+      }
+    } catch(e) {}
+  }));
+
+  // ── Step 3: Sort by mcap, top 50 ─────────────────────────────────────────────
+  GA_ALL = assets
+    .filter(function(a){ return a.mcapT && a.mcapT > 0; })
+    .sort(function(a,b){ return (b.mcapT||0) - (a.mcapT||0); })
+    .slice(0, 50);
+
+  renderGA();
+
+  const upd = document.getElementById('ga-updated');
+  if (upd) upd.textContent = '↻ Updated ' + new Date().toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit'});
+}
+
+// Lazy-init — only runs when panel is first opened
+(function(){
+  const _prev = window.go;
+  window.go = function(id, el) {
+    if (_prev) _prev(id, el);
+    if (id === 'global-assets' && !window._gaInited) {
+      window._gaInited = true;
+      loadGlobalAssets();
+    }
+  };
+})();
+
+})(); // end IIFE
+
 window.setSiteLang = setSiteLang;
 </script>
 <script>
