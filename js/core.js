@@ -575,16 +575,20 @@ function renderFearGreed(data){
     if(vEl){vEl.textContent=v;vEl.style.color=c;}
   });
 
-  // 30-day chart
+  // 30-day chart — redraws when data changes
   const fngEl=document.getElementById('fngChart');
-  if(fngEl&&!fngEl._drawn){
-    fngEl._drawn=true;
+  if(fngEl){
     const h30=data.data.slice(0,30).reverse();
     const fngL=h30.map(d=>new Date(d.timestamp*1000).toLocaleDateString('en',{month:'short',day:'numeric'}));
     const fngV=h30.map(d=>parseInt(d.value));
     const fngC=fngV.map(v=>v>=60?ACCENT:v>=40?GOLD:RED);
-    new Chart(fngEl,{type:'bar',data:{labels:fngL,datasets:[{label:'Fear & Greed',data:fngV,backgroundColor:fngC,borderRadius:3}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'#1c2d38'},ticks:{color:MUTED}},x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,maxTicksLimit:8,font:{size:8}}}}}});
+    // Check if today's value changed before redrawing
+    const todayVal = fngV[fngV.length-1];
+    if(fngEl._lastVal !== todayVal){
+      fngEl._lastVal = todayVal;
+      if(fngEl._chart){ try{fngEl._chart.destroy();}catch(e){} }
+      fngEl._chart = new Chart(fngEl,{type:'bar',data:{labels:fngL,datasets:[{label:'Fear & Greed',data:fngV,backgroundColor:fngC,borderRadius:3}]},
+        options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'#1c2d38'},ticks:{color:MUTED}},x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,maxTicksLimit:8,font:{size:8}}}}}});
+    }
   }
 }
-
