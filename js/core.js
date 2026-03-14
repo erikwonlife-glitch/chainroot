@@ -74,72 +74,126 @@ async function fetchJSON(url){
 // ── MAIN INITIALISER — runs on load and every 60s ────────────────────────────
 const CR_API = 'https://chainroot-production.up.railway.app';
 
-// Shared BTC monthly history array — used by all overlay charts
-// Format: [{ym:'2013-01', ts:unix, price:13.5}, ...]
-window.BTC_MONTHLY_HISTORY = [];
-window._btcMonthlyLoaded   = false;
 
-async function loadBtcMonthlyHistory() {
-  if (window._btcMonthlyLoaded) return;
+// ── SHARED BTC DAILY HISTORY — used by ALL overlay charts ────────────────────
+// Format: [{ts:unix, date:'2013-01-01', price:13.5}, ...]
+window.BTC_DAILY_HISTORY  = [];
+window.BTC_MONTHLY_HISTORY= []; // kept for backward compat
+window._btcDailyLoaded    = false;
+
+async function loadBtcDailyHistory() {
+  if (window._btcDailyLoaded) return;
   try {
-    const r = await fetch(`${CR_API}/api/crypto/btc-monthly`, {signal:AbortSignal.timeout(25000)});
+    const r = await fetch(`${CR_API}/api/crypto/btc-daily`, {signal:AbortSignal.timeout(30000)});
     if (!r.ok) throw new Error('HTTP '+r.status);
     const d = await r.json();
-    if (!d || !d.prices || !d.prices.length) throw new Error('No data');
+    if (!d || !d.daily || !d.daily.length) throw new Error('No data');
 
-    // Build monthly array from raw prices
-    const monthly = [];
+    window.BTC_DAILY_HISTORY = d.daily; // [{ts, date, price}]
+    window._btcDailyLoaded   = true;
+
+    // Also populate monthly for backward compat with older chart code
     const seen = {};
-    d.prices.forEach(function(p) {
-      const date = new Date(p[0]);
-      const ym   = date.getFullYear() + '-' + String(date.getMonth()+1).padStart(2,'0');
-      if (!seen[ym]) {
-        seen[ym] = true;
-        monthly.push({ym:ym, ts:Math.floor(p[0]/1000), price:+p[1].toFixed(2)});
-      }
+    window.BTC_MONTHLY_HISTORY = d.daily.filter(function(p) {
+      const ym = p.date.slice(0,7);
+      if (!seen[ym]) { seen[ym] = true; return true; }
+      return false;
+    }).map(function(p) {
+      return { ym: p.date.slice(0,7), ts: p.ts, price: p.price };
     });
 
-    // Sort ascending
-    monthly.sort(function(a,b){ return a.ts-b.ts; });
-
-    window.BTC_MONTHLY_HISTORY = monthly;
-    window._btcMonthlyLoaded   = true;
-
-    // Refresh all overlay charts with real BTC data — safe live-endpoint updates only
-    ['_fedRefresh','_dxyRefresh','_liqRefresh','_ismRefresh','_socialRefresh'].forEach(function(fn) {
+    // Refresh all overlay charts with real daily data
+    ['_fedRefresh','_dxyRefresh','_liqRefresh','_ismRefresh','_socialRefresh',
+     '_halvingRefresh','_epochRefresh'].forEach(function(fn) {
       if (typeof window[fn] === 'function') {
         try { window[fn](); } catch(e){ console.warn('[ChainRoot] '+fn+' error:', e.message); }
       }
     });
 
-    console.log('[ChainRoot] BTC monthly history loaded:', monthly.length, 'months');
+    console.log('[ChainRoot] BTC daily history loaded:', d.daily.length, 'days from', d.daily[0].date, 'to', d.daily[d.daily.length-1].date);
   } catch(e) {
-    console.warn('[ChainRoot] BTC monthly history fallback:', e.message);
-    // Keep existing hardcoded arrays as fallback — charts still work
+    console.warn('[ChainRoot] BTC daily history failed, using fallback:', e.message);
+    // Fallback: try monthly endpoint
+    try {
+      const r2 = await fetch(`${CR_API}/api/crypto/btc-monthly`, {signal:AbortSignal.timeout(20000)});
+      if (r2.ok) {
+        const d2 = await r2.json();
+        if (d2 && d2.prices && d2.prices.length) {
+          const seen2 = {};
+          window.BTC_MONTHLY_HISTORY = d2.prices.map(function(p) {
+            return { ym: new Date(p[0]).toISOString().slice(0,7), ts: Math.floor(p[0]/1000), price: +p[1].toFixed(2) };
+          }).filter(function(p) {
+            if (seen2[p.ym]) return false;
+            seen2[p.ym] = true; return true;
+          });
+          console.log('[ChainRoot] BTC monthly fallback loaded:', window.BTC_MONTHLY_HISTORY.length, 'months');
+        }
+      }
+    } catch(e2) { console.warn('[ChainRoot] Monthly fallback also failed'); }
   }
 }
 
-// Helper: returns [{time:unixTs, value:price}] for TradingView overlay charts
-// Uses real monthly history when loaded, falls back to hardcoded array
-// Always injects live BTC_CURRENT as the final point
-function getBtcOverlayData(fallbackArr) {
-  var src = (window.BTC_MONTHLY_HISTORY && window.BTC_MONTHLY_HISTORY.length > 10)
-    ? window.BTC_MONTHLY_HISTORY.map(function(m){ return {time:m.ts, value:m.price}; })
-    : (fallbackArr || []).map(function(d){ return {time: new Date(d[0]+'-01').getTime()/1000, value:d[1]}; });
+// ── HALVING CYCLE DAILY DATA ──────────────────────────────────────────────────
+// Returns daily prices for a specific halving cycle from Railway
+// Falls back to slicing BTC_DAILY_HISTORY if available
+window.BTC_HALVING_CYCLES = {}; // {1: [{day,ts,price}], 2: ..., 3: ..., 4: ...}
 
-  // Inject live price as final point
+async function loadHalvingCycle(cycle) {
+  if (window.BTC_HALVING_CYCLES[cycle]) return window.BTC_HALVING_CYCLES[cycle];
+  try {
+    const r = await fetch(`${CR_API}/api/crypto/btc-halving/${cycle}`, {signal:AbortSignal.timeout(25000)});
+    if (!r.ok) throw new Error('HTTP '+r.status);
+    const d = await r.json();
+    if (!d || !d.prices || !d.prices.length) throw new Error('No data');
+    window.BTC_HALVING_CYCLES[cycle] = d.prices; // [{day, ts, price}]
+    console.log('[ChainRoot] Halving cycle', cycle, 'loaded:', d.prices.length, 'days');
+    return d.prices;
+  } catch(e) {
+    console.warn('[ChainRoot] Halving cycle', cycle, 'failed:', e.message);
+    return null;
+  }
+}
+
+// ── HELPER: get BTC data for TradingView overlay charts ──────────────────────
+// Priority: daily history → monthly history → hardcoded fallback
+// Always injects live BTC_CURRENT as final point
+function getBtcOverlayData(fallbackArr) {
+  var src;
+
+  if (window.BTC_DAILY_HISTORY && window.BTC_DAILY_HISTORY.length > 100) {
+    // Use real daily data
+    src = window.BTC_DAILY_HISTORY.map(function(d) {
+      return { time: d.ts, value: d.price };
+    });
+  } else if (window.BTC_MONTHLY_HISTORY && window.BTC_MONTHLY_HISTORY.length > 10) {
+    // Use monthly
+    src = window.BTC_MONTHLY_HISTORY.map(function(m) {
+      return { time: m.ts, value: m.price };
+    });
+  } else {
+    // Hardcoded fallback
+    src = (fallbackArr || []).map(function(d) {
+      return { time: new Date(d[0]+'-01').getTime()/1000, value: d[1] };
+    });
+  }
+
+  // Always inject live price as final point
   if (window.BTC_CURRENT && src.length) {
     var nowTs = Math.floor(Date.now()/1000);
-    // Replace last point if it's within 35 days, otherwise append
-    var last = src[src.length-1];
-    if (nowTs - last.time < 35*86400) {
-      src[src.length-1] = {time:nowTs, value:Math.round(window.BTC_CURRENT)};
+    var last  = src[src.length-1];
+    if (nowTs - last.time < 3*86400) {
+      src[src.length-1] = { time: nowTs, value: Math.round(window.BTC_CURRENT) };
     } else {
-      src.push({time:nowTs, value:Math.round(window.BTC_CURRENT)});
+      src.push({ time: nowTs, value: Math.round(window.BTC_CURRENT) });
     }
   }
   return src;
 }
+
+// Backward compat alias
+function loadBtcMonthlyHistory() { return loadBtcDailyHistory(); }
+
+
 
 async function init(){
   // 1. Fetch all live data — route CoinGecko through Railway to avoid CORS
@@ -191,8 +245,12 @@ async function init(){
   if(!window._chartsDrawn){
     window._chartsDrawn=true;
     drawAllCharts();
-    // Load full BTC monthly history from backend for accurate overlay charts
-    loadBtcMonthlyHistory();
+    // Load full BTC daily history for accurate overlay charts
+    loadBtcDailyHistory();
+    // Pre-load halving cycle data for halving chart
+    setTimeout(function() {
+      [1,2,3,4].forEach(function(c) { loadHalvingCycle(c); });
+    }, 2000);
   }
 
   // Refresh yearly performance charts with latest BTC price data
@@ -518,5 +576,4 @@ function renderFearGreed(data){
       options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{min:0,max:100,grid:{color:'#1c2d38'},ticks:{color:MUTED}},x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,maxTicksLimit:8,font:{size:8}}}}}});
   }
 }
-
 
