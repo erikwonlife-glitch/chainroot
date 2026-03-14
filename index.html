@@ -983,12 +983,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 .tr-pricing-sub { font-size: 14px; color: #4d6475; margin-bottom: 32px; }
 .tr-plans {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr 1fr 1fr;
   gap: 14px;
-  max-width: 560px;
+  max-width: 860px;
   margin: 0 auto;
 }
-@media (max-width: 500px) { .tr-plans { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .tr-plans { grid-template-columns: 1fr; } }
 .tr-plan {
   border: 1px solid #1c2d38;
   border-radius: 6px;
@@ -3586,15 +3586,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <!-- Pricing CTA with CRYPTO PAYMENT -->
     <div class="tr-pricing">
-      <div class="tr-pricing-title" data-mn="Индикаторт захиалга хийх" data-en="Subscribe to the Indicator">Индикаторт захиалга хийх</div>
+      <div class="tr-pricing-title">Индикаторт захиалга хийх</div>
       <p class="tr-pricing-sub">Крипто төлбөрөөр хандалт авна уу · USDT эсвэл SOL · Хэдийд ч цуцлах боломжтой</p>
-      <div class="tr-plans">
+      <div class="tr-plans" style="grid-template-columns:1fr 1fr 1fr">
 
         <!-- Monthly -->
         <div class="tr-plan">
           <div class="tr-plan-name">Сарын захиалга</div>
-          <div class="tr-plan-price">$9<span>/сар</span></div>
-          <div class="tr-plan-period">≈ 9 USDT · Сар бүр</div>
+          <div class="tr-plan-price">$40<span>/сар</span></div>
+          <div class="tr-plan-period">≈ 40 USDT · Сар бүр</div>
           <ul class="tr-plan-features">
             <li>TradingView индикатор хандалт</li>
             <li>BUY / SELL · Entry / Exit дохио</li>
@@ -3607,12 +3607,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
           </button>
         </div>
 
-        <!-- Annual -->
+        <!-- 6 months — featured -->
         <div class="tr-plan featured">
-          <div class="tr-plan-badge">ХАМГИЙН АШИГТАЙ</div>
-          <div class="tr-plan-name">Жилийн захиалга</div>
-          <div class="tr-plan-price">$69<span>/жил</span></div>
-          <div class="tr-plan-period save">≈ 69 USDT · $39 хэмнэлт</div>
+          <div class="tr-plan-badge">ХАМГИЙН АЛДАРТАЙ</div>
+          <div class="tr-plan-name">6 Сарын захиалга</div>
+          <div class="tr-plan-price">$150<span>/6 сар</span></div>
+          <div class="tr-plan-period save">$90 хэмнэлт · Сард $25</div>
           <ul class="tr-plan-features">
             <li>TradingView индикатор хандалт</li>
             <li>BUY / SELL · Entry / Exit дохио</li>
@@ -3620,6 +3620,26 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
             <li>Мэдэгдлийн систем</li>
             <li>Монгол хэлний дэмжлэг</li>
             <li>Үнэгүй шинэчлэлт бүхэн</li>
+          </ul>
+          <button class="tr-plan-btn" onclick="openCryptoPayment('biannual')">
+            Крипто төлбөр →
+          </button>
+        </div>
+
+        <!-- Annual -->
+        <div class="tr-plan">
+          <div class="tr-plan-badge" style="background:rgba(0,180,216,.15);color:#00b4d8;border-color:rgba(0,180,216,.3)">ХАМГИЙН ХЯМД</div>
+          <div class="tr-plan-name">Жилийн захиалга</div>
+          <div class="tr-plan-price">$250<span>/жил</span></div>
+          <div class="tr-plan-period save">$230 хэмнэлт · Сард $20.8</div>
+          <ul class="tr-plan-features">
+            <li>TradingView индикатор хандалт</li>
+            <li>BUY / SELL · Entry / Exit дохио</li>
+            <li>Дэмжлэг &amp; Эсэргүүцлийн түвшин</li>
+            <li>Мэдэгдлийн систем</li>
+            <li>Монгол хэлний дэмжлэг</li>
+            <li>Үнэгүй шинэчлэлт бүхэн</li>
+            <li>Тэргүүн эрэмбийн дэмжлэг</li>
           </ul>
           <button class="tr-plan-btn" onclick="openCryptoPayment('annual')">
             Крипто төлбөр →
