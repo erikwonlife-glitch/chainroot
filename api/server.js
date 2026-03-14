@@ -393,15 +393,178 @@ app.get('/api/overview/:type', async function(req, res) {
   res.json(out);
 });
 
+// ── COIN TABLE ENDPOINTS ──────────────────────────────────────────────────────
+// These power the main crypto price table with filter tabs
+
+// Top 400 coins — fetches 2 pages of 200 from CoinGecko
+// GET /api/crypto/coins?page=1  (coins 1-200)
+// GET /api/crypto/coins?page=2  (coins 201-400)
+app.get('/api/crypto/coins', async function(req, res) {
+  var page = parseInt(req.query.page) || 1;
+  if (page < 1 || page > 2) page = 1;
+  var cacheKey = 'crypto/coins/page' + page;
+  var cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    var url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd' +
+      '&order=market_cap_desc&per_page=200&page=' + page +
+      '&sparkline=true&price_change_percentage=1h,24h,7d,30d';
+    var r = await fetch(url, { timeout: 15000 });
+    if (!r.ok) return res.status(502).json({ error: 'CoinGecko ' + r.status });
+    var data = await r.json();
+    setCache(cacheKey, data);
+    res.json(data);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// DeFi tokens category
+// GET /api/crypto/category/defi
+app.get('/api/crypto/category/defi', async function(req, res) {
+  var cached = getCache('crypto/category/defi');
+  if (cached) return res.json(cached);
+  try {
+    var url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd' +
+      '&category=decentralized-finance-defi&order=market_cap_desc&per_page=100&page=1' +
+      '&sparkline=true&price_change_percentage=1h,24h,7d';
+    var r = await fetch(url, { timeout: 15000 });
+    if (!r.ok) return res.status(502).json({ error: 'CoinGecko ' + r.status });
+    var data = await r.json();
+    setCache('crypto/category/defi', data);
+    res.json(data);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// Layer 1 blockchains category
+// GET /api/crypto/category/layer1
+app.get('/api/crypto/category/layer1', async function(req, res) {
+  var cached = getCache('crypto/category/layer1');
+  if (cached) return res.json(cached);
+  try {
+    var url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd' +
+      '&category=layer-1&order=market_cap_desc&per_page=100&page=1' +
+      '&sparkline=true&price_change_percentage=1h,24h,7d';
+    var r = await fetch(url, { timeout: 15000 });
+    if (!r.ok) return res.status(502).json({ error: 'CoinGecko ' + r.status });
+    var data = await r.json();
+    setCache('crypto/category/layer1', data);
+    res.json(data);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// Binance exchange tokens — from Binance public API (no key required)
+// Returns top 200 USDT pairs sorted by volume
+// GET /api/crypto/binance
+app.get('/api/crypto/binance', async function(req, res) {
+  var cached = getCache('crypto/binance');
+  if (cached) return res.json(cached);
+  try {
+    // Fetch 24hr ticker data for all USDT pairs from Binance
+    var r = await fetch('https://api.binance.com/api/v3/ticker/24hr', { timeout: 15000 });
+    if (!r.ok) return res.status(502).json({ error: 'Binance ' + r.status });
+    var tickers = await r.json();
+    // Filter USDT pairs only, sort by quote volume descending
+    var usdtPairs = tickers
+      .filter(function(t) { return t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 0; })
+      .sort(function(a, b) { return parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume) })
+      .slice(0, 200)
+      .map(function(t) {
+        var sym = t.symbol.replace('USDT', '');
+        var price = parseFloat(t.lastPrice);
+        var chg24 = parseFloat(t.priceChangePercent);
+        var vol   = parseFloat(t.quoteVolume);
+        return {
+          id:                    sym.toLowerCase() + '-binance',
+          symbol:                sym.toLowerCase(),
+          name:                  sym,
+          current_price:         price,
+          price_change_percentage_24h: chg24,
+          total_volume:          vol,
+          market_cap:            0,
+          image:                 '',
+          source:                'binance',
+          high_24h:              parseFloat(t.highPrice),
+          low_24h:               parseFloat(t.lowPrice),
+          sparkline_in_7d:       { price: [] }
+        };
+      });
+    setCache('crypto/binance', usdtPairs);
+    res.json(usdtPairs);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// Hyperliquid perps — from Hyperliquid public API (no key required)
+// GET /api/crypto/hyperliquid
+app.get('/api/crypto/hyperliquid', async function(req, res) {
+  var cached = getCache('crypto/hyperliquid');
+  if (cached) return res.json(cached);
+  try {
+    // Hyperliquid public meta + asset ctx endpoint
+    var r = await fetch('https://api.hyperliquid.xyz/info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'metaAndAssetCtxs' }),
+      timeout: 15000
+    });
+    if (!r.ok) return res.status(502).json({ error: 'Hyperliquid ' + r.status });
+    var data = await r.json();
+    // data[0] = meta (universe array), data[1] = asset contexts (prices, volumes, etc.)
+    var universe = data[0] && data[0].universe ? data[0].universe : [];
+    var ctxs     = data[1] ? data[1] : [];
+    var coins = universe.map(function(asset, i) {
+      var ctx   = ctxs[i] || {};
+      var price = parseFloat(ctx.markPx) || 0;
+      var oi    = parseFloat(ctx.openInterest) || 0;
+      var vol   = parseFloat(ctx.dayNtlVlm) || 0;
+      var chg   = parseFloat(ctx.prevDayPx) > 0
+        ? ((price - parseFloat(ctx.prevDayPx)) / parseFloat(ctx.prevDayPx)) * 100
+        : 0;
+      return {
+        id:                    asset.name.toLowerCase() + '-hl',
+        symbol:                asset.name.toLowerCase(),
+        name:                  asset.name,
+        current_price:         price,
+        price_change_percentage_24h: +chg.toFixed(2),
+        total_volume:          vol,
+        market_cap:            oi * price,
+        open_interest:         oi,
+        image:                 '',
+        source:                'hyperliquid',
+        sparkline_in_7d:       { price: [] }
+      };
+    }).filter(function(c) { return c.current_price > 0; })
+      .sort(function(a, b) { return b.total_volume - a.total_volume });
+    setCache('crypto/hyperliquid', coins);
+    res.json(coins);
+  } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
 // ── HEALTH CHECK ──────────────────────────────────────────────────────────────
 app.get('/health', function(req, res) {
   res.json({
     status:      'ok',
     server:      'ChainRoot API',
-    version:     '2.0.0',
+    version:     '3.0.0',
     cached:      Object.keys(CACHE).length,
     instruments: Object.keys(INSTRUMENTS).length,
-    uptime:      Math.floor(process.uptime()) + 's'
+    uptime:      Math.floor(process.uptime()) + 's',
+    endpoints: {
+      crypto: [
+        '/api/crypto/markets',
+        '/api/crypto/global',
+        '/api/crypto/btcchart',
+        '/api/crypto/coins?page=1 (200 coins)',
+        '/api/crypto/coins?page=2 (coins 201-400)',
+        '/api/crypto/category/defi',
+        '/api/crypto/category/layer1',
+        '/api/crypto/binance (top 200 USDT pairs)',
+        '/api/crypto/hyperliquid (perps)',
+        '/api/crypto/rsi/:id',
+        '/api/crypto/feargreed'
+      ],
+      fx:          ['eurusd','gbpusd','usdjpy','usdchf','audusd'].map(function(s){return '/api/fx/'+s;}),
+      commodities: ['gold','silver','oil','natgas'].map(function(s){return '/api/cmd/'+s;}),
+      equities:    ['aapl','msft','nvda','tsla','spx'].map(function(s){return '/api/eq/'+s;})
+    }
   });
 });
 
