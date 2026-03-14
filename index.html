@@ -2351,7 +2351,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               <span class="live-dot"></span>LIVE
             </span>
           </div>
-          <div class="phs">CryptoCompare · Finnhub · RSS aggregator — refreshes every 10 min</div>
+          <div class="phs">CryptoCompare · CoinTelegraph · Reuters · X Posts — refreshes every 10 min</div>
         </div>
         <div class="phst" style="gap:10px;flex-wrap:wrap">
           <div id="news-last-updated" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">Fetching…</div>
@@ -2376,43 +2376,54 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         </div>
       </div>
 
-      <!-- LIVE TWEETS SECTION -->
+      <!-- X POSTS SECTION -->
       <div style="padding:20px 40px 0;background:var(--bg1);border-bottom:1px solid var(--border)">
+
+        <!-- ChainRoot X account banner -->
+        <a href="https://x.com/jf_macro" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(0,232,122,.05);border:1px solid rgba(0,232,122,.2);border-radius:8px;margin-bottom:16px;text-decoration:none;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(0,232,122,.5)'" onmouseout="this.style.borderColor='rgba(0,232,122,.2)'">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,232,122,.15);border:1px solid rgba(0,232,122,.3);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent);font-weight:700;flex-shrink:0">𝕏</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--accent)">@jf_macro</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">ChainRoot-ийн албан ёсны X хаяг · Macro & Crypto Intelligence</div>
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0">Дагах →</div>
+        </a>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
 
-          <!-- Crypto Tweets -->
+          <!-- Crypto X Posts -->
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <div style="width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite"></div>
-              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase">Crypto Twitter</span>
-              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">@WatcherGuru</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase">Crypto X Posts</span>
+              <a href="https://x.com/WatcherGuru" target="_blank" rel="noopener" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--accent)'" onmouseout="this.style.color='var(--muted)'">@WatcherGuru ↗</a>
             </div>
             <div id="tweet-grid-crypto" style="max-height:420px;overflow-y:auto;padding-right:4px">
               <div style="padding:20px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">
                 <div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px"></div>
-                Твит ачаалж байна…
+                X пост ачаалж байна…
               </div>
             </div>
           </div>
 
-          <!-- TradFi Tweets -->
+          <!-- TradFi X Posts -->
           <div>
             <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px">
               <div style="width:8px;height:8px;border-radius:50%;background:var(--blue);animation:pulse 2s infinite 0.5s"></div>
-              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase">TradFi Twitter</span>
-              <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">@zerohedge</span>
+              <span style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--blue);text-transform:uppercase">TradFi X Posts</span>
+              <a href="https://x.com/zerohedge" target="_blank" rel="noopener" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-decoration:none" onmouseover="this.style.color='var(--blue)'" onmouseout="this.style.color='var(--muted)'">@zerohedge ↗</a>
             </div>
             <div id="tweet-grid-tradfi" style="max-height:420px;overflow-y:auto;padding-right:4px">
               <div style="padding:20px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">
                 <div style="width:16px;height:16px;border:2px solid var(--border2);border-top-color:var(--blue);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px"></div>
-                Твит ачаалж байна…
+                X пост ачаалж байна…
               </div>
             </div>
           </div>
 
         </div>
         <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);padding:8px 0;text-align:center;letter-spacing:1px">
-          🇲🇳 МОНГОЛ ОРЧУУЛГА БОЛОМЖТОЙ · CLICK TO TRANSLATE · REFRESHES EVERY 15 MIN
+          🇲🇳 МОНГОЛ ОРЧУУЛГА БОЛОМЖТОЙ · ДАРЖ ОРЧУУЛНА · 15 МИН ТУТ ШИНЭЧЛЭГДЭНЭ
         </div>
       </div>
 
