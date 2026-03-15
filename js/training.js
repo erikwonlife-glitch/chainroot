@@ -14,40 +14,72 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ── ANIMATED INDICATOR DEMO ───────────────────────────────
-var _demoInterval = null;
-var _demoFrame   = 0;
+// Matches real indicator: Precision v6
+// Blue MA (fast) + Red MA (slow) + green/red fill + STRONG BUY/SELL labels
+// Pink dots (top warnings) + Yellow dots (bottom warnings) + small green/red dots
 
-// Simulated BTC price data with realistic movement
+var _demoInterval = null;
+
+// Generate realistic BTC-like price data
 var DEMO_DATA = (function() {
-  var prices = [68200, 67800, 68100, 68900, 69200, 68700, 68300, 67900, 67400, 67800,
-                68200, 69100, 70300, 71200, 70800, 71500, 72100, 71800, 70900, 70200,
-                69800, 70100, 71300, 72800, 73200, 72600, 71900, 71200, 70600, 71400,
-                72500, 73800, 74200, 73500, 72900, 73400, 74600, 75200, 74800, 75500];
+  var seed = 42;
+  function rand() { seed = (seed * 1664525 + 1013904223) & 0xffffffff; return (seed >>> 0) / 0xffffffff; }
+  var prices = [
+    67200,66800,66400,65800,64900,64200,63800,64500,65200,65800,
+    66400,67100,68200,69400,70800,72100,73500,73800,73200,72400,
+    71600,70800,70100,69600,68900,68400,68100,68600,69200,69800,
+    70400,71200,72000,72600,73100,72800,72200,71500,70800,70200,
+    69800,70100,70600,71200,71800,72400,73000,73500,74000,74500
+  ];
   var candles = [];
   for (var i = 0; i < prices.length; i++) {
     var base = prices[i];
-    var range = base * 0.012;
-    var open  = i > 0 ? prices[i-1] : base;
-    var close = base;
-    var high  = Math.max(open, close) + Math.random() * range;
-    var low   = Math.min(open, close) - Math.random() * range;
-    candles.push({open, close, high, low});
+    var range = base * 0.008;
+    var open  = i > 0 ? prices[i-1] : base * (1 + (rand()-0.5)*0.003);
+    var close = base * (1 + (rand()-0.5)*0.003);
+    var high  = Math.max(open, close) + rand() * range;
+    var low   = Math.min(open, close) - rand() * range * 0.8;
+    candles.push({o:open, c:close, h:high, l:low});
   }
   return candles;
 })();
 
-// Signal definitions — where BUY/SELL appear
-var SIGNALS = [
-  {idx: 8,  type: 'BUY',  entry: 67400, exit: 71200, label: '▲ BUY — Entry', exitLabel: '✓ Exit +5.6%'},
-  {idx: 22, type: 'BUY',  entry: 71300, exit: 74200, label: '▲ BUY — Entry', exitLabel: '✓ Exit +4.1%'},
-  {idx: 18, type: 'SELL', entry: 70900, exit: 69800, label: '▼ SELL — Entry', exitLabel: '✓ Exit +1.6%'},
-];
+// Compute simple MA
+function computeMA(candles, period) {
+  var result = [];
+  for (var i = 0; i < candles.length; i++) {
+    if (i < period - 1) { result.push(null); continue; }
+    var sum = 0;
+    for (var j = i - period + 1; j <= i; j++) sum += candles[j].c;
+    result.push(sum / period);
+  }
+  return result;
+}
 
-// Support/Resistance levels
-var SR_LEVELS = [
-  {price: 67500, label: 'S1 Support',    color: 'rgba(0,232,122,.5)'},
-  {price: 72000, label: 'R1 Resistance', color: 'rgba(255,107,53,.5)'},
-  {price: 75000, label: 'R2 Target',     color: 'rgba(0,180,216,.5)'},
+var MA_FAST = computeMA(DEMO_DATA, 8);   // Blue — fast
+var MA_SLOW = computeMA(DEMO_DATA, 18);  // Red — slow
+
+// Signal definitions matching real indicator
+// type: 'STRONG_BUY' | 'STRONG_SELL' | 'dot_pink' | 'dot_yellow' | 'dot_green' | 'dot_red'
+var INDICATOR_SIGNALS = [
+  {idx:4,  type:'dot_yellow'},
+  {idx:6,  type:'STRONG_BUY'},
+  {idx:7,  type:'dot_green'},
+  {idx:8,  type:'dot_green'},
+  {idx:10, type:'dot_pink'},
+  {idx:13, type:'dot_pink'},
+  {idx:16, type:'dot_pink'},
+  {idx:19, type:'STRONG_SELL'},
+  {idx:22, type:'dot_yellow'},
+  {idx:25, type:'dot_yellow'},
+  {idx:28, type:'dot_green'},
+  {idx:30, type:'STRONG_BUY'},
+  {idx:33, type:'dot_pink'},
+  {idx:36, type:'STRONG_SELL'},
+  {idx:39, type:'dot_yellow'},
+  {idx:42, type:'STRONG_BUY'},
+  {idx:45, type:'dot_green'},
+  {idx:47, type:'dot_yellow'},
 ];
 
 function startIndicatorDemo() {
@@ -56,7 +88,6 @@ function startIndicatorDemo() {
   var ctx = canvas.getContext('2d');
   var feed = document.getElementById('indicatorSignalFeed');
 
-  // Set canvas resolution
   var dpr = window.devicePixelRatio || 1;
   var rect = canvas.getBoundingClientRect();
   canvas.width  = rect.width  * dpr;
@@ -64,177 +95,265 @@ function startIndicatorDemo() {
   ctx.scale(dpr, dpr);
   var W = rect.width, H = rect.height;
 
-  var visibleCount = 20; // candles visible at once
-  var offset = 0;       // scrolling offset
+  var visibleCount = 22;
+  var offset = 0;
+
+  // Color constants matching real indicator
+  var C_BG      = '#0a0e13';
+  var C_BLUE_MA = '#3b82f6';
+  var C_RED_MA  = '#ef4444';
+  var C_GREEN   = '#00e87a';
+  var C_RED     = '#ff4560';
+  var C_BULL    = 'rgba(0,232,122,0.18)';
+  var C_BEAR    = 'rgba(180,0,40,0.22)';
+  var C_MUTED   = '#4d6475';
+  var C_TEXT    = '#ccd8df';
 
   function priceToY(price, minP, maxP) {
-    var pad = 20;
-    return H - pad - ((price - minP) / (maxP - minP)) * (H - pad*2);
+    var pad = 28;
+    return H - pad - ((price - minP) / (maxP - minP)) * (H - pad * 2);
   }
 
   function drawFrame() {
     ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = C_BG;
+    ctx.fillRect(0, 0, W, H);
 
-    // Scrolling: show window of candles
     var start = Math.min(offset, DEMO_DATA.length - visibleCount);
-    var slice = DEMO_DATA.slice(start, start + visibleCount);
+    var end   = start + visibleCount;
+    var slice = DEMO_DATA.slice(start, end);
+    var maFastSlice = MA_FAST.slice(start, end);
+    var maSlowSlice = MA_SLOW.slice(start, end);
 
-    // Price range for this window
-    var minP = Math.min.apply(null, slice.map(function(c){return c.low;}))  * 0.998;
-    var maxP = Math.max.apply(null, slice.map(function(c){return c.high;})) * 1.002;
+    // Price range
+    var minP = Math.min.apply(null, slice.map(function(c){return c.l;})) * 0.997;
+    var maxP = Math.max.apply(null, slice.map(function(c){return c.h;})) * 1.003;
 
-    var cw = (W - 40) / visibleCount; // candle width
-    var xOff = 20;
+    var cw   = (W - 48) / visibleCount;
+    var xOff = 24;
 
-    // Draw S/R lines
-    SR_LEVELS.forEach(function(sr) {
-      if (sr.price < minP || sr.price > maxP) return;
-      var y = priceToY(sr.price, minP, maxP);
-      ctx.beginPath();
-      ctx.setLineDash([6, 4]);
-      ctx.strokeStyle = sr.color;
-      ctx.lineWidth = 1;
-      ctx.moveTo(xOff, y);
-      ctx.lineTo(W - 10, y);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.font = 'bold 9px "Space Mono", monospace';
-      ctx.fillStyle = sr.color.replace('.5)', '1)');
-      ctx.textAlign = 'right';
-      ctx.fillText(sr.label + ' $' + (sr.price/1000).toFixed(1)+'K', W-12, y-3);
-      ctx.textAlign = 'left';
-    });
-
-    // Grid lines
-    ctx.strokeStyle = 'rgba(28,45,56,.6)';
+    // Grid
+    ctx.strokeStyle = 'rgba(28,45,56,0.5)';
     ctx.lineWidth = 0.5;
     for (var g = 0; g <= 4; g++) {
-      var gy = 20 + g * (H-40)/4;
-      ctx.beginPath(); ctx.moveTo(xOff, gy); ctx.lineTo(W-10, gy); ctx.stroke();
-      var gPrice = maxP - g * (maxP-minP)/4;
-      ctx.font = '8px "Space Mono", monospace';
-      ctx.fillStyle = '#4d6475';
-      ctx.textAlign = 'left';
-      ctx.fillText('$' + Math.round(gPrice/100)*100, 2, gy+3);
+      var gy = 24 + g * (H - 48) / 4;
+      ctx.beginPath(); ctx.moveTo(xOff, gy); ctx.lineTo(W - xOff, gy); ctx.stroke();
+      var gPrice = maxP - g * (maxP - minP) / 4;
+      ctx.font = '9px "Space Mono", monospace';
+      ctx.fillStyle = C_MUTED;
+      ctx.textAlign = 'right';
+      ctx.fillText('$' + Math.round(gPrice / 100) * 100, W - 2, gy + 3);
+    }
+    ctx.textAlign = 'left';
+
+    // Build MA point arrays for drawing
+    var fastPts = [], slowPts = [];
+    for (var i = 0; i < slice.length; i++) {
+      var px = xOff + i * cw + cw / 2;
+      if (maFastSlice[i] !== null) fastPts.push({x: px, y: priceToY(maFastSlice[i], minP, maxP)});
+      else fastPts.push(null);
+      if (maSlowSlice[i] !== null) slowPts.push({x: px, y: priceToY(maSlowSlice[i], minP, maxP)});
+      else slowPts.push(null);
     }
 
+    // Fill between MAs (green when fast > slow, red when fast < slow)
+    // Draw filled region
+    for (var i = 0; i < slice.length - 1; i++) {
+      if (!fastPts[i] || !slowPts[i] || !fastPts[i+1] || !slowPts[i+1]) continue;
+      var bullish = maFastSlice[i] >= maSlowSlice[i];
+      ctx.beginPath();
+      ctx.moveTo(fastPts[i].x, fastPts[i].y);
+      ctx.lineTo(fastPts[i+1].x, fastPts[i+1].y);
+      ctx.lineTo(slowPts[i+1].x, slowPts[i+1].y);
+      ctx.lineTo(slowPts[i].x, slowPts[i].y);
+      ctx.closePath();
+      ctx.fillStyle = bullish ? C_BULL : C_BEAR;
+      ctx.fill();
+    }
+
+    // Draw slow MA (red)
+    ctx.beginPath();
+    ctx.strokeStyle = C_RED_MA;
+    ctx.lineWidth = 1.5;
+    var started = false;
+    for (var i = 0; i < slowPts.length; i++) {
+      if (!slowPts[i]) { started = false; continue; }
+      if (!started) { ctx.moveTo(slowPts[i].x, slowPts[i].y); started = true; }
+      else ctx.lineTo(slowPts[i].x, slowPts[i].y);
+    }
+    ctx.stroke();
+
+    // Draw fast MA (blue)
+    ctx.beginPath();
+    ctx.strokeStyle = C_BLUE_MA;
+    ctx.lineWidth = 1.8;
+    started = false;
+    for (var i = 0; i < fastPts.length; i++) {
+      if (!fastPts[i]) { started = false; continue; }
+      if (!started) { ctx.moveTo(fastPts[i].x, fastPts[i].y); started = true; }
+      else ctx.lineTo(fastPts[i].x, fastPts[i].y);
+    }
+    ctx.stroke();
+
     // Draw candles
-    slice.forEach(function(c, i) {
-      var x = xOff + i * cw + cw * 0.1;
-      var w = cw * 0.8;
-      var openY  = priceToY(c.open,  minP, maxP);
-      var closeY = priceToY(c.close, minP, maxP);
-      var highY  = priceToY(c.high,  minP, maxP);
-      var lowY   = priceToY(c.low,   minP, maxP);
-      var bull   = c.close >= c.open;
-      var col    = bull ? '#00e87a' : '#ff4560';
+    for (var i = 0; i < slice.length; i++) {
+      var c  = slice[i];
+      var cx = xOff + i * cw + cw * 0.15;
+      var bw = cw * 0.7;
+      var ox = xOff + i * cw + cw / 2;
+      var oy = priceToY(c.o, minP, maxP);
+      var cy2= priceToY(c.c, minP, maxP);
+      var hy = priceToY(c.h, minP, maxP);
+      var ly = priceToY(c.l, minP, maxP);
+      var bull = c.c >= c.o;
+      var col  = bull ? C_GREEN : C_RED;
 
       // Wick
       ctx.beginPath();
       ctx.strokeStyle = col;
       ctx.lineWidth = 1;
-      ctx.moveTo(x + w/2, highY);
-      ctx.lineTo(x + w/2, lowY);
+      ctx.moveTo(ox, hy); ctx.lineTo(ox, ly);
       ctx.stroke();
 
       // Body
-      ctx.fillStyle = bull ? 'rgba(0,232,122,.8)' : 'rgba(255,69,96,.8)';
-      var bodyY = Math.min(openY, closeY);
-      var bodyH = Math.max(Math.abs(closeY - openY), 1);
-      ctx.fillRect(x, bodyY, w, bodyH);
-    });
+      ctx.fillStyle = bull ? 'rgba(0,232,122,0.75)' : 'rgba(255,69,96,0.75)';
+      var bodyY = Math.min(oy, cy2);
+      var bodyH = Math.max(Math.abs(cy2 - oy), 1.5);
+      ctx.fillRect(cx, bodyY, bw, bodyH);
+    }
 
-    // Draw signals on visible candles
-    SIGNALS.forEach(function(sig) {
+    // Draw signals
+    INDICATOR_SIGNALS.forEach(function(sig) {
       var localIdx = sig.idx - start;
-      if (localIdx < 0 || localIdx >= visibleCount) return;
+      if (localIdx < 1 || localIdx >= visibleCount - 1) return;
+      var c   = slice[localIdx];
+      var px  = xOff + localIdx * cw + cw / 2;
+      var highY = priceToY(c.h, minP, maxP);
+      var lowY  = priceToY(c.l, minP, maxP);
 
-      var x = xOff + localIdx * cw + cw/2;
-      var c = slice[localIdx];
-      var isBuy = sig.type === 'BUY';
-
-      if (isBuy) {
-        var y = priceToY(c.low, minP, maxP) + 18;
-        // Triangle up
-        ctx.beginPath();
+      if (sig.type === 'STRONG_BUY') {
+        // Green label below candle
+        var ly2 = lowY + 6;
         ctx.fillStyle = '#00e87a';
-        ctx.moveTo(x, y-12); ctx.lineTo(x-8, y+4); ctx.lineTo(x+8, y+4);
-        ctx.closePath(); ctx.fill();
-        // Label
+        roundRect(ctx, px - 36, ly2, 72, 18, 3);
         ctx.fillStyle = '#000';
-        ctx.font = 'bold 8px "Space Mono", monospace';
+        ctx.font = 'bold 9px "Space Mono", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('BUY', x, y+14);
-        // Entry line
-        var entryY = priceToY(sig.entry, minP, maxP);
-        ctx.beginPath();
-        ctx.setLineDash([3,3]);
-        ctx.strokeStyle = 'rgba(0,232,122,.4)';
-        ctx.lineWidth = 1;
-        ctx.moveTo(x, entryY);
-        ctx.lineTo(W-10, entryY);
-        ctx.stroke();
-        ctx.setLineDash([]);
-        ctx.font = 'bold 8px "Space Mono", monospace';
-        ctx.fillStyle = '#00e87a';
-        ctx.textAlign = 'right';
-        ctx.fillText('ENTRY $' + sig.entry.toLocaleString(), W-12, entryY-3);
-      } else {
-        var y2 = priceToY(c.high, minP, maxP) - 18;
-        // Triangle down
-        ctx.beginPath();
+        ctx.fillText('STRONG BUY', px, ly2 + 12);
+
+      } else if (sig.type === 'STRONG_SELL') {
+        // Red label above candle
+        var hy2 = highY - 24;
         ctx.fillStyle = '#ff4560';
-        ctx.moveTo(x, y2+12); ctx.lineTo(x-8, y2-4); ctx.lineTo(x+8, y2-4);
-        ctx.closePath(); ctx.fill();
+        roundRect(ctx, px - 38, hy2, 76, 18, 3);
         ctx.fillStyle = '#fff';
-        ctx.font = 'bold 8px "Space Mono", monospace';
+        ctx.font = 'bold 9px "Space Mono", monospace';
         ctx.textAlign = 'center';
-        ctx.fillText('SELL', x, y2-10);
+        ctx.fillText('STRONG SELL', px, hy2 + 12);
+
+      } else if (sig.type === 'dot_pink') {
+        // Magenta dot above candle (top warning)
+        ctx.beginPath();
+        ctx.arc(px, highY - 8, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#f0abfc';
+        ctx.fill();
+
+      } else if (sig.type === 'dot_yellow') {
+        // Yellow dot below candle (bottom warning)
+        ctx.beginPath();
+        ctx.arc(px, lowY + 8, 5, 0, Math.PI * 2);
+        ctx.fillStyle = '#fbbf24';
+        ctx.fill();
+
+      } else if (sig.type === 'dot_green') {
+        // Small green dot below candle (minor buy)
+        ctx.beginPath();
+        ctx.arc(px, lowY + 5, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#00e87a';
+        ctx.fill();
+
+      } else if (sig.type === 'dot_red') {
+        // Small red dot above candle (minor sell)
+        ctx.beginPath();
+        ctx.arc(px, highY - 5, 3, 0, Math.PI * 2);
+        ctx.fillStyle = '#ff4560';
+        ctx.fill();
       }
       ctx.textAlign = 'left';
     });
 
     // Current price line
-    var lastC = slice[slice.length-1];
-    var lastY = priceToY(lastC.close, minP, maxP);
-    ctx.beginPath();
-    ctx.setLineDash([2,2]);
-    ctx.strokeStyle = lastC.close >= lastC.open ? '#00e87a' : '#ff4560';
-    ctx.lineWidth = 1;
-    ctx.moveTo(xOff, lastY); ctx.lineTo(W-10, lastY); ctx.stroke();
+    var lastC  = slice[slice.length - 1];
+    var priceY = priceToY(lastC.c, minP, maxP);
+    var lineCol = lastC.c >= lastC.o ? C_GREEN : C_RED;
+    ctx.setLineDash([3, 3]);
+    ctx.strokeStyle = lineCol;
+    ctx.lineWidth = 0.8;
+    ctx.beginPath(); ctx.moveTo(xOff, priceY); ctx.lineTo(W - 56, priceY); ctx.stroke();
     ctx.setLineDash([]);
-    // Price label
-    ctx.fillStyle = lastC.close >= lastC.open ? '#00e87a' : '#ff4560';
-    ctx.fillStyle = '#0c1014';
-    ctx.fillRect(W-62, lastY-9, 60, 16);
-    ctx.fillStyle = lastC.close >= lastC.open ? '#00e87a' : '#ff4560';
+    // Price tag
+    ctx.fillStyle = lineCol;
+    ctx.fillRect(W - 54, priceY - 9, 52, 16);
+    ctx.fillStyle = '#000';
     ctx.font = 'bold 9px "Space Mono", monospace';
     ctx.textAlign = 'center';
-    ctx.fillText('$' + Math.round(lastC.close/100)*100, W-32, lastY+3);
+    ctx.fillText('$' + Math.round(lastC.c).toLocaleString(), W - 28, priceY + 4);
     ctx.textAlign = 'left';
+
+    // Indicator name watermark
+    ctx.font = '9px "Space Mono", monospace';
+    ctx.fillStyle = 'rgba(77,100,117,0.5)';
+    ctx.fillText('Precision v6  (50, 200, 14, 40, 85, 18, 60, 10)', xOff + 2, 20);
   }
 
-  // Signal feed updates
+  function roundRect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.lineTo(x + w, y + h - r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.lineTo(x + r, y + h);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.lineTo(x, y + r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // Signal feed — matches real indicator outputs
   var feedSignals = [
-    {pair:'BTC/USDT', tf:'4H', type:'BUY',  price:'$71,200', time:'2мин өмнө',  pct:'+4.1%'},
-    {pair:'ETH/USDT', tf:'1H', type:'SELL', price:'$3,842',  time:'18мин өмнө', pct:'+2.3%'},
-    {pair:'SOL/USDT', tf:'4H', type:'BUY',  price:'$148.2',  time:'1ц өмнө',    pct:'+5.8%'},
-    {pair:'AAPL',     tf:'1D', type:'BUY',  price:'$223.4',  time:'3ц өмнө',    pct:'+2.1%'},
+    {pair:'BTC/USDT', tf:'45', type:'STRONG_BUY',  price:'$70,400', pct:'+3.2%', time:'12мин өмнө'},
+    {pair:'ETH/USDT', tf:'1H', type:'STRONG_SELL', price:'$3,920',  pct:'+2.8%', time:'28мин өмнө'},
+    {pair:'SOL/USDT', tf:'4H', type:'STRONG_BUY',  price:'$148.2',  pct:'+5.1%', time:'1ц өмнө'},
+    {pair:'BTC/USDT', tf:'1H', type:'dot_pink',    price:'$74,200',  pct:'top',  time:'2ц өмнө'},
+    {pair:'ETH/USDT', tf:'4H', type:'STRONG_BUY',  price:'$3,680',  pct:'+4.4%', time:'3ц өмнө'},
+    {pair:'BNB/USDT', tf:'45', type:'STRONG_SELL', price:'$612',    pct:'+1.9%', time:'4ц өмнө'},
+    {pair:'SOL/USDT', tf:'1H', type:'dot_yellow',  price:'$138.5',  pct:'bot',   time:'5ц өмнө'},
   ];
   var feedIdx = 0;
 
   function updateFeed() {
     if (!feed) return;
     var sig = feedSignals[feedIdx % feedSignals.length];
-    var isBuy = sig.type === 'BUY';
-    var col = isBuy ? '#00e87a' : '#ff4560';
+    var isBuy  = sig.type === 'STRONG_BUY' || sig.type === 'dot_yellow' || sig.type === 'dot_green';
+    var isPink = sig.type === 'dot_pink';
+    var isYellow = sig.type === 'dot_yellow';
+    var col = isPink ? '#f0abfc' : isYellow ? '#fbbf24' : isBuy ? '#00e87a' : '#ff4560';
+    var label = sig.type === 'STRONG_BUY' ? '▲ STRONG BUY'
+              : sig.type === 'STRONG_SELL' ? '▼ STRONG SELL'
+              : sig.type === 'dot_pink' ? '● TOP WARNING'
+              : sig.type === 'dot_yellow' ? '● BOT WARNING'
+              : sig.type === 'dot_green' ? '▲ BUY'
+              : '▼ SELL';
+    var bg = isBuy && !isYellow ? 'rgba(0,232,122,.06)' : isPink ? 'rgba(240,171,252,.06)' : isYellow ? 'rgba(251,191,36,.06)' : 'rgba(255,69,96,.06)';
     var newRow = document.createElement('div');
-    newRow.style.cssText = 'display:flex;align-items:center;gap:10px;padding:4px 8px;background:'+(isBuy?'rgba(0,232,122,.06)':'rgba(255,69,96,.06)')+';border-left:2px solid '+col+';border-radius:0 4px 4px 0;animation:fadeIn .3s ease;font-family:Space Mono,monospace;font-size:10px';
-    newRow.innerHTML = '<span style="color:'+col+';font-weight:700;min-width:36px">'+(isBuy?'▲ BUY':'▼ SELL')+'</span>'
-      + '<span style="color:#ccd8df;min-width:80px">'+sig.pair+'</span>'
+    newRow.style.cssText = 'display:flex;align-items:center;gap:8px;padding:4px 8px;background:'+bg+';border-left:2px solid '+col+';border-radius:0 4px 4px 0;font-family:Space Mono,monospace;font-size:10px';
+    newRow.innerHTML = '<span style="color:'+col+';font-weight:700;min-width:90px">'+label+'</span>'
+      + '<span style="color:#ccd8df;min-width:72px">'+sig.pair+'</span>'
       + '<span style="color:#4d6475;min-width:24px">'+sig.tf+'</span>'
       + '<span style="color:'+col+'">'+sig.price+'</span>'
-      + '<span style="color:#4d6475;margin-left:auto">'+sig.time+'</span>'
+      + '<span style="margin-left:auto;color:#4d6475">'+sig.time+'</span>'
       + '<span style="color:'+col+';font-weight:700">'+sig.pct+'</span>';
     feed.insertBefore(newRow, feed.firstChild);
     while (feed.children.length > 3) feed.removeChild(feed.lastChild);
@@ -244,16 +363,12 @@ function startIndicatorDemo() {
   updateFeed();
   drawFrame();
 
-  // Animate: slowly scroll through candles
   var scrollTimer = 0;
   _demoInterval = setInterval(function() {
     scrollTimer++;
-    if (scrollTimer % 80 === 0 && offset < DEMO_DATA.length - visibleCount) {
-      offset++;
-    }
-    if (scrollTimer % 120 === 0) updateFeed();
+    if (scrollTimer % 100 === 0 && offset < DEMO_DATA.length - visibleCount) offset++;
+    if (scrollTimer % 140 === 0) updateFeed();
     drawFrame();
-    _demoFrame++;
   }, 50);
 }
 
@@ -265,10 +380,9 @@ window.openTrainingPage  = openTrainingPage;
 window.closeTrainingPage = closeTrainingPage;
 
 // ── CRYPTO PAYMENT ───────────────────────────────────────
-// ⚠️ REPLACE THESE WITH YOUR REAL WALLET ADDRESSES
 var WALLETS = {
-  usdt: 'TCdHDhEDxbkybnz93gzQpJfSDYiT2HHrRV',          // USDT TRC20 (Tron)
-  sol:  '3zVyQWuKLtY6By49M2ovup2CsgBjnE47GB8sAHsGWQ2m'  // Solana SOL
+  usdt: 'TCdHDhEDxbkybnz93gzQpJfSDYiT2HHrRV',
+  sol:  '3zVyQWuKLtY6By49M2ovup2CsgBjnE47GB8sAHsGWQ2m'
 };
 
 var _currentToken = 'usdt';
@@ -285,11 +399,9 @@ function openCryptoPayment(plan) {
   document.getElementById('cryptoPayModal').style.display = 'flex';
   updateCryptoPayModal();
 }
-
 function closeCryptoPayment() {
   document.getElementById('cryptoPayModal').style.display = 'none';
 }
-
 function selectToken(token) {
   _currentToken = token;
   document.getElementById('btnUsdt').style.cssText = token==='usdt'
@@ -300,7 +412,6 @@ function selectToken(token) {
     : 'flex:1;padding:10px;border-radius:8px;border:1px solid #1c2d38;background:transparent;font-family:Space Mono,monospace;font-size:11px;color:#4d6475;cursor:pointer';
   updateCryptoPayModal();
 }
-
 function updateCryptoPayModal() {
   var plan = PRICES[_currentPlan];
   document.getElementById('cryptoPayTitle').textContent = plan.label;
@@ -308,21 +419,14 @@ function updateCryptoPayModal() {
   document.getElementById('cryptoPayToken').textContent = plan[_currentToken].split(' ')[1] + (_currentToken==='usdt' ? ' (TRC20)' : ' (Solana)');
   document.getElementById('cryptoPayAddr').textContent = WALLETS[_currentToken];
 }
-
 function copyCryptoAddr() {
   var addr = WALLETS[_currentToken];
   navigator.clipboard.writeText(addr).then(function() {
     var btn = document.getElementById('copyAddrBtn');
     btn.textContent = '✓ Хуулагдлаа';
-    btn.style.color = '#00e87a';
-    setTimeout(function(){ btn.textContent='Хуулах'; btn.style.color='#00e87a'; }, 2000);
-  }).catch(function(){
-    var btn = document.getElementById('copyAddrBtn');
-    btn.textContent = 'Copy failed';
+    setTimeout(function(){ btn.textContent = 'Хуулах'; }, 2000);
   });
 }
-
-// Close modal on outside click
 document.addEventListener('click', function(e) {
   var modal = document.getElementById('cryptoPayModal');
   if (modal && e.target === modal) closeCryptoPayment();
