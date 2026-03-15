@@ -41,7 +41,7 @@ const QUOTE  = {};
 const LOADED = {};
 const CHARTS = {};
 const PRECOMP= {}; // pre-computed data from Railway API
-const API_BASE = 'https://chainroot-production.up.railway.app';
+const API_BASE = 'https://defimongo-production.up.railway.app';
 
 // ── STOOQ FETCH (fallback only) ──────────────────────────────────────────────
 async function fetchStooq(sym, rows=400){
@@ -423,7 +423,7 @@ function renderDetail(bodyId,inst,color){
   const macdLast = pre ? pre.macd : {line:lMacd, signal:null, histogram:null};
 
   const pC=bodyId+'-pc',rC=bodyId+'-rc',mC=bodyId+'-mc';
-  const srcLabel = pre ? `ChainRoot API · ${pre.candles} days` : `Stooq · ${data.length} days`;
+  const srcLabel = pre ? `DeFiMongo API · ${pre.candles} days` : `Stooq · ${data.length} days`;
 
   el.innerHTML=`
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;flex-wrap:wrap">
@@ -550,7 +550,7 @@ async function openMkt(type,id){
   if(id==='overview'){
     const cEl=document.getElementById(`${type}-ov-cards`);
     if(cEl&&!group.some(i=>PRECOMP[i.id]||HIST[i.id]?.length))
-      cEl.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Fetching from ChainRoot API…</div>`;
+      cEl.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>Fetching from DeFiMongo API…</div>`;
     await loadGroup(group);
     renderOverview(`${type}-ov-cards`,`${type}-ov-rsi`,`${type}-ov-ma`,`${type}-ov-sigs`,group,color);
   } else {
@@ -566,7 +566,7 @@ async function openMkt(type,id){
     // ── First time loading this instrument ──
     if(el) el.innerHTML=`<div class="mkt-loading"><div class="mkt-spinner"></div>
       <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:1.5px">
-        Fetching ${inst.sym} from ChainRoot API…
+        Fetching ${inst.sym} from DeFiMongo API…
       </div>
     </div>`;
     await loadInst(inst);
@@ -607,4 +607,3 @@ async function openMkt(type,id){
 })();
 
 })(); // end IIFE
-
