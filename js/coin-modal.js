@@ -4,7 +4,7 @@ function openCoinModal(id){
   currentCoinId=id;
   const c=ALL_COINS.find(x=>x.id===id);
   if(!c)return;
-  document.getElementById('coinModalOv').classList.add('on');
+  document.getElementById('cm-ov').classList.add('on');
   const img=document.getElementById('cmImg');img.src=c.image||'';img.style.display='';
   document.getElementById('cmName').textContent=c.name;
   document.getElementById('cmSym').textContent=c.symbol.toUpperCase();
@@ -44,7 +44,7 @@ function openCoinModal(id){
         scales:{y:{grid:{color:'rgba(28,45,56,.6)'},ticks:{color:MUTED,callback:v=>fmt(v)}},x:{grid:{color:'rgba(28,45,56,.3)'},ticks:{color:MUTED,maxTicksLimit:7}}}}});
   }
 }
-function closeCoinModal(){document.getElementById('coinModalOv').classList.remove('on');if(_cmChart){_cmChart.destroy();_cmChart=null;}}
+function closeCoinModal(){document.getElementById('cm-ov').classList.remove('on');if(_cmChart){_cmChart.destroy();_cmChart=null;}}
 
 function addToPortfolioFromModal(id){
   if(!CR_USER){closeCoinModal();openAuth('register');return;}
