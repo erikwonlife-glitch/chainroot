@@ -436,3 +436,34 @@ window.openCryptoPayment  = openCryptoPayment;
 window.closeCryptoPayment = closeCryptoPayment;
 window.selectToken        = selectToken;
 window.copyCryptoAddr     = copyCryptoAddr;
+
+// ── MISSING FUNCTIONS ─────────────────────────────────────────────────────────
+function showVideoInstructions() {
+  toast('Видео удахгүй байршина — бэлтгэж байна 🎬', '#f4c542');
+}
+
+// Training overlay language switcher
+function setLang(lang) {
+  // Sync with main site language
+  if (typeof setSiteLang === 'function') setSiteLang(lang);
+  // Update training overlay elements
+  document.querySelectorAll('#trainingOverlay [data-mn]').forEach(function(el) {
+    const txt = el.getAttribute('data-' + lang);
+    if (txt !== null) el.innerHTML = txt;
+  });
+  // Update training page toggle buttons
+  const mnBtn = document.getElementById('lang-mn');
+  const enBtn = document.getElementById('lang-en');
+  if (mnBtn && enBtn) {
+    if (lang === 'mn') {
+      mnBtn.style.background = '#f4c542'; mnBtn.style.color = '#000';
+      enBtn.style.background = 'transparent'; enBtn.style.color = 'var(--muted)';
+    } else {
+      enBtn.style.background = '#f4c542'; enBtn.style.color = '#000';
+      mnBtn.style.background = 'transparent'; mnBtn.style.color = 'var(--muted)';
+    }
+  }
+}
+
+window.showVideoInstructions = showVideoInstructions;
+window.setLang = setLang;
