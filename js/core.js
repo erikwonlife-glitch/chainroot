@@ -196,13 +196,45 @@ function loadBtcMonthlyHistory() { return loadBtcDailyHistory(); }
 
 
 
+// ── FETCH WITH FALLBACK — tries Railway first, then direct API ────────────────
+async function fetchWithFallback(railwayUrl, directUrl) {
+  // Try Railway first (cached, no rate limit issues)
+  try {
+    const r = await fetch(railwayUrl, {signal: AbortSignal.timeout(12000)});
+    if (r.ok) {
+      const d = await r.json();
+      if (d && !d.error) return d;
+    }
+  } catch(e) { console.warn('[DeFiMongo] Railway failed:', railwayUrl, e.message); }
+  // Fallback: try direct API if provided
+  if (directUrl) {
+    try {
+      const r2 = await fetch(directUrl, {signal: AbortSignal.timeout(15000)});
+      if (r2.ok) return await r2.json();
+    } catch(e2) { console.warn('[DeFiMongo] Direct fallback failed:', directUrl, e2.message); }
+  }
+  return null;
+}
+
 async function init(){
-  // 1. Fetch all live data — route CoinGecko through Railway to avoid CORS
+  // 1. Fetch all live data — Railway first, direct CoinGecko as fallback
   const [markets, global, fg, btcChart] = await Promise.all([
-    fetchJSON(`${CR_API}/api/crypto/markets`),
-    fetchJSON(`${CR_API}/api/crypto/global`),
-    fetchJSON(`${CR_API}/api/crypto/feargreed`),
-    fetchJSON(`${CR_API}/api/crypto/btcchart`)
+    fetchWithFallback(
+      `${CR_API}/api/crypto/markets`,
+      `${CG}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=1h,24h,7d`
+    ),
+    fetchWithFallback(
+      `${CR_API}/api/crypto/global`,
+      `${CG}/global`
+    ),
+    fetchWithFallback(
+      `${CR_API}/api/crypto/feargreed`,
+      `https://api.alternative.me/fng/?limit=90`
+    ),
+    fetchWithFallback(
+      `${CR_API}/api/crypto/btcchart`,
+      `${CG}/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily`
+    )
   ]);
 
   // 2. Process BTC price history — everything else reads from these shared arrays
@@ -326,26 +358,41 @@ let COIN_LOADED  = {};
 let COIN_FETCHING= {};
 
 async function fetchCoinFilter(filter) {
-  if (COIN_FETCHING[filter]) return; // already in flight
-  if (COIN_LOADED[filter] && COIN_STORE[filter].length) return; // already loaded
+  if (COIN_FETCHING[filter]) return;
+  if (COIN_LOADED[filter] && COIN_STORE[filter].length) return;
   COIN_FETCHING[filter] = true;
+
+  // Show loading spinner immediately
+  const tb = document.getElementById('coinBody');
+  if (tb && COIN_STORE[filter].length === 0) {
+    tb.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:2px">
+      <div style="width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 14px"></div>
+      FETCHING ${filter.toUpperCase()} DATA…
+    </td></tr>`;
+  }
+
   try {
+    // Railway URLs + direct CoinGecko fallbacks
     const urlMap = {
-      top200:      `${CR_API}/api/crypto/markets`,
-      defi:        `${CR_API}/api/crypto/category/defi`,
-      layer1:      `${CR_API}/api/crypto/category/layer1`,
-      binance:     `${CR_API}/api/crypto/binance`,
-      hyperliquid: `${CR_API}/api/crypto/hyperliquid`
+      top200:      [`${CR_API}/api/crypto/markets`, `${CG}/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=50&page=1&sparkline=true&price_change_percentage=1h,24h,7d`],
+      defi:        [`${CR_API}/api/crypto/category/defi`, `${CG}/coins/markets?vs_currency=usd&category=decentralized-finance-defi&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d`],
+      layer1:      [`${CR_API}/api/crypto/category/layer1`, `${CG}/coins/markets?vs_currency=usd&category=layer-1&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d`],
+      binance:     [`${CR_API}/api/crypto/binance`, null],
+      hyperliquid: [`${CR_API}/api/crypto/hyperliquid`, null]
     };
-    const url = urlMap[filter];
-    if (!url) return;
-    const r = await fetch(url, {signal: AbortSignal.timeout(25000)});
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    const data = await r.json();
+    const urls = urlMap[filter];
+    if (!urls) { COIN_FETCHING[filter] = false; return; }
+
+    const data = await fetchWithFallback(urls[0], urls[1]);
     if (Array.isArray(data) && data.length) {
       COIN_STORE[filter] = data;
       COIN_LOADED[filter] = true;
       if (COIN_FILTER === filter) renderCoinTable();
+    } else {
+      // Show error state
+      if (tb) tb.innerHTML = `<tr><td colspan="10" style="text-align:center;padding:48px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">⚠ Could not load data — retrying in 30s</td></tr>`;
+      // Retry after 30s
+      setTimeout(() => { COIN_FETCHING[filter] = false; fetchCoinFilter(filter); }, 30000);
     }
   } catch(e) {
     console.warn('fetchCoinFilter failed:', filter, e.message);
