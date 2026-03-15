@@ -1,7 +1,7 @@
 {
-  "name": "chainroot-api",
+  "name": "defimongo-api",
   "version": "1.0.0",
-  "description": "ChainRoot market data proxy server",
+  "description": "DeFiMongo market data proxy server",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
