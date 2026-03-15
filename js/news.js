@@ -1,11 +1,11 @@
 /* ═══════════════════════════════════════════════════════════════
-   CHAINROOT LIVE NEWS ENGINE v3
+   DEFIMONGO LIVE NEWS ENGINE v3
    ALL sources routed through Railway to avoid CORS
    Tweets: @WatcherGuru (Crypto) · @zerohedge (TradFi)
    Translation: MyMemory → Mongolian
 ═══════════════════════════════════════════════════════════════ */
 
-const CR_API_NEWS = 'https://chainroot-production.up.railway.app';
+const CR_API_NEWS = 'https://defimongo-production.up.railway.app';
 
 // ── TWEET ENGINE ─────────────────────────────────────────────────────────────
 const TWEETS = (function(){
@@ -83,7 +83,7 @@ const TWEETS = (function(){
         }
       }
       _renderAll();
-    } catch(e) { console.warn('[ChainRoot] Tweets failed:', e.message); }
+    } catch(e) { console.warn('[DeFiMongo] Tweets failed:', e.message); }
   }
 
   return {
