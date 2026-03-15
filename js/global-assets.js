@@ -62,7 +62,7 @@ function setSiteLang(lang) {
 // ── GLOBAL ASSET RANKING ──────────────────────────────────────────────────────
 (function(){
 
-const CR_API_GA = 'https://defimongo-production.up.railway.app';
+const CR_API_GA = 'https://chainroot-production-b7d1.up.railway.app';
 
 // ── Inline SVG logos for major stocks (guaranteed to render) ──────────────────
 // Convert SVG string to safe data URI for use as img src
