@@ -2028,31 +2028,38 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
     <div class="ng" id="g1">
       <div class="ngh" onclick="tog('g1')"><span data-mn="Зах зээлийн тойм" data-en="Market Overview">Зах зээлийн тойм</span> <span class="arr">∨</span></div>
       <div class="nbody">
-
-        <div class="nl on" onclick="go('crypto-prices',this)"><div class="nd d"></div><span data-mn="Крипто Үнэ" data-en="Crypto Prices">Крипто Үнэ</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl on" onclick="go('crypto-prices',this)"><div class="nd d"></div><span data-mn="Крипто Үнэ" data-en="Crypto Prices">Крипто Үнэ</span><span class="nt d">DeFi</span></div>
         <div class="nl" onclick="go('global-assets',this)"><div class="nd c"></div><span data-mn="Дэлхийн Хөрөнгийн Жагсаалт" data-en="Global Asset Ranking">Дэлхийн Хөрөнгийн Жагсаалт</span><span class="nt c">CeFi</span></div>
-        <div class="nl" onclick="go('fear-greed',this)"><div class="nd c"></div><span data-mn="Айдас &amp;탐욕 Индекс" data-en="Fear &amp; Greed Index">Айдас &amp; Шунал Индекс</span><span class="nt c">CeFi</span></div>
+        <div class="nl" onclick="go('fear-greed',this)"><div class="nd c"></div><span data-mn="Айдас &amp; Шунал Индекс" data-en="Fear &amp; Greed Index">Айдас &amp; Шунал Индекс</span><span class="nt c">CeFi</span></div>
         <div class="nl" onclick="go('news',this)"><div class="nd c"></div><span data-mn="Крипто &amp; Зах зээлийн мэдээ" data-en="Crypto &amp; TradFi News">Крипто &amp; Зах зээлийн мэдээ</span><span class="nt c">CeFi</span></div>
-        <div class="nl" onclick="go('bitcoin-mas',this)"><div class="nd d"></div><span data-mn="Биткоин MA" data-en="Bitcoin MAs">Биткоин MA</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl" onclick="go('bitcoin-mas',this)"><div class="nd d"></div><span data-mn="Биткоин MA" data-en="Bitcoin MAs">Биткоин MA</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('biggest-movers',this)"><div class="nd d"></div><span data-mn="Том Хөдөлгөөнүүд" data-en="Biggest Movers">Том Хөдөлгөөнүүд</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('altcoin-season',this)"><div class="nd d"></div><span data-mn="Алткоин Сезон Индекс" data-en="Altcoin Season Index">Алткоин Сезон Индекс</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('btc-dominance',this)"><div class="nd d"></div><span data-mn="BTC Давамгайлал График" data-en="BTC Dominance Chart">BTC Dominance Chart</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('funding-rates',this)"><div class="nd d"></div><span data-mn="Санхүүжилтийн Хүү" data-en="Funding Rates">Funding Rates</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('mvrv',this)"><div class="nd d"></div><span data-mn="MVRV Z-Score" data-en="MVRV Z-Score">MVRV Z-Score</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('liquidations',this)"><div class="nd d"></div><span data-mn="Ликвидэйшн Хяналт" data-en="Liquidation Monitor">Liquidation Monitor</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('long-short',this)"><div class="nd d"></div><span data-mn="Лонг/Шорт Харьцаа" data-en="Long/Short Ratio">Long/Short Ratio</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('dca-calc',this)"><div class="nd d"></div><span data-mn="DCA Тооцоолуур" data-en="DCA Calculator">DCA Calculator</span><span class="nt d">DeFi</span></div>
       </div>
     </div>
 
-    <div class="ng" id="g2">
+    <div class="ng closed" id="g2">
       <div class="ngh" onclick="tog('g2')"><span data-mn="Мөчлөг" data-en="Cycles">Мөчлөг</span> <span class="arr">∨</span></div>
       <div class="nbody">
-        <div class="nl" onclick="go('perf-year',this)"><div class="nd d"></div><span data-mn="Bitcoin Performance by Year" data-en="Bitcoin Performance by Year">Bitcoin Performance by Year</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('btcd-perf',this)"><div class="nd d"></div><span data-mn="BTC.D Performance by Year" data-en="BTC.D Performance by Year">BTC.D Performance by Year</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('sp500-perf',this)"><div class="nd d"></div><span data-mn="S&amp;P 500 Performance by Year" data-en="S&amp;P 500 Performance by Year">S&amp;P 500 Performance by Year</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('gold-perf',this)"><div class="nd d"></div><span data-mn="Gold Performance by Year" data-en="Gold Performance by Year">Gold Performance by Year</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl" onclick="go('perf-year',this)"><div class="nd d"></div><span data-mn="Bitcoin Performance by Year" data-en="Bitcoin Performance by Year">Bitcoin Performance by Year</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('btcd-perf',this)"><div class="nd d"></div><span data-mn="BTC.D Performance by Year" data-en="BTC.D Performance by Year">BTC.D Performance by Year</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('sp500-perf',this)"><div class="nd d"></div><span data-mn="S&amp;P 500 Performance by Year" data-en="S&amp;P 500 Performance by Year">S&amp;P 500 Performance by Year</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('gold-perf',this)"><div class="nd d"></div><span data-mn="Gold Performance by Year" data-en="Gold Performance by Year">Gold Performance by Year</span><span class="nt d">DeFi</span></div>
         <div class="nl" onclick="go('dxy-perf',this)"><div class="nd c"></div><span data-mn="DXY Performance by Year" data-en="DXY Performance by Year">DXY Performance by Year</span><span class="nt c">CeFi</span></div>
         <div class="nl" onclick="go('igv-perf',this)"><div class="nd c"></div><span data-mn="IGV Performance by Year" data-en="IGV Performance by Year">IGV Performance by Year</span><span class="nt c">CeFi</span></div>
         <div class="nl" onclick="go('gsci-perf',this)"><div class="nd c"></div><span data-mn="GSCI Performance by Year" data-en="GSCI Performance by Year">GSCI Performance by Year</span><span class="nt c">CeFi</span></div>
-        <div class="nl" onclick="go('halving',this)"><div class="nd d"></div><span data-mn="Халвинг Мөчлөг" data-en="Halving Cycles">Халвинг Мөчлөг</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('low-cycles',this)"><div class="nd d"></div><span data-mn="Эпох Мөчлөг (Доод→Доод)" data-en="Low to Low Cycles">Low to Low Cycles</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl" onclick="go('halving',this)"><div class="nd d"></div><span data-mn="Халвинг Мөчлөг" data-en="Halving Cycles">Халвинг Мөчлөг</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('low-cycles',this)"><div class="nd d"></div><span data-mn="Эпох Мөчлөг (Доод→Доод)" data-en="Low to Low Cycles">Low to Low Cycles</span><span class="nt d">DeFi</span></div>
       </div>
     </div>
 
-    <div class="ng" id="g3">
+    <div class="ng closed" id="g3">
       <div class="ngh" onclick="tog('g3')"><span data-mn="Макро / TradFi" data-en="Macro / TradFi">Макро / TradFi</span> <span class="arr">∨</span></div>
       <div class="nbody">
         <div class="nl" onclick="go('ism',this)"><div class="nd c"></div><span data-mn="ISM График" data-en="ISM Chart">ISM График</span><span class="nt c">CeFi</span></div>
@@ -2063,24 +2070,24 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       </div>
     </div>
 
-    <div class="ng" id="g4">
+    <div class="ng closed" id="g4">
       <div class="ngh" onclick="tog('g4')"><span data-mn="Он-Чэйн &amp; Нийгмийн" data-en="On-Chain &amp; Social">Он-Чэйн &amp; Нийгмийн</span> <span class="arr">∨</span></div>
       <div class="nbody">
-        <div class="nl" onclick="go('social-risk',this)"><div class="nd d"></div><span data-mn="Нийгмийн Эрсдэл" data-en="Social Risk">Нийгмийн Эрсдэл</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('hyperliquid',this)"><div class="nd d"></div><span data-mn="Hyperliquid Хэтэвч" data-en="Hyperliquid Wallets">Hyperliquid Хэтэвч</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('onchain',this)"><div class="nd d"></div><span data-mn="Он-Чэйн Статистик" data-en="On-Chain Stats">Он-Чэйн Статистик</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl" onclick="go('social-risk',this)"><div class="nd d"></div><span data-mn="Нийгмийн Эрсдэл" data-en="Social Risk">Нийгмийн Эрсдэл</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('hyperliquid',this)"><div class="nd d"></div><span data-mn="Hyperliquid Хэтэвч" data-en="Hyperliquid Wallets">Hyperliquid Хэтэвч</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('onchain',this)"><div class="nd d"></div><span data-mn="Он-Чэйн Статистик" data-en="On-Chain Stats">Он-Чэйн Статистик</span><span class="nt d">DeFi</span></div>
       </div>
     </div>
 
-    <div class="ng" id="g5">
+    <div class="ng closed" id="g5">
       <div class="ngh" onclick="tog('g5')"><span data-mn="Trenches" data-en="Trenches">Trenches</span> <span class="arr">∨</span></div>
       <div class="nbody">
-        <div class="nl" onclick="go('pumpfun',this)"><div class="nd d"></div><span data-mn="Pump Fun Статистик" data-en="Pump Fun Stats">Pump Fun Статистик</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
-        <div class="nl" onclick="go('dex',this)"><div class="nd d"></div><span data-mn="DEX Эргэлт" data-en="DEX Volume">DEX Эргэлт</span><span class="nt d"><span data-mn="DeFi" data-en="DeFi">DeFi</span></span></div>
+        <div class="nl" onclick="go('pumpfun',this)"><div class="nd d"></div><span data-mn="Pump Fun Статистик" data-en="Pump Fun Stats">Pump Fun Статистик</span><span class="nt d">DeFi</span></div>
+        <div class="nl" onclick="go('dex',this)"><div class="nd d"></div><span data-mn="DEX Эргэлт" data-en="DEX Volume">DEX Эргэлт</span><span class="nt d">DeFi</span></div>
       </div>
     </div>
 
-    <div class="ng" id="g6">
+    <div class="ng closed" id="g6">
       <div class="ngh" onclick="tog('g6')"><span data-mn="Техник Шинжилгээ" data-en="Technical">Техник Шинжилгээ</span> <span class="arr">∨</span></div>
       <div class="nbody">
         <div class="nl" onclick="go('sma200',this)"><div class="nd c"></div><span data-mn="200 Долоо хоногийн SMA" data-en="Weekly 200 SMA">200 Долоо хоногийн SMA</span><span class="nt c">CeFi</span></div>
@@ -3398,6 +3405,143 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
     <div class="pnl" id="P-eq-tsla"><div class="ph"><div><div class="pht">Tesla · TSLA <span class="pbg eq">EQ</span></div><div class="phs">Tesla Inc. · NASDAQ · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-tsla-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
     <div class="pnl" id="P-eq-spx"><div class="ph"><div><div class="pht">S&amp;P 500 · SPX <span class="pbg eq">EQ</span></div><div class="phs">S&amp;P 500 Index (via SPY ETF) · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-spx-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
 
+    <!-- ═══ NEW FEATURES ══════════════════════════════════════════════════════ -->
+
+    <!-- BIGGEST MOVERS -->
+    <div class="pnl" id="P-biggest-movers">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="Том Хөдөлгөөнүүд" data-en="Biggest Movers">Том Хөдөлгөөнүүд</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="24 цагийн шилдэг ахисан болон уналтад орсон крипто" data-en="Top gainers and losers in the last 24 hours">Топ ахигчид &amp; унагчид · 24 цаг · CoinGecko</span></div>
+      </div></div>
+      <div class="pc"><div id="movers-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- ALTCOIN SEASON INDEX -->
+    <div class="pnl" id="P-altcoin-season">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="Алткоин Сезон Индекс" data-en="Altcoin Season Index">Алткоин Сезон Индекс</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Алткоин эсвэл Биткоин давамгайлж байна уу?" data-en="Are altcoins or Bitcoin outperforming?">Топ 50 алткоины BTC-ийг гүйцэж байна уу · 7 хоногийн дүн</span></div>
+      </div>
+      <div class="phst"><div><div class="phsv" id="alt-season-score" style="color:var(--accent)">—</div><div class="phsl">Altcoin Season Score</div></div></div>
+      </div>
+      <div class="pc"><div id="altseason-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- BTC DOMINANCE CHART -->
+    <div class="pnl" id="P-btc-dominance">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="BTC Давамгайлал График" data-en="BTC Dominance Chart">BTC Dominance Chart</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Биткоины зах зээлийн хувь — өдөр тутмын өөрчлөлт" data-en="Bitcoin market dominance over time">Bitcoin market dominance % · live</span></div>
+      </div>
+      <div class="phst"><div><div class="phsv" id="btcd-live" style="color:var(--gold)">—</div><div class="phsl"><span data-mn="BTC Давамгайлал" data-en="BTC Dominance">BTC Давамгайлал</span></div></div></div>
+      </div>
+      <div class="pc">
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:14px"><canvas id="btcDomChart" height="120"></canvas></div>
+        <div id="btcdom-body"></div>
+      </div>
+    </div>
+
+    <!-- FUNDING RATES -->
+    <div class="pnl" id="P-funding-rates">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="Санхүүжилтийн Хүү" data-en="Funding Rates">Funding Rates</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Мөнхийн гэрээний санхүүжилтийн хүү — шууд мэдээлэл" data-en="Perpetual contract funding rates · live">Hyperliquid · live funding rates · бүх хөрөнгө</span></div>
+      </div>
+      <div class="phst">
+        <div><div class="phsv" id="funding-btc" style="color:var(--accent)">—</div><div class="phsl">BTC Funding</div></div>
+        <div><div class="phsv" id="funding-eth" style="color:var(--blue)">—</div><div class="phsl">ETH Funding</div></div>
+      </div></div>
+      <div class="pc"><div id="funding-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- MVRV Z-SCORE -->
+    <div class="pnl" id="P-mvrv">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="MVRV Z-Score" data-en="MVRV Z-Score">MVRV Z-Score</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Биткоин үнэлэгдэж байна уу эсвэл үнэлэгдэхгүй байна уу?" data-en="Is Bitcoin overvalued or undervalued?">Market Value vs Realized Value · Bitcoin valuation signal</span></div>
+      </div>
+      <div class="phst"><div><div class="phsv" id="mvrv-score" style="color:var(--accent)">—</div><div class="phsl">MVRV Z-Score</div></div></div>
+      </div>
+      <div class="pc"><div id="mvrv-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- LIQUIDATION MONITOR -->
+    <div class="pnl" id="P-liquidations">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="Ликвидэйшн Хяналт" data-en="Liquidation Monitor">Liquidation Monitor</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="24 цагийн ликвидэйшн мэдээлэл · лонг vs шорт" data-en="24h liquidations across all major exchanges · long vs short">24h liquidations · long vs short · Hyperliquid</span></div>
+      </div>
+      <div class="phst"><div><div class="phsv" id="liq-total" style="color:var(--red)">$—</div><div class="phsl"><span data-mn="24Ц Ликвидэйшн" data-en="24h Liquidated">24Ц Ликвидэйшн</span></div></div></div>
+      </div>
+      <div class="pc"><div id="liquidations-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- LONG/SHORT RATIO -->
+    <div class="pnl" id="P-long-short">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="Лонг/Шорт Харьцаа" data-en="Long/Short Ratio">Long/Short Ratio</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Трейдерүүдийн лонг ба шорт позицийн харьцаа" data-en="Trader long vs short position ratio">Trader positions · long vs short · Hyperliquid live</span></div>
+      </div></div>
+      <div class="pc"><div id="longshort-body"><div class="mkt-loading"><div class="mkt-spinner"></div><span data-mn="Ачаалж байна…" data-en="Loading…">Ачаалж байна…</span></div></div></div>
+    </div>
+
+    <!-- DCA CALCULATOR -->
+    <div class="pnl" id="P-dca-calc">
+      <div class="ph"><div>
+        <div class="pht"><span data-mn="DCA Тооцоолуур" data-en="DCA Calculator">DCA Calculator</span> <span class="pbg d">DeFi</span></div>
+        <div class="phs"><span data-mn="Тогтмол хөрөнгө оруулалтын тооцоолуур" data-en="Dollar Cost Averaging calculator">Dollar Cost Averaging · BTC/ETH/SOL/BNB/XRP</span></div>
+      </div></div>
+      <div class="pc">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px">
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:22px">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px"><span data-mn="Тохиргоо" data-en="Settings">Тохиргоо</span></div>
+            <div style="margin-bottom:14px">
+              <label style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px"><span data-mn="Хөрөнгө" data-en="Asset">Хөрөнгө</span></label>
+              <select id="dca-coin" onchange="calcDCA()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer">
+                <option value="bitcoin">Bitcoin (BTC)</option>
+                <option value="ethereum">Ethereum (ETH)</option>
+                <option value="solana">Solana (SOL)</option>
+                <option value="binancecoin">BNB</option>
+                <option value="ripple">XRP</option>
+              </select>
+            </div>
+            <div style="margin-bottom:14px">
+              <label style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px"><span data-mn="Давтамж" data-en="Frequency">Давтамж</span></label>
+              <select id="dca-freq" onchange="calcDCA()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer">
+                <option value="7"><span data-mn="Долоо хоног бүр" data-en="Weekly">Долоо хоног бүр / Weekly</span></option>
+                <option value="30"><span data-mn="Сар бүр" data-en="Monthly">Сар бүр / Monthly</span></option>
+                <option value="1"><span data-mn="Өдөр бүр" data-en="Daily">Өдөр бүр / Daily</span></option>
+              </select>
+            </div>
+            <div style="margin-bottom:14px">
+              <label style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px"><span data-mn="Дүн (USD)" data-en="Amount (USD)">Дүн (USD)</span></label>
+              <input id="dca-amount" type="number" value="100" min="1" oninput="calcDCA()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:13px;color:var(--text);outline:none;transition:border-color .15s" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'"/>
+            </div>
+            <div style="margin-bottom:14px">
+              <label style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;display:block;margin-bottom:6px"><span data-mn="Хугацаа" data-en="Period">Хугацаа</span></label>
+              <select id="dca-period" onchange="calcDCA()" style="width:100%;background:var(--bg3);border:1px solid var(--border);border-radius:6px;padding:10px 12px;font-family:'Space Mono',monospace;font-size:12px;color:var(--text);outline:none;cursor:pointer">
+                <option value="365">1 жил / 1 Year</option>
+                <option value="730">2 жил / 2 Years</option>
+                <option value="1095">3 жил / 3 Years</option>
+                <option value="1825">5 жил / 5 Years</option>
+                <option value="180">6 сар / 6 Months</option>
+                <option value="90">3 сар / 3 Months</option>
+              </select>
+            </div>
+            <button onclick="calcDCA()" style="width:100%;padding:12px;background:var(--accent);border:none;border-radius:6px;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#000;cursor:pointer;transition:all .2s" onmouseover="this.style.background='var(--ad)'" onmouseout="this.style.background='var(--accent)'"><span data-mn="ТООЦООЛОХ" data-en="CALCULATE">ТООЦООЛОХ</span></button>
+          </div>
+          <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:22px">
+            <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:16px"><span data-mn="Үр дүн" data-en="Results">Үр дүн</span></div>
+            <div id="dca-results"><div style="text-align:center;padding:40px 20px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)"><span data-mn="Тохиргоо хийж тооцоолно уу" data-en="Configure and calculate above">Тохиргоо хийж тооцоолно уу</span></div></div>
+          </div>
+        </div>
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:20px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px"><span data-mn="DCA График" data-en="DCA Chart">DCA График</span></div>
+          <canvas id="dcaChart" height="100"></canvas>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -3420,16 +3564,17 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 <div class="tst" id="tst"><div class="td" id="td"></div><span id="tm"></span></div>
 
 
-<script src="js/core.js?v=2"></script>
-<script src="js/charts.js?v=2"></script>
-<script src="js/etf.js?v=2"></script>
-<script src="js/auth.js?v=2"></script>
-<script src="js/coin-modal.js?v=2"></script>
-<script src="js/training.js?v=2"></script>
-<script src="js/market-engine.js?v=2"></script>
-<script src="js/global-assets.js?v=2"></script>
-<script src="js/news.js?v=2"></script>
-<script src="js/yield.js?v=2"></script>
+<script src="js/core.js?v=4"></script>
+<script src="js/charts.js?v=4"></script>
+<script src="js/etf.js?v=4"></script>
+<script src="js/auth.js?v=4"></script>
+<script src="js/coin-modal.js?v=4"></script>
+<script src="js/training.js?v=4"></script>
+<script src="js/market-engine.js?v=4"></script>
+<script src="js/global-assets.js?v=4"></script>
+<script src="js/news.js?v=4"></script>
+<script src="js/yield.js?v=4"></script>
+<script src="js/new-features.js?v=2"></script>
 
 <div class="training-overlay" id="trainingOverlay">
 
