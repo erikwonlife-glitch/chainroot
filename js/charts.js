@@ -51,7 +51,7 @@ async function drawAllCharts(){
     async function getRSIHistory(id){
       // Route through Railway API to avoid CoinGecko CORS block
       try{
-        const r = await fetch(`${API_BASE}/api/crypto/rsi/${id}`, {signal:AbortSignal.timeout(15000)});
+        const r = await fetch(`${CR_API}/api/crypto/rsi/${id}`, {signal:AbortSignal.timeout(15000)});
         if(r.ok){
           const d = await r.json();
           if(d&&d.vals30) return d;
@@ -2625,13 +2625,172 @@ async function drawAllCharts(){
     };
   })();
 
-  // ── HYPERLIQUID OI ──────────────────────────────────────────────────────────
-  const hlOIEl=document.getElementById('hlOIChart');
-  if(hlOIEl){
-    const g=hexGrad(hlOIEl,BLUE);
-    new Chart(hlOIEl,{type:'line',data:{labels:['7d','6d','5d','4d','3d','2d','Yesterday','AM','Now'],datasets:[{label:'Open Interest $B',data:[1.62,1.70,1.85,1.78,1.92,2.04,1.98,2.08,2.14],borderColor:BLUE,backgroundColor:g,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:BLUE}]},
-      options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#1c2d38'},ticks:{color:MUTED,callback:v=>'$'+v+'B'}},x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,font:{size:8}}}}}});
-  }
+  // ── HYPERLIQUID — LIVE DATA ──────────────────────────────────────────────────
+  (async function loadHyperliquidLive(){
+    try {
+      // Fetch live Hyperliquid perp market data
+      const r = await fetch('https://api.hyperliquid.xyz/info', {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({type:'metaAndAssetCtxs'}),
+        signal:AbortSignal.timeout(15000)
+      });
+      if(!r.ok) throw new Error('HL '+r.status);
+      const data = await r.json();
+      const universe = (data[0]&&data[0].universe)||[];
+      const ctxs     = data[1]||[];
+
+      // Build rich asset list
+      let totalOI = 0, totalVol = 0, longCount = 0, shortCount = 0;
+      const assets = universe.map(function(asset,i){
+        const ctx=ctxs[i]||{};
+        const price   = parseFloat(ctx.markPx)||0;
+        const oi      = parseFloat(ctx.openInterest)||0;
+        const vol     = parseFloat(ctx.dayNtlVlm)||0;
+        const prevPx  = parseFloat(ctx.prevDayPx)||0;
+        const funding = parseFloat(ctx.funding)||0;
+        const chg     = prevPx>0?((price-prevPx)/prevPx)*100:0;
+        const oiUsd   = oi*price;
+        totalOI  += oiUsd;
+        totalVol += vol;
+        if(funding>0) longCount++; else shortCount++;
+        return {name:asset.name, price, chg, oi, oiUsd, vol, funding};
+      }).filter(a=>a.price>0).sort(function(a,b){return b.oiUsd-a.oiUsd;});
+
+      // Update stat cards
+      const ogs = document.querySelectorAll('#P-hyperliquid .oc');
+      if(ogs[0]) ogs[0].querySelector('.ov').textContent='$'+(totalOI/1e9).toFixed(2)+'B';
+      if(ogs[1]) ogs[1].querySelector('.ov').textContent=((longCount/(longCount+shortCount||1))*100).toFixed(0)+'%';
+      if(ogs[2]) ogs[2].querySelector('.ov').textContent='$'+(totalVol/1e9).toFixed(2)+'B';
+
+      // Update whale table with real top OI positions
+      const hlWhale = document.getElementById('hlWhaleTable');
+      if(hlWhale && assets.length){
+        hlWhale.innerHTML = assets.slice(0,8).map(function(a){
+          const isBull = a.funding>=0;
+          const col    = isBull?'#00e87a':'#ff4560';
+          const side   = isBull?'LONG':'SHORT';
+          const sideBg = isBull?'rgba(0,232,122,.1)':'rgba(255,69,96,.1)';
+          return `<tr style="border-bottom:1px solid rgba(28,45,56,.4)">
+            <td style="padding:8px;font-family:'Space Mono',monospace;font-size:11px">${a.name}-PERP</td>
+            <td style="text-align:center">
+              <span style="color:${col};background:${sideBg};padding:2px 7px;border-radius:3px;font-family:'Space Mono',monospace;font-size:9px">${side}</span>
+            </td>
+            <td style="text-align:right;font-family:'Space Mono',monospace;font-size:11px;color:#fff">$${(a.oiUsd/1e6).toFixed(1)}M</td>
+            <td style="text-align:right;font-family:'Space Mono',monospace;font-size:11px;color:${a.chg>=0?'#00e87a':'#ff4560'}">${a.chg>=0?'+':''}${a.chg.toFixed(2)}%</td>
+            <td style="text-align:right;font-family:'Space Mono',monospace;font-size:10px;color:#4d6475">${(a.funding*100).toFixed(4)}%</td>
+          </tr>`;
+        }).join('');
+
+        // Update table header to show funding column
+        const thead = document.querySelector('#P-hyperliquid table thead tr');
+        if(thead) thead.innerHTML='<th style="text-align:left;padding:5px 8px">Asset</th><th style="text-align:center;padding:5px 8px">Side</th><th style="text-align:right;padding:5px 8px">OI</th><th style="text-align:right;padding:5px 8px">24h</th><th style="text-align:right;padding:5px 8px">Funding</th>';
+      }
+
+      // OI Chart — top 8 assets by OI
+      const hlOIEl = document.getElementById('hlOIChart');
+      if(hlOIEl && assets.length){
+        const top8  = assets.slice(0,8);
+        const cols  = top8.map(a=>a.funding>=0?'rgba(0,232,122,.7)':'rgba(255,69,96,.7)');
+        const g     = hexGrad(hlOIEl,BLUE);
+        if(hlOIEl._hlChart){ try{hlOIEl._hlChart.destroy();}catch(e){} }
+        hlOIEl._hlChart = new Chart(hlOIEl,{
+          type:'bar',
+          data:{
+            labels:top8.map(a=>a.name),
+            datasets:[{
+              label:'Open Interest $M',
+              data:top8.map(a=>+(a.oiUsd/1e6).toFixed(1)),
+              backgroundColor:cols,
+              borderRadius:4
+            }]
+          },
+          options:{
+            responsive:true,
+            plugins:{legend:{display:false},tooltip:{callbacks:{label:v=>'$'+v.raw+'M OI'}}},
+            scales:{
+              y:{grid:{color:'#1c2d38'},ticks:{color:MUTED,callback:v=>'$'+v+'M'}},
+              x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,font:{size:9}}}
+            }
+          }
+        });
+      }
+
+      // Add extra detail section with top movers
+      const hlDetailEl = document.querySelector('#P-hyperliquid .pc');
+      if(hlDetailEl){
+        // Check if extra section already exists
+        if(!document.getElementById('hl-extra-stats')){
+          const extraDiv = document.createElement('div');
+          extraDiv.id = 'hl-extra-stats';
+          extraDiv.style.cssText = 'margin-top:20px';
+
+          // Top gainers and losers from HL
+          const sorted24h = [...assets].sort(function(a,b){return b.chg-a.chg;});
+          const gainers = sorted24h.slice(0,5);
+          const losers  = sorted24h.slice(-5).reverse();
+
+          extraDiv.innerHTML = `
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:20px">
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:12px">🚀 Top Gainers 24h</div>
+                ${gainers.map(a=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(28,45,56,.3);font-family:'Space Mono',monospace;font-size:11px">
+                  <span style="color:#fff">${a.name}</span>
+                  <span style="color:#00e87a;font-weight:700">+${a.chg.toFixed(2)}%</span>
+                </div>`).join('')}
+              </div>
+              <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--red);text-transform:uppercase;margin-bottom:12px">📉 Top Losers 24h</div>
+                ${losers.map(a=>`<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(28,45,56,.3);font-family:'Space Mono',monospace;font-size:11px">
+                  <span style="color:#fff">${a.name}</span>
+                  <span style="color:#ff4560;font-weight:700">${a.chg.toFixed(2)}%</span>
+                </div>`).join('')}
+              </div>
+            </div>
+            <div style="background:var(--bg2);border:1px solid var(--border);border-radius:6px;padding:16px">
+              <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:12px">💰 Top OI · Full Funding Rate Table</div>
+              <div style="overflow-x:auto">
+                <table style="width:100%;border-collapse:collapse;font-family:'Space Mono',monospace;font-size:11px">
+                  <thead><tr style="color:var(--muted);font-size:9px;letter-spacing:1px;text-transform:uppercase;border-bottom:1px solid var(--border)">
+                    <th style="text-align:left;padding:6px 10px">Asset</th>
+                    <th style="text-align:right;padding:6px 10px">Price</th>
+                    <th style="text-align:right;padding:6px 10px">24h %</th>
+                    <th style="text-align:right;padding:6px 10px">OI USD</th>
+                    <th style="text-align:right;padding:6px 10px">Volume</th>
+                    <th style="text-align:right;padding:6px 10px">Funding</th>
+                  </tr></thead>
+                  <tbody>
+                    ${assets.slice(0,20).map(function(a){
+                      const cc = a.chg>=0?'#00e87a':'#ff4560';
+                      const fc = a.funding>=0?'#00e87a':'#ff4560';
+                      return `<tr style="border-bottom:1px solid rgba(28,45,56,.3);transition:background .12s" onmouseover="this.style.background='rgba(0,232,122,.025)'" onmouseout="this.style.background=''">
+                        <td style="padding:7px 10px;color:#fff;font-weight:600">${a.name}</td>
+                        <td style="padding:7px 10px;text-align:right;color:#ccd8df">$${a.price>1000?a.price.toLocaleString(undefined,{maximumFractionDigits:0}):a.price.toFixed(4)}</td>
+                        <td style="padding:7px 10px;text-align:right;color:${cc};font-weight:700">${a.chg>=0?'+':''}${a.chg.toFixed(2)}%</td>
+                        <td style="padding:7px 10px;text-align:right;color:var(--muted)">$${(a.oiUsd/1e6).toFixed(1)}M</td>
+                        <td style="padding:7px 10px;text-align:right;color:var(--muted)">$${(a.vol/1e6).toFixed(1)}M</td>
+                        <td style="padding:7px 10px;text-align:right;color:${fc}">${(a.funding*100).toFixed(4)}%</td>
+                      </tr>`;
+                    }).join('')}
+                  </tbody>
+                </table>
+              </div>
+            </div>`;
+          hlDetailEl.appendChild(extraDiv);
+        }
+      }
+
+    } catch(e){
+      console.warn('[DeFiMongo] Hyperliquid live fetch failed:', e.message);
+      // Fallback static OI chart
+      const hlOIEl = document.getElementById('hlOIChart');
+      if(hlOIEl){
+        const g=hexGrad(hlOIEl,BLUE);
+        new Chart(hlOIEl,{type:'line',data:{labels:['7d','6d','5d','4d','3d','2d','Yesterday','AM','Now'],datasets:[{label:'Open Interest $B',data:[1.62,1.70,1.85,1.78,1.92,2.04,1.98,2.08,2.14],borderColor:BLUE,backgroundColor:g,fill:true,tension:0.4,pointRadius:3,pointBackgroundColor:BLUE}]},
+          options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{grid:{color:'#1c2d38'},ticks:{color:MUTED,callback:v=>'$'+v+'B'}},x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,font:{size:8}}}}}});
+      }
+    }
+  })();
 
   // ── CRYPTO BUBBLES ──────────────────────────────────────────────────────────
   const canvas=document.getElementById('bubbleCanvas');
