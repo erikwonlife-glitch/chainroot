@@ -5,7 +5,7 @@
    Translation: MyMemory → Mongolian
 ═══════════════════════════════════════════════════════════════ */
 
-const CR_API_NEWS = 'https://defimongo-production.up.railway.app';
+const CR_API_NEWS = 'https://chainroot-production-b7d1.up.railway.app';
 
 // ── TWEET ENGINE ─────────────────────────────────────────────────────────────
 const TWEETS = (function(){
