@@ -489,15 +489,15 @@ function filterCoins(q) { renderCoinTable(); }
 function renderGlobal(g){
   const d=g.data;
   if(!d)return;
-  const mcEl=document.getElementById('globalMC');
-  const volEl=document.getElementById('globalVol');
+  const mcEl=document.getElementById('cgTotalCap');
+  const volEl=document.getElementById('cgVolume');
   const btcDomEl=document.getElementById('btcDom');
   const ethDomEl=document.getElementById('ethDom');
   if(mcEl)mcEl.textContent=fmt(d.total_market_cap?.usd);
   if(volEl)volEl.textContent=fmt(d.total_volume?.usd);
   if(btcDomEl)btcDomEl.textContent=(d.market_cap_percentage?.btc||0).toFixed(1)+'%';
   if(ethDomEl)ethDomEl.textContent=(d.market_cap_percentage?.eth||0).toFixed(1)+'%';
-  const mcChgEl=document.getElementById('globalMCChg');
+  const mcChgEl=document.getElementById('cgCapChg');
   if(mcChgEl){const c=d.market_cap_change_percentage_24h_usd||0;mcChgEl.textContent=fmtPct(c);mcChgEl.className='cc '+pctClass(c);}
   // Update crypto prices panel header
   const cgCap=document.getElementById('cgTotalCap');
