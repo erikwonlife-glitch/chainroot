@@ -1,5 +1,5 @@
 /* ═══════════════════════════════════════════════════════════
-   CHAINROOT SITE-WIDE LANGUAGE SWITCHER
+   DEFIMONGO SITE-WIDE LANGUAGE SWITCHER
    Default: Mongolian (mn)
    All translatable elements use data-mn / data-en attributes.
    setSiteLang('en') switches everything to English instantly.
@@ -62,7 +62,7 @@ function setSiteLang(lang) {
 // ── GLOBAL ASSET RANKING ──────────────────────────────────────────────────────
 (function(){
 
-const CR_API_GA = 'https://chainroot-production.up.railway.app';
+const CR_API_GA = 'https://defimongo-production.up.railway.app';
 
 // ── Inline SVG logos for major stocks (guaranteed to render) ──────────────────
 // Convert SVG string to safe data URI for use as img src
