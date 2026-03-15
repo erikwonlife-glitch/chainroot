@@ -2052,14 +2052,49 @@ async function drawAllCharts(){
         scales:{x:{grid:{color:'#1c2d38'},ticks:{color:MUTED,callback:v=>'$'+v+'T'}},y:{grid:{color:'#1c2d38'},ticks:{color:MUTED,font:{size:9}}}}}});
   }
 
-  // ── ON-CHAIN — TVL + BTC stats live from Railway ────────────────────────────
+  // ── ON-CHAIN — TVL + BTC stats — Railway first, direct DeFiLlama fallback ────
   const tvlEl=document.getElementById('tvlChart');
   const exEl=document.getElementById('exchangeChart');
   if(tvlEl||exEl){
     try{
+      // Try Railway first, fall back to DeFiLlama directly (open CORS)
+      async function fetchTVL() {
+        try {
+          const r = await fetch(`${CR_API}/api/defi/tvl`, {signal:AbortSignal.timeout(10000)});
+          if(r.ok) { const d=await r.json(); if(d&&d.top7) return d; }
+        } catch(e) {}
+        // Direct DeFiLlama fallback
+        try {
+          const [protos, chains] = await Promise.all([
+            fetch('https://api.llama.fi/protocols',{signal:AbortSignal.timeout(12000)}).then(r=>r.json()),
+            fetch('https://api.llama.fi/v2/chains',{signal:AbortSignal.timeout(12000)}).then(r=>r.json())
+          ]);
+          const totalTVL = (chains||[]).reduce((s,c)=>s+(c.tvl||0),0);
+          const top7 = (protos||[]).filter(p=>p.tvl>0).sort((a,b)=>b.tvl-a.tvl).slice(0,7)
+            .map(p=>({name:p.name, tvl:p.tvl, change24h:p.change_1d||0, category:p.category}));
+          return {totalTVL, top7};
+        } catch(e) { return null; }
+      }
+      async function fetchOnchain() {
+        try {
+          const r = await fetch(`${CR_API}/api/onchain/btc`, {signal:AbortSignal.timeout(10000)});
+          if(r.ok) { const d=await r.json(); if(d) return d; }
+        } catch(e) {}
+        // Direct Blockchain.info fallback
+        try {
+          const [stats, addrs] = await Promise.allSettled([
+            fetch('https://api.blockchain.info/stats',{signal:AbortSignal.timeout(10000)}).then(r=>r.json()),
+            fetch('https://api.blockchain.info/charts/n-unique-addresses?timespan=30days&format=json&sampled=true',{signal:AbortSignal.timeout(10000)}).then(r=>r.json())
+          ]);
+          const s = stats.status==='fulfilled' ? stats.value : {};
+          const a = addrs.status==='fulfilled' ? addrs.value : {};
+          const addrData = (a.values||[]).slice(-30).map(p=>({date:new Date(p.x*1000).toLocaleDateString('en',{month:'short',day:'numeric'}),val:p.y}));
+          return { activeAddr:s.n_unique_addresses||null, addrChart:addrData };
+        } catch(e) { return null; }
+      }
       const [tvlData, onchainData] = await Promise.allSettled([
-        fetchJSON(`${CR_API}/api/defi/tvl`),
-        fetchJSON(`${CR_API}/api/onchain/btc`)
+        fetchTVL(),
+        fetchOnchain()
       ]);
 
       // TVL chart — top 7 protocols
@@ -2093,12 +2128,27 @@ async function drawAllCharts(){
     }catch(e){}
   }
 
-  // ── DEX VOLUME — live from Railway/DeFiLlama ─────────────────────────────────
+  // ── DEX VOLUME — Railway first, direct DeFiLlama fallback ───────────────────
   const dexShareEl=document.getElementById('dexShareChart');
   const dexVolEl=document.getElementById('dexVolumeChart');
   if(dexShareEl||dexVolEl){
     try{
-      const dexData=await fetchJSON(`${CR_API}/api/defi/dex`);
+      async function fetchDex() {
+        try {
+          const r = await fetch(`${CR_API}/api/defi/dex`, {signal:AbortSignal.timeout(10000)});
+          if(r.ok) { const d=await r.json(); if(d&&d.top5) return d; }
+        } catch(e) {}
+        // Direct DeFiLlama fallback
+        try {
+          const data = await fetch('https://api.llama.fi/overview/dexs?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=false&dataType=dailyVolume',{signal:AbortSignal.timeout(12000)}).then(r=>r.json());
+          const top5 = (data?.protocols||[]).filter(p=>p.total24h>0).sort((a,b)=>b.total24h-a.total24h).slice(0,5)
+            .map(p=>({name:p.name, vol24h:p.total24h, change24h:p.change_1d||0}));
+          const totalVol = (data?.protocols||[]).reduce((s,p)=>s+(p.total24h||0),0);
+          const chart14 = (data?.totalDataChart||[]).slice(-14).map(p=>({date:new Date(p[0]*1000).toLocaleDateString('en',{month:'short',day:'numeric'}),vol:+(p[1]/1e9).toFixed(2)}));
+          return {totalVol, top5, chart14};
+        } catch(e) { return null; }
+      }
+      const dexData = await fetchDex();
       if(dexData?.top5){
         const top5=dexData.top5;
         const othersV=(dexData.totalVol||0)-top5.reduce(function(s,p){return s+p.vol24h;},0);
@@ -2127,12 +2177,26 @@ async function drawAllCharts(){
     }catch(e){}
   }
 
-  // ── PUMP FUN — live volume from Railway/DeFiLlama ────────────────────────────
+  // ── PUMP FUN — Railway first, direct DeFiLlama fallback ─────────────────────
   const pumpLEl=document.getElementById('pumpLaunchChart');
   const pumpGEl=document.getElementById('pumpGradChart');
   if(pumpLEl||pumpGEl){
     try{
-      const pData=await fetchJSON(`${CR_API}/api/defi/pumpfun`);
+      async function fetchPumpFun() {
+        try {
+          const r = await fetch(`${CR_API}/api/defi/pumpfun`, {signal:AbortSignal.timeout(10000)});
+          if(r.ok) { const d=await r.json(); if(d) return d; }
+        } catch(e) {}
+        // Direct DeFiLlama fallback
+        try {
+          const data = await fetch('https://api.llama.fi/summary/dexs/pump-fun?excludeTotalDataChart=false&dataType=dailyVolume',{signal:AbortSignal.timeout(12000)}).then(r=>r.json());
+          const vol24h = data?.total24h||0;
+          const vol7d  = data?.total7d||0;
+          const chart14 = (data?.totalDataChart||[]).slice(-14).map(p=>({date:new Date(p[0]*1000).toLocaleDateString('en',{month:'short',day:'numeric'}),vol:+(p[1]/1e6).toFixed(1)}));
+          return {vol24h, vol7d, chart14};
+        } catch(e) { return null; }
+      }
+      const pData = await fetchPumpFun();
       if(pData){
         // Update stat cards
         const pOgs=document.querySelectorAll('#P-pumpfun .oc');
