@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>ChainRoot — Market Intelligence</title>
+<title>DeFiMongo — Mongolian DeFi Intelligence</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
@@ -29,7 +29,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 .logo-icon svg{width:100%;height:100%}
 .logo-wordmark{display:flex;flex-direction:column;line-height:1}
 .logo-name{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;letter-spacing:0.04em;color:#fff;display:flex;align-items:center;gap:0}
-.logo-name .chain{color:#fff;font-weight:600}
+.logo-name .chain{color:#ccd8df;font-weight:600}
 .logo-name .root{color:var(--accent);font-weight:700;letter-spacing:0.01em}
 .logo-tag{font-family:'Space Mono',monospace;font-size:7.5px;letter-spacing:0.18em;color:var(--muted);text-transform:uppercase;margin-top:2px}
 .ticker-wrap{flex:1;overflow:hidden;margin:0 28px;
@@ -1976,27 +1976,20 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   <div class="logo">
     <div class="logo-icon">
       <svg viewBox="0 0 30 30" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <!-- Chain link node design -->
-        <circle cx="15" cy="15" r="14" stroke="#1c2d38" stroke-width="1.5"/>
-        <!-- Left chain link -->
-        <rect x="4" y="11.5" width="10" height="7" rx="3.5" stroke="#00e87a" stroke-width="2" fill="none"/>
-        <!-- Right chain link -->
-        <rect x="16" y="11.5" width="10" height="7" rx="3.5" stroke="#00b4d8" stroke-width="2" fill="none"/>
-        <!-- Center connector dot -->
-        <circle cx="15" cy="15" r="2.2" fill="#00e87a"/>
-        <!-- Accent glow line -->
-        <line x1="9" y1="15" x2="21" y2="15" stroke="url(#logoGrad)" stroke-width="1.5" stroke-linecap="round" opacity="0.5"/>
-        <defs>
-          <linearGradient id="logoGrad" x1="0" y1="0" x2="1" y2="0">
-            <stop offset="0%" stop-color="#00e87a"/>
-            <stop offset="100%" stop-color="#00b4d8"/>
-          </linearGradient>
-        </defs>
+        <!-- Outer diamond — Mongolian inspired -->
+        <polygon points="15,2 27,10 27,20 15,28 3,20 3,10" stroke="#00e87a" stroke-width="1.5" fill="rgba(0,232,122,0.08)"/>
+        <!-- Inner diamond -->
+        <polygon points="15,7 22,12 22,18 15,23 8,18 8,12" stroke="#00e87a" stroke-width="1" fill="rgba(0,232,122,0.12)"/>
+        <!-- Center glow dot -->
+        <circle cx="15" cy="15" r="3" fill="#00e87a"/>
+        <!-- Chain connectors -->
+        <line x1="3" y1="15" x2="8" y2="15" stroke="#00e87a" stroke-width="1.5" stroke-linecap="round"/>
+        <line x1="22" y1="15" x2="27" y2="15" stroke="#00e87a" stroke-width="1.5" stroke-linecap="round"/>
       </svg>
     </div>
     <div class="logo-wordmark">
-      <div class="logo-name"><span class="chain">Chain</span><span class="root">Root</span></div>
-      <div class="logo-tag">Market Intelligence</div>
+      <div class="logo-name"><span class="chain">DeFi</span><span class="root">Mongo</span></div>
+      <div class="logo-tag">Mongolian DeFi Intelligence</div>
     </div>
   </div>
   <div class="ticker-wrap"><div class="ticker" id="ticker"></div></div>
@@ -2351,7 +2344,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               <span class="live-dot"></span>LIVE
             </span>
           </div>
-          <div class="phs">CryptoCompare · CoinTelegraph · Reuters · X Posts — refreshes every 10 min</div>
+          <div class="phs">CryptoCompare · CoinTelegraph · Reuters · RSS — refreshes every 10 min</div>
         </div>
         <div class="phst" style="gap:10px;flex-wrap:wrap">
           <div id="news-last-updated" style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">Fetching…</div>
@@ -2423,12 +2416,12 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       <!-- LIVE INTELLIGENCE FEEDS -->
       <div style="padding:20px 40px 0;background:var(--bg1);border-bottom:1px solid var(--border)">
 
-        <!-- ChainRoot X account banner -->
+        <!-- DeFiMongo X account banner -->
         <a href="https://x.com/jf_macro" target="_blank" rel="noopener" style="display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(0,232,122,.05);border:1px solid rgba(0,232,122,.2);border-radius:8px;margin-bottom:16px;text-decoration:none;transition:border-color .15s" onmouseover="this.style.borderColor='rgba(0,232,122,.5)'" onmouseout="this.style.borderColor='rgba(0,232,122,.2)'">
           <div style="width:36px;height:36px;border-radius:50%;background:rgba(0,232,122,.15);border:1px solid rgba(0,232,122,.3);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--accent);font-weight:700;flex-shrink:0">𝕏</div>
           <div style="flex:1;min-width:0">
             <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;color:var(--accent)">@jf_macro</div>
-            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">ChainRoot-ийн албан ёсны X хаяг · Macro & Crypto Intelligence</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-top:2px">DeFiMongo-ийн албан ёсны X хаяг · Macro & Crypto Intelligence</div>
           </div>
           <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--accent);letter-spacing:1px;flex-shrink:0">Дагах →</div>
         </a>
@@ -3444,7 +3437,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   <div class="tr-topbar">
     <div class="tr-logo">
       <div class="tr-logo-dot"></div>
-      <span data-mn="ChainRoot — Үнэгүй Сургалт" data-en="ChainRoot — Free Training">ChainRoot — Үнэгүй Сургалт</span>
+      <span data-mn="DeFiMongo — Үнэгүй Сургалт" data-en="DeFiMongo — Free Training">DeFiMongo — Үнэгүй Сургалт</span>
     </div>
     <div style="display:flex;align-items:center;gap:10px">
       <!-- Language toggle -->
@@ -3471,7 +3464,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         <span data-mn='Зах зээлийг <span class="accent">ойлго</span>.<br>Индикаторыг <span class="accent">ашигла</span>.' data-en='Understand the <span class="accent">market</span>.<br>Master the <span class="accent">indicator</span>.'>Зах зээлийг <span class="accent">ойлго</span>.<br>Индикаторыг <span class="accent">ашигла</span>.</span>
       </h1>
       <p class="tr-hero-sub">
-        <span data-mn="<strong>30 минутын үнэгүй сургалтын видео</strong> үзэж, ChainRoot TradingView индикаторыг хэрхэн ашиглан крипто болон хувьцааны дохионуудыг уншихыг сурна уу." data-en="Watch our <strong>free 30-minute training video</strong> and learn exactly how to read crypto &amp; stock signals using the ChainRoot TradingView indicator."><strong>30 минутын үнэгүй сургалтын видео</strong> үзэж, ChainRoot TradingView индикаторыг хэрхэн ашиглан крипто болон хувьцааны дохионуудыг уншихыг сурна уу.</span>
+        <span data-mn="<strong>30 минутын үнэгүй сургалтын видео</strong> үзэж, DeFiMongo TradingView индикаторыг хэрхэн ашиглан крипто болон хувьцааны дохионуудыг уншихыг сурна уу." data-en="Watch our <strong>free 30-minute training video</strong> and learn exactly how to read crypto &amp; stock signals using the DeFiMongo TradingView indicator."><strong>30 минутын үнэгүй сургалтын видео</strong> үзэж, DeFiMongo TradingView индикаторыг хэрхэн ашиглан крипто болон хувьцааны дохионуудыг уншихыг сурна уу.</span>
       </p>
     </div>
 
@@ -3493,7 +3486,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       <!--
       <iframe
         src="https://www.youtube.com/embed/YOUR_YOUTUBE_VIDEO_ID?rel=0&modestbranding=1&color=white"
-        title="ChainRoot Сургалт"
+        title="DeFiMongo Сургалт"
         frameborder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowfullscreen>
@@ -3530,7 +3523,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       <div class="tr-lesson">
         <div class="tr-lesson-num">ХИЧЭЭЛ 02</div>
         <div class="tr-lesson-title" data-mn="TradingView тохируулах" data-en="Setting Up TradingView">TradingView тохируулах</div>
-        <div class="tr-lesson-desc" data-mn="ChainRoot индикаторыг TradingView дээр хэрхэн нэмж тохируулахыг алхам алхмаар үзүүлнэ." data-en="Step-by-step guide to adding and configuring the ChainRoot indicator on TradingView.">ChainRoot индикаторыг TradingView дээр хэрхэн нэмж тохируулахыг алхам алхмаар үзүүлнэ.</div>
+        <div class="tr-lesson-desc" data-mn="DeFiMongo индикаторыг TradingView дээр хэрхэн нэмж тохируулахыг алхам алхмаар үзүүлнэ." data-en="Step-by-step guide to adding and configuring the DeFiMongo indicator on TradingView.">DeFiMongo индикаторыг TradingView дээр хэрхэн нэмж тохируулахыг алхам алхмаар үзүүлнэ.</div>
       </div>
       <div class="tr-lesson">
         <div class="tr-lesson-num">ХИЧЭЭЛ 03</div>
@@ -3548,7 +3541,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <!-- Indicator demo -->
     <div class="tr-section-label">// TradingView Indicator</div>
-    <h2 class="tr-section-title" data-mn="ChainRoot Индикатор — Шууд Жишээ" data-en="ChainRoot Indicator — Live Demo">ChainRoot Индикатор — Шууд Жишээ</h2>
+    <h2 class="tr-section-title" data-mn="DeFiMongo Индикатор — Шууд Жишээ" data-en="DeFiMongo Indicator — Live Demo">DeFiMongo Индикатор — Шууд Жишээ</h2>
 
     <div class="tr-indicator-wrap">
       <div class="tr-indicator-info">
@@ -3571,7 +3564,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
             <span style="font-family:'Space Mono',monospace;font-size:10px;color:#ccd8df;font-weight:700">BTC/USDT</span>
             <span style="font-family:'Space Mono',monospace;font-size:9px;color:#4d6475">4H</span>
             <span style="font-family:'Space Mono',monospace;font-size:9px;color:#4d6475">·</span>
-            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#00e87a">ChainRoot v2</span>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:#00e87a">DeFiMongo v2</span>
           </div>
           <span class="tr-live-dot" style="font-family:'Space Mono',monospace;font-size:9px;color:#00e87a;display:flex;align-items:center;gap:5px">
             <span style="width:6px;height:6px;border-radius:50%;background:#00e87a;display:inline-block;animation:pulse 1.5s infinite"></span>LIVE DEMO
@@ -3708,7 +3701,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 </div><!-- /training-overlay -->
 
 <!-- ═══════════════════════════════════════════════════════
-     CHAINROOT YIELD / DEFI EARN — CHAINROOT VAULT INFRASTRUCTURE
+     DEFIMONGO YIELD / DEFI EARN — DEFIMONGO VAULT INFRASTRUCTURE
      Opens as full-screen overlay (no new tab)
 ═══════════════════════════════════════════════════════ -->
 <div class="yield-overlay" id="yieldOverlay">
@@ -3717,13 +3710,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
   <div class="yl-topbar">
     <div class="yl-logo">
       <svg width="22" height="22" viewBox="0 0 30 30" fill="none"><circle cx="15" cy="15" r="14" stroke="#1c2d38" stroke-width="1.5"/><rect x="4" y="11.5" width="10" height="7" rx="3.5" stroke="#9945FF" stroke-width="2" fill="none"/><rect x="16" y="11.5" width="10" height="7" rx="3.5" stroke="#14F195" stroke-width="2" fill="none"/><circle cx="15" cy="15" r="2.2" fill="#14F195"/></svg>
-      <span>ChainRoot <span style="color:#9945FF">Yield</span></span>
+      <span>DeFiMongo <span style="color:#9945FF">Yield</span></span>
       <span class="yl-logo-badge">Solana DeFi</span>
     </div>
     <div class="yl-topbar-right">
       <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;display:flex;align-items:center;gap:6px">
         <span style="width:6px;height:6px;border-radius:50%;background:#14F195;display:inline-block;animation:yieldGlow 1.5s infinite"></span>
-        Powered by ChainRoot Protocol
+        Powered by DeFiMongo Protocol
       </span>
       <button class="yl-close-btn" onclick="closeYieldPage()">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="currentColor"><path d="M1 1l10 10M11 1L1 11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
@@ -3745,8 +3738,8 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         <span data-mn="Солана сүлжээн дэх" data-en="Earn Real Yield on">Earn Real Yield on</span><br>
         <span class="sol" data-mn="жинхэнэ өгөөж олоорой" data-en="Solana DeFi — Together">Solana DeFi — Together</span>
       </h1>
-      <p class="yl-hero-sub" data-mn="ChainRoot нийгэмлэгийн гишүүд ChainRoot-ийн аюулгүй, аудитлагдсан Vault системийг ашиглан нийтийн өгөөжид нэгдэнэ." data-en="ChainRoot community members earn together through our secure, audited Vault infrastructure — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.">
-        ChainRoot community members earn together through our <strong>secure, audited Vault infrastructure</strong> — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.
+      <p class="yl-hero-sub" data-mn="DeFiMongo нийгэмлэгийн гишүүд DeFiMongo-ийн аюулгүй, аудитлагдсан Vault системийг ашиглан нийтийн өгөөжид нэгдэнэ." data-en="DeFiMongo community members earn together through our secure, audited Vault infrastructure — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.">
+        DeFiMongo community members earn together through our <strong>secure, audited Vault infrastructure</strong> — transparent, non-custodial, and optimized on Solana's fastest liquidity layer.
       </p>
 
       <!-- Live stats bar -->
@@ -3774,7 +3767,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         <div class="yl-stat">
           <div class="yl-stat-val" style="color:#ccd8df">10–20%</div>
           <div class="yl-stat-lbl">Performance Fee</div>
-          <div class="yl-stat-sub" style="color:var(--muted)">to ChainRoot</div>
+          <div class="yl-stat-sub" style="color:var(--muted)">to DeFiMongo</div>
         </div>
       </div>
     </div>
@@ -3784,14 +3777,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
     <!-- COMMUNITY VAULTS -->
     <div>
       <div class="yl-section-label" data-mn="Одоогийн Vault-ууд" data-en="Active Vaults">Active Vaults</div>
-      <h2 class="yl-section-title" data-mn="ChainRoot Нийгэмлэгийн Vault-ууд" data-en="ChainRoot Community Vaults">ChainRoot Community Vaults</h2>
-      <p class="yl-section-sub" data-mn="Бүх vault нь ChainRoot-ийн аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллана. Та хэдийд ч хөрөнгөө татаж авах боломжтой." data-en="All vaults run on ChainRoot's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.">All vaults run on ChainRoot's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.</p>
+      <h2 class="yl-section-title" data-mn="DeFiMongo Нийгэмлэгийн Vault-ууд" data-en="DeFiMongo Community Vaults">DeFiMongo Community Vaults</h2>
+      <p class="yl-section-sub" data-mn="Бүх vault нь DeFiMongo-ийн аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллана. Та хэдийд ч хөрөнгөө татаж авах боломжтой." data-en="All vaults run on DeFiMongo's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.">All vaults run on DeFiMongo's audited smart contract infrastructure. Your funds remain in your control — withdraw anytime.</p>
       
       <div class="yl-vaults">
 
         <!-- Vault 1 — flagship -->
         <div class="yl-vault-card featured">
-          <span class="yl-vault-badge our">◈ ChainRoot</span>
+          <span class="yl-vault-badge our">◈ DeFiMongo</span>
           <div class="yl-vault-top">
             <div class="yl-vault-pair">
               <div class="yl-vault-icons">
@@ -3800,7 +3793,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               </div>
               <div>
                 <div class="yl-vault-name">SOL / USDC</div>
-                <div class="yl-vault-proto">ChainRoot · Solana Liquidity</div>
+                <div class="yl-vault-proto">DeFiMongo · Solana Liquidity</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -3842,7 +3835,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               </div>
               <div>
                 <div class="yl-vault-name">SOL / JTO</div>
-                <div class="yl-vault-proto">ChainRoot · High-Yield Layer</div>
+                <div class="yl-vault-proto">DeFiMongo · High-Yield Layer</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -3884,7 +3877,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               </div>
               <div>
                 <div class="yl-vault-name">USDC / USDT</div>
-                <div class="yl-vault-proto">ChainRoot · Stable Pool</div>
+                <div class="yl-vault-proto">DeFiMongo · Stable Pool</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -3926,7 +3919,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               </div>
               <div>
                 <div class="yl-vault-name">BTC / SOL</div>
-                <div class="yl-vault-proto">ChainRoot · Coming Soon</div>
+                <div class="yl-vault-proto">DeFiMongo · Coming Soon</div>
               </div>
             </div>
             <div class="yl-vault-apy">
@@ -3952,7 +3945,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
     <div>
       <div class="yl-section-label" data-mn="Яаж ажилладаг вэ?" data-en="How It Works">How It Works</div>
       <h2 class="yl-section-title" data-mn="3 алхамд өгөөж олоорой" data-en="3 Steps to Start Earning">3 Steps to Start Earning</h2>
-      <p class="yl-section-sub" data-mn="Та DeFi протоколтой шууд харилцана — ChainRoot хэзээ ч таны хөрөнгийг хянахгүй." data-en="You interact directly with the DeFi protocol — ChainRoot never has custody of your assets.">You interact directly with the DeFi protocol — ChainRoot never has custody of your assets.</p>
+      <p class="yl-section-sub" data-mn="Та DeFi протоколтой шууд харилцана — DeFiMongo хэзээ ч таны хөрөнгийг хянахгүй." data-en="You interact directly with the DeFi protocol — DeFiMongo never has custody of your assets.">You interact directly with the DeFi protocol — DeFiMongo never has custody of your assets.</p>
       <div class="yl-steps">
         <div class="yl-step">
           <div class="yl-step-icon">🔌</div>
@@ -3964,13 +3957,13 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
           <div class="yl-step-icon">🏦</div>
           <div class="yl-step-num">STEP 02</div>
           <div class="yl-step-title">Choose a Vault</div>
-          <div class="yl-step-desc">Pick a ChainRoot community vault based on your risk tolerance and target APY. Stablecoins to high-yield pairs.</div>
+          <div class="yl-step-desc">Pick a DeFiMongo community vault based on your risk tolerance and target APY. Stablecoins to high-yield pairs.</div>
         </div>
         <div class="yl-step">
           <div class="yl-step-icon">⚡</div>
           <div class="yl-step-num">STEP 03</div>
           <div class="yl-step-title">Deposit & Earn</div>
-          <div class="yl-step-desc">Deposit tokens in one click. ChainRoot's vault engine auto-compounds your position 24/7 while you watch your balance grow.</div>
+          <div class="yl-step-desc">Deposit tokens in one click. DeFiMongo's vault engine auto-compounds your position 24/7 while you watch your balance grow.</div>
         </div>
         <div class="yl-step">
           <div class="yl-step-icon">💰</div>
@@ -3983,27 +3976,27 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
     <hr class="yl-divider">
 
-    <!-- CHAINROOT VAULT SETUP -->
+    <!-- DEFIMONGO VAULT SETUP -->
     <div>
       <div class="yl-section-label" data-mn="Creator Vault байршуулах" data-en="Creator Vault Setup">Creator Vault Setup</div>
-      <h2 class="yl-section-title" data-mn="ChainRoot Vault Тохиргоо" data-en="ChainRoot Vault Infrastructure">ChainRoot Vault Infrastructure</h2>
-      <p class="yl-section-sub" data-mn="ChainRoot Vault нь аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллах нийгэмлэгийн хөрөнгийн удирдлагын систем юм." data-en="ChainRoot Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.">ChainRoot Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.</p>
+      <h2 class="yl-section-title" data-mn="DeFiMongo Vault Тохиргоо" data-en="DeFiMongo Vault Infrastructure">DeFiMongo Vault Infrastructure</h2>
+      <p class="yl-section-sub" data-mn="DeFiMongo Vault нь аюулгүй, аудитлагдсан ухаалаг гэрээн дээр ажиллах нийгэмлэгийн хөрөнгийн удирдлагын систем юм." data-en="DeFiMongo Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.">DeFiMongo Vault Infrastructure is our battle-tested, audited framework for community-managed DeFi vaults on Solana — zero counterparty risk.</p>
 
       <div class="yl-vault-cta">
         <div class="yl-vault-cta-grid">
           <div class="yl-vault-cta-info">
-            <div class="yl-vault-cta-title" data-mn="Яагаад ChainRoot Vault?" data-en="Why ChainRoot Vaults?">Why ChainRoot Vaults?</div>
-            <p class="yl-vault-cta-sub" data-mn="ChainRoot Vault нь Solana сүлжээн дэх хамгийн хурдан ликвидийн давхарга дээр суурилсан аудитлагдсан, тусгай зориулалтын ухаалаг гэрээ юм." data-en="ChainRoot Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.">ChainRoot Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.</p>
+            <div class="yl-vault-cta-title" data-mn="Яагаад DeFiMongo Vault?" data-en="Why DeFiMongo Vaults?">Why DeFiMongo Vaults?</div>
+            <p class="yl-vault-cta-sub" data-mn="DeFiMongo Vault нь Solana сүлжээн дэх хамгийн хурдан ликвидийн давхарга дээр суурилсан аудитлагдсан, тусгай зориулалтын ухаалаг гэрээ юм." data-en="DeFiMongo Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.">DeFiMongo Vaults are audited, purpose-built smart contracts running on Solana's fastest liquidity layer. Community managers earn protocol fees transparently on-chain.</p>
             <ul class="yl-vault-cta-features">
               <li><strong>Audited Core Contracts</strong> — Production-grade, battle-tested smart contract infrastructure. Zero counterparty risk.</li>
-              <li><strong>10–20% Performance Fee</strong> — ChainRoot earns a % on profits only. If the vault doesn't earn, neither do we.</li>
-              <li><strong>Vault Deployment</strong> — Vaults are deployed via ChainRoot's <code style="color:#9945FF;font-size:11px">ChainRoot backend SDK</code> — programmatic, reproducible and fully verifiable on-chain.</li>
-              <li><strong>Non-Custodial</strong> — Assets sit in on-chain smart contract vaults. ChainRoot never holds user funds.</li>
+              <li><strong>10–20% Performance Fee</strong> — DeFiMongo earns a % on profits only. If the vault doesn't earn, neither do we.</li>
+              <li><strong>Vault Deployment</strong> — Vaults are deployed via DeFiMongo's <code style="color:#9945FF;font-size:11px">DeFiMongo backend SDK</code> — programmatic, reproducible and fully verifiable on-chain.</li>
+              <li><strong>Non-Custodial</strong> — Assets sit in on-chain smart contract vaults. DeFiMongo never holds user funds.</li>
               <li><strong>Auto-Compounding</strong> — LP fees auto-reinvested into the position 24/7 to maximize APY.</li>
               <li><strong>Full Transparency</strong> — Vault address, fees, and performance all public on-chain.</li>
             </ul>
             <div class="yl-vault-cta-actions">
-              <button class="yl-btn-primary" onclick="openYieldDeposit()">Open ChainRoot Vaults ↗</button>
+              <button class="yl-btn-primary" onclick="openYieldDeposit()">Open DeFiMongo Vaults ↗</button>
               <button class="yl-btn-secondary" onclick="openYieldDocs()">Learn More</button>
             </div>
           </div>
@@ -4014,7 +4007,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
             <div class="yl-input-row">
               <div class="yl-input-label">Vault Name</div>
-              <input class="yl-input" id="vaultName" type="text" placeholder="ChainRoot SOL/USDC Vault" oninput="updateVaultPreview()">
+              <input class="yl-input" id="vaultName" type="text" placeholder="DeFiMongo SOL/USDC Vault" oninput="updateVaultPreview()">
             </div>
 
             <div class="yl-input-row">
@@ -4048,7 +4041,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               <div class="yl-vault-preview-label">Live Preview</div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Vault Name</span>
-                <span class="yl-vault-preview-val" id="pvName">ChainRoot SOL/USDC Vault</span>
+                <span class="yl-vault-preview-val" id="pvName">DeFiMongo SOL/USDC Vault</span>
               </div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Pair</span>
@@ -4064,7 +4057,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
               </div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Protocol</span>
-                <span class="yl-vault-preview-val" style="color:#9945FF">ChainRoot Protocol</span>
+                <span class="yl-vault-preview-val" style="color:#9945FF">DeFiMongo Protocol</span>
               </div>
               <div class="yl-vault-preview-row">
                 <span class="yl-vault-preview-key">Vault Address</span>
@@ -4073,7 +4066,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
             </div>
 
             <button class="yl-deploy-btn" onclick="handleVaultDeploy()">
-              ◈ Deploy ChainRoot Vault →
+              ◈ Deploy DeFiMongo Vault →
             </button>
           </div>
         </div>
@@ -4084,15 +4077,15 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
         <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#4d6475;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:8px">
           <span>TypeScript SDK — Vault Deployment</span>
           <span style="flex:1;height:1px;background:#1c2d38;display:block"></span>
-          <span style="background:rgba(153,69,255,.1);color:#9945FF;border:1px solid rgba(153,69,255,.25);padding:2px 8px;border-radius:3px;font-size:8px">ChainRoot Vault SDK (Internal)</span>
+          <span style="background:rgba(153,69,255,.1);color:#9945FF;border:1px solid rgba(153,69,255,.25);padding:2px 8px;border-radius:3px;font-size:8px">DeFiMongo Vault SDK (Internal)</span>
         </div>
         <pre style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df;line-height:1.7;overflow-x:auto;margin:0"><code><span style="color:#4d6475">// 1. Install SDK</span>
-<span style="color:#14F195">npm install</span> @chainroot/vault-sdk
+<span style="color:#14F195">npm install</span> @defimongo/vault-sdk
 
-<span style="color:#4d6475">// 2. Deploy ChainRoot Creator Vault</span>
-<span style="color:#9945FF">import</span> { ChainRootVault } <span style="color:#9945FF">from</span> <span style="color:#f4c542">'@chainroot/vault-sdk'</span>;
+<span style="color:#4d6475">// 2. Deploy DeFiMongo Creator Vault</span>
+<span style="color:#9945FF">import</span> { DeFiMongoVault } <span style="color:#9945FF">from</span> <span style="color:#f4c542">'@defimongo/vault-sdk'</span>;
 
-<span style="color:#9945FF">const</span> manager = <span style="color:#9945FF">new</span> ChainRootVault(connection, wallet);
+<span style="color:#9945FF">const</span> manager = <span style="color:#9945FF">new</span> DeFiMongoVault(connection, wallet);
 
 <span style="color:#9945FF">const</span> vault = <span style="color:#9945FF">await</span> manager.deployVault({
   tokenA: <span style="color:#f4c542">"So111...SOL"</span>,       <span style="color:#4d6475">// SOL mint</span>
@@ -4116,7 +4109,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
 
       <div class="yl-community-section">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
-          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;letter-spacing:1.5px;text-transform:uppercase">All ChainRoot Vaults on Solana</span>
+          <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4d6475;letter-spacing:1.5px;text-transform:uppercase">All DeFiMongo Vaults on Solana</span>
           <span style="font-family:'Space Mono',monospace;font-size:9px;color:#14F195;display:flex;align-items:center;gap:5px">
             <span style="width:5px;height:5px;border-radius:50%;background:#14F195;display:inline-block;animation:yieldGlow 1.5s infinite"></span>
             Live Data
@@ -4126,7 +4119,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
           <div class="yl-lb-row" style="border-color:rgba(20,241,149,.25)">
             <div class="yl-lb-rank gold">1</div>
             <div class="yl-lb-info">
-              <div class="yl-lb-name">ChainRoot SOL/JTO</div>
+              <div class="yl-lb-name">DeFiMongo SOL/JTO</div>
               <div class="yl-lb-pair">SOL · JTO · Raydium CLMM</div>
             </div>
             <div class="yl-lb-apy">38.2%</div>
@@ -4138,7 +4131,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
           <div class="yl-lb-row">
             <div class="yl-lb-rank silver">2</div>
             <div class="yl-lb-info">
-              <div class="yl-lb-name">ChainRoot SOL/USDC</div>
+              <div class="yl-lb-name">DeFiMongo SOL/USDC</div>
               <div class="yl-lb-pair">SOL · USDC · Orca CLMM</div>
             </div>
             <div class="yl-lb-apy">24.7%</div>
@@ -4150,7 +4143,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
           <div class="yl-lb-row">
             <div class="yl-lb-rank bronze">3</div>
             <div class="yl-lb-info">
-              <div class="yl-lb-name">ChainRoot USDC/USDT</div>
+              <div class="yl-lb-name">DeFiMongo USDC/USDT</div>
               <div class="yl-lb-pair">USDC · USDT · Stable</div>
             </div>
             <div class="yl-lb-apy" style="color:#f4c542">8.4%</div>
@@ -4179,7 +4172,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
 
     <!-- RISK DISCLAIMER -->
     <div class="yl-disclaimer">
-      <strong>⚠ Risk Disclosure:</strong> DeFi yield farming involves significant risks including impermanent loss, smart contract vulnerabilities, liquidity risks, and market volatility. Past APY figures are not indicative of future returns. All vaults operate on-chain and are non-custodial — ChainRoot does not guarantee returns or protect against losses. Performance fees (10–20%) are charged on profits only. Always do your own research. Never invest more than you can afford to lose. This is not financial advice.
+      <strong>⚠ Risk Disclosure:</strong> DeFi yield farming involves significant risks including impermanent loss, smart contract vulnerabilities, liquidity risks, and market volatility. Past APY figures are not indicative of future returns. All vaults operate on-chain and are non-custodial — DeFiMongo does not guarantee returns or protect against losses. Performance fees (10–20%) are charged on profits only. Always do your own research. Never invest more than you can afford to lose. This is not financial advice.
     </div>
 
   </div>
