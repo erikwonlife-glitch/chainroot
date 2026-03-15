@@ -41,7 +41,7 @@ const QUOTE  = {};
 const LOADED = {};
 const CHARTS = {};
 const PRECOMP= {}; // pre-computed data from Railway API
-const API_BASE = 'https://defimongo-production.up.railway.app';
+const API_BASE = 'https://chainroot-production-b7d1.up.railway.app';
 
 // ── STOOQ FETCH (fallback only) ──────────────────────────────────────────────
 async function fetchStooq(sym, rows=400){
