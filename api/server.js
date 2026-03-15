@@ -655,7 +655,7 @@ app.get('/api/news/rss', async function(req, res) {
   try {
     var r = await fetch(feedUrl, {
       timeout: 14000,
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; ChainRoot/1.0)', 'Accept': 'application/rss+xml, application/xml, text/xml' }
+      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; DeFiMongo/1.0)', 'Accept': 'application/rss+xml, application/xml, text/xml' }
     });
     if (!r.ok) throw new Error('HTTP ' + r.status);
     var xml = await r.text();
@@ -921,15 +921,15 @@ app.get('/api/overview/:type', async function(req, res) {
 
 // ── HEALTH & ROOT ─────────────────────────────────────────────────────────────
 app.get('/health', function(req, res) {
-  res.json({status:'ok', server:'ChainRoot API', version:'3.0.0',
+  res.json({status:'ok', server:'DeFiMongo API', version:'3.0.0',
     cached:Object.keys(CACHE).length, instruments:Object.keys(INSTRUMENTS).length,
     uptime:Math.floor(process.uptime())+'s'});
 });
 app.get('/', function(req, res) {
-  res.json({name:'ChainRoot Market Data API v3.0', health:'/health'});
+  res.json({name:'DeFiMongo Market Data API v3.0', health:'/health'});
 });
 
 app.listen(PORT, function() {
-  console.log('ChainRoot API v3.0 on port '+PORT);
+  console.log('DeFiMongo API v3.0 on port '+PORT);
   console.log('Finnhub: '+(FH_KEY?'configured':'NOT SET'));
 });
