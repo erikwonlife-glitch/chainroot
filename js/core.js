@@ -72,7 +72,7 @@ async function fetchJSON(url){
 }
 
 // ── MAIN INITIALISER — runs on load and every 60s ────────────────────────────
-const CR_API = 'https://defimongo-production.up.railway.app';
+const CR_API = 'https://chainroot-production-b7d1.up.railway.app';
 
 
 // ── SHARED BTC DAILY HISTORY — used by ALL overlay charts ────────────────────
