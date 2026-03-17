@@ -2,10 +2,21 @@
 const express = require('express');
 const fetch   = require('node-fetch');
 const cors    = require('cors');
+const http    = require('http');
+const https   = require('https');
 
 const app    = express();
 const PORT   = process.env.PORT || 8080;
 const FH_KEY = process.env.FINNHUB_KEY || '';
+
+// ── TIMEOUT-SAFE FETCH — node-fetch v2 ignores {timeout}, use AbortController ─
+function fetchT(url, options, ms) {
+  ms = ms || 12000;
+  const controller = new AbortController();
+  const timer = setTimeout(function() { controller.abort(); }, ms);
+  const opts = Object.assign({}, options || {}, { signal: controller.signal });
+  return fetch(url, opts).finally(function() { clearTimeout(timer); });
+}
 
 app.use(cors({
   origin: function(origin, callback) {
@@ -44,7 +55,7 @@ function setCache(key, data, ttl) {
 async function fetchStooq(symbol, rows) {
   rows = rows || 400;
   try {
-    const res = await fetch('https://stooq.com/q/d/l/?s=' + symbol.toLowerCase() + '&i=d', { timeout: 15000 });
+    const res = await fetchT('https://stooq.com/q/d/l/?s=' + symbol.toLowerCase() + '&i=d', {}, 15000);
     if (!res.ok) return null;
     const csv = (await res.text()).trim();
     if (!csv || csv.includes('No data') || csv.includes('Przekroczon') || csv.length < 30) return null;
@@ -82,7 +93,7 @@ async function fetchYahoo(symbol, rows) {
 async function fetchFinnhubQuote(symbol) {
   if (!FH_KEY) return null;
   try {
-    const res = await fetch('https://finnhub.io/api/v1/quote?symbol='+symbol+'&token='+FH_KEY, { timeout: 8000 });
+    const res = await fetchT('https://finnhub.io/api/v1/quote?symbol='+symbol+'&token='+FH_KEY, {}, 8000);
     if (!res.ok) return null;
     const d = await res.json();
     return (d.c && d.c > 0) ? d : null;
@@ -185,7 +196,7 @@ app.get('/api/crypto/markets', async function(req, res) {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd' +
       '&order=market_cap_desc&per_page=50&page=1' +
       '&sparkline=true&price_change_percentage=1h,24h,7d,30d';
-    const r = await fetch(url, {timeout:14000});
+    const r = await fetchT(url, {}, 14000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache('crypto/markets', data);
@@ -198,7 +209,7 @@ app.get('/api/crypto/global', async function(req, res) {
   const cached = getCache('crypto/global');
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/global', {timeout:12000});
+    const r = await fetchT('https://api.coingecko.com/api/v3/global', {}, 12000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache('crypto/global', data);
@@ -211,7 +222,7 @@ app.get('/api/crypto/btcchart', async function(req, res) {
   const cached = getCache('crypto/btcchart');
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily', {timeout:14000});
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily', {}, 14000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache('crypto/btcchart', data);
@@ -269,7 +280,7 @@ app.get('/api/crypto/coin/:id/chart', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days='+days+'&interval=daily', {timeout:14000});
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days='+days+'&interval=daily', {}, 14000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache(cacheKey, data);
@@ -283,7 +294,7 @@ app.get('/api/crypto/rsi/:id', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days=60&interval=daily', {timeout:14000});
+    const r = await fetchT('https://api.coingecko.com/api/v3/coins/'+id+'/market_chart?vs_currency=usd&days=60&interval=daily', {}, 14000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const d = await r.json();
     if (!d||!d.prices||!d.prices.length) return res.status(502).json({error:'No data'});
@@ -313,7 +324,7 @@ app.get('/api/crypto/feargreed', async function(req, res) {
   const cached = getCache('crypto/feargreed');
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.alternative.me/fng/?limit=90', {timeout:10000});
+    const r = await fetchT('https://api.alternative.me/fng/?limit=90', {}, 10000);
     if (!r.ok) return res.status(502).json({error:'FNG '+r.status});
     const data = await r.json();
     // Cache 4 hours — Fear & Greed only updates once per day at midnight UTC
@@ -328,7 +339,7 @@ app.get('/api/crypto/category/defi', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=decentralized-finance-defi&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d';
-    const r = await fetch(url, {timeout:15000});
+    const r = await fetchT(url, {}, 15000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache('crypto/category/defi', data);
@@ -342,7 +353,7 @@ app.get('/api/crypto/category/layer1', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     const url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=layer-1&order=market_cap_desc&per_page=100&page=1&sparkline=true&price_change_percentage=1h,24h,7d';
-    const r = await fetch(url, {timeout:15000});
+    const r = await fetchT(url, {}, 15000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
     setCache('crypto/category/layer1', data);
@@ -355,7 +366,7 @@ app.get('/api/crypto/binance', async function(req, res) {
   const cached = getCache('crypto/binance');
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://api.binance.com/api/v3/ticker/24hr', {timeout:15000});
+    const r = await fetchT('https://api.binance.com/api/v3/ticker/24hr', {}, 15000);
     if (!r.ok) return res.status(502).json({error:'Binance '+r.status});
     const tickers = await r.json();
     const pairs = tickers
@@ -450,7 +461,7 @@ app.get('/api/global/prices', async function(req, res) {
       const now = Math.floor(Date.now()/1000), from = now - 7*86400;
       const url = 'https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+
                   '?interval=1d&period1='+from+'&period2='+now;
-      const r = await fetch(url, {timeout:10000, headers:{'User-Agent':'Mozilla/5.0'}});
+      const r = await fetchT(url, {headers:{'User-Agent':'Mozilla/5.0'}}, 10000);
       if (!r.ok) return null;
       const j = await r.json();
       const res = j && j.chart && j.chart.result && j.chart.result[0];
@@ -470,7 +481,7 @@ app.get('/api/global/prices', async function(req, res) {
 
   async function stooqQuote(sym) {
     try {
-      const r = await fetch('https://stooq.com/q/d/l/?s='+sym+'&i=d', {timeout:10000});
+      const r = await fetchT('https://stooq.com/q/d/l/?s='+sym+'&i=d', {}, 10000);
       if (!r.ok) return null;
       const csv = (await r.text()).trim();
       if (!csv||csv.length<30) return null;
@@ -511,12 +522,12 @@ app.get('/api/crypto/btc-daily', async function(req, res) {
   try {
     // Try max history first, fall back to 365 days if rate limited
     var url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=max&interval=daily';
-    var r = await fetch(url, { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+    var r = await fetchT(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } }, 30000);
 
     // If rate limited, try 365 days instead
     if (!r.ok) {
       url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily';
-      r = await fetch(url, { timeout: 20000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      r = await fetchT(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 20000);
       if (!r.ok) throw new Error('CoinGecko ' + r.status);
     }
 
@@ -581,7 +592,7 @@ app.get('/api/crypto/btc-halving/:cycle', async function(req, res) {
     await new Promise(function(r){ setTimeout(r, cycle * 500); }); // stagger requests
     const url = 'https://api.coingecko.com/api/v3/coins/bitcoin/market_chart/range?vs_currency=usd&from='
       + Math.floor(startMs/1000) + '&to=' + Math.floor(endMs/1000);
-    const r = await fetch(url, { timeout: 30000, headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } });
+    const r = await fetchT(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } }, 30000);
     if (!r.ok) throw new Error('CoinGecko ' + r.status);
     const data = await r.json();
     if (!data || !data.prices || !data.prices.length) throw new Error('No data');
@@ -607,7 +618,7 @@ app.get('/api/market/dxy', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     // DTWEXBGS = Broad Trade Weighted Dollar Index from Stooq
-    const r = await fetch('https://stooq.com/q/d/l/?s=dxy&i=d&d1=20100101', { timeout: 15000 });
+    const r = await fetchT('https://stooq.com/q/d/l/?s=dxy&i=d&d1=20100101', {}, 15000);
     if (!r.ok) throw new Error('Stooq ' + r.status);
     const csv = (await r.text()).trim();
     if (!csv || csv.length < 50) throw new Error('No data');
@@ -633,7 +644,7 @@ app.get('/api/market/gold', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
   try {
-    const r = await fetch('https://stooq.com/q/d/l/?s=xauusd&i=d&d1=20100101', { timeout: 15000 });
+    const r = await fetchT('https://stooq.com/q/d/l/?s=xauusd&i=d&d1=20100101', {}, 15000);
     if (!r.ok) throw new Error('Stooq ' + r.status);
     const csv = (await r.text()).trim();
     if (!csv || csv.length < 50) throw new Error('No data');
@@ -715,7 +726,7 @@ async function fetchNitterRSS(username) {
   for (var i = 0; i < NITTER_INSTANCES.length; i++) {
     try {
       var url = NITTER_INSTANCES[i] + '/' + username + '/rss';
-      var r = await fetch(url, { timeout: 10000, headers: { 'User-Agent': 'Mozilla/5.0' } });
+      var r = await fetchT(url, { headers: { 'User-Agent': 'Mozilla/5.0' } }, 10000);
       if (!r.ok) continue;
       var xml = await r.text();
       if (!xml || xml.length < 100) continue;
@@ -785,7 +796,7 @@ app.get('/api/translate', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     var url = 'https://api.mymemory.translated.net/get?q=' + encodeURIComponent(text) + '&langpair=en|mn';
-    var r = await fetch(url, { timeout: 10000 });
+    var r = await fetchT(url, {}, 10000);
     if (!r.ok) throw new Error('MyMemory ' + r.status);
     var d = await r.json();
     var translation = (d.responseData && d.responseData.translatedText) || text;
@@ -805,8 +816,8 @@ app.get('/api/defi/tvl', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     const [protocols, chains] = await Promise.all([
-      fetch('https://api.llama.fi/protocols', {timeout:15000}).then(function(r){return r.json();}),
-      fetch('https://api.llama.fi/v2/chains', {timeout:15000}).then(function(r){return r.json();})
+      fetchT('https://api.llama.fi/protocols', {}, 15000).then(function(r){return r.json();}),
+      fetchT('https://api.llama.fi/v2/chains', {}, 15000).then(function(r){return r.json();})
     ]);
     // Total TVL from top chains
     const totalTVL = (chains||[]).reduce(function(s,c){return s+(c.tvl||0);},0);
@@ -824,7 +835,7 @@ app.get('/api/defi/dex', async function(req, res) {
   const cached = getCache('defi/dex');
   if (cached) return res.json(cached);
   try {
-    const data = await fetch('https://api.llama.fi/overview/dexs?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=false&dataType=dailyVolume', {timeout:15000}).then(function(r){return r.json();});
+    const data = await fetchT('https://api.llama.fi/overview/dexs?excludeTotalDataChart=false&excludeTotalDataChartBreakdown=false&dataType=dailyVolume', {}, 15000).then(function(r){return r.json();});
     const top5 = (data?.protocols||[]).filter(function(p){return p.total24h>0;}).sort(function(a,b){return b.total24h-a.total24h;}).slice(0,5)
       .map(function(p){return {name:p.name, vol24h:p.total24h, change24h:p.change_1d||0};});
     const totalVol = top5.reduce(function(s,p){return s+p.vol24h;},0) + (data?.protocols||[]).slice(5).reduce(function(s,p){return s+(p.total24h||0);},0);
@@ -841,7 +852,7 @@ app.get('/api/defi/pumpfun', async function(req, res) {
   if (cached) return res.json(cached);
   try {
     // PumpFun volume from DeFiLlama
-    const data = await fetch('https://api.llama.fi/summary/dexs/pump-fun?excludeTotalDataChart=false&dataType=dailyVolume', {timeout:15000}).then(function(r){return r.json();});
+    const data = await fetchT('https://api.llama.fi/summary/dexs/pump-fun?excludeTotalDataChart=false&dataType=dailyVolume', {}, 15000).then(function(r){return r.json();});
     const vol24h = data?.total24h || 0;
     const vol7d  = data?.total7d  || 0;
     const chart14 = (data?.totalDataChart||[]).slice(-14).map(function(p){
@@ -860,8 +871,8 @@ app.get('/api/onchain/btc', async function(req, res) {
   try {
     // Blockchain.info for basic on-chain metrics
     const [stats, addrs] = await Promise.allSettled([
-      fetch('https://api.blockchain.info/stats', {timeout:12000}).then(function(r){return r.json();}),
-      fetch('https://api.blockchain.info/charts/n-unique-addresses?timespan=30days&format=json&sampled=true', {timeout:12000}).then(function(r){return r.json();})
+      fetchT('https://api.blockchain.info/stats', {}, 12000).then(function(r){return r.json();}),
+      fetchT('https://api.blockchain.info/charts/n-unique-addresses?timespan=30days&format=json&sampled=true', {}, 12000).then(function(r){return r.json();})
     ]);
     const s = stats.status==='fulfilled' ? stats.value : {};
     const a = addrs.status==='fulfilled' ? addrs.value : {};
