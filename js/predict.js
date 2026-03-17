@@ -218,337 +218,166 @@ function animateCount(id, from, to, dur, prefix) {
 }
 
 /* ── FILTER TABS ─────────────────────────────────────────── */
-function filterPMMarkets(cat) {
-  pmCurrentCat = cat;
-  // Update tab active state
-  document.querySelectorAll('.pm-tab').forEach(function(btn) {
-    btn.classList.toggle('active', btn.getAttribute('data-cat') === cat);
-  });
-  renderPMMarkets(cat);
+/* ── WAITLIST MODAL ──────────────────────────────────────── */
+function pmOpenWaitlist(marketId) {
+  var lang   = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
+  var market = PM_MARKETS.find(function(m) { return m.id === marketId; });
+  if (!market) return;
+  var question = lang === 'en' ? market.en : market.mn;
+
+  var existing = document.getElementById('pmWaitlistModal');
+  if (existing) existing.remove();
+
+  var overlay = document.createElement('div');
+  overlay.id = 'pmWaitlistModal';
+  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
+  overlay.innerHTML = buildWaitlistModal(market, question, lang);
+  document.body.appendChild(overlay);
+
+  setTimeout(function() {
+    var inp = document.getElementById('pmWaitlistEmail');
+    if (inp) inp.focus();
+  }, 100);
 }
 
-/* ── RENDER MARKET CARDS ─────────────────────────────────── */
-function renderPMMarkets(cat) {
-  const lang = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
-  const grid = document.getElementById('pmMarketsGrid');
-  if (!grid) return;
+function buildWaitlistModal(market, question, lang) {
+  var yesW = market.yes;
+  var noW  = 100 - market.yes;
+  var perks = [
+    '🎯 ' + (lang === 'en' ? 'Be first to trade when markets go live' : 'Зах зээл нээгдэхэд хамгийн түрүүнд арилжаа хийх'),
+    '💰 ' + (lang === 'en' ? 'Bonus shares on your first position' : 'Эхний байрлалд урамшуулал хувьцаа'),
+    '🔔 ' + (lang === 'en' ? 'Launch notification via email & X' : 'Имэйл болон X-ээр нээлтийн мэдэгдэл'),
+    '⚡ ' + (lang === 'en' ? 'Phantom wallet — 1-click trading on Solana' : 'Phantom wallet — Solana дээр 1 товшилтоор арилжаа')
+  ];
 
-  const filtered = cat === 'all'
-    ? PM_MARKETS
-    : PM_MARKETS.filter(function(m) { return m.cat === cat; });
+  return '<div style="background:#111820;border:1px solid #1c2d38;border-radius:16px;padding:28px;max-width:440px;width:100%;position:relative">'
+    + '<button onclick="document.getElementById(\'pmWaitlistModal\').remove()" style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:#4d6475;font-size:18px;cursor:pointer;line-height:1">✕</button>'
 
-  if (filtered.length === 0) {
-    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--muted);font-family:\'Space Mono\',monospace;font-size:11px">Одоогоор зах зээл байхгүй байна.</div>';
+    // Header
+    + '<div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">'
+    +   '<div style="width:36px;height:36px;border-radius:50%;background:rgba(232,64,64,.15);border:1px solid rgba(232,64,64,.3);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">🔔</div>'
+    +   '<div>'
+    +     '<div style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:2px;color:#e84040;margin-bottom:3px">'
+    +       (lang === 'en' ? 'COMING SOON' : 'УДАХГҮЙ НЭЭГДЭНЭ')
+    +     '</div>'
+    +     '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:14px;font-weight:700;color:#ccd8df">'
+    +       (lang === 'en' ? 'Get Early Access' : 'Эрт хандалт авах')
+    +     '</div>'
+    +   '</div>'
+    + '</div>'
+
+    // Market preview card
+    + '<div style="background:#0c1014;border:1px solid #1c2d38;border-radius:8px;padding:14px;margin-bottom:16px">'
+    +   '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:13px;color:#ccd8df;line-height:1.5;margin-bottom:10px">' + question + '</div>'
+    +   '<div style="display:flex;justify-content:space-between;margin-bottom:5px">'
+    +     '<span style="font-family:\'Space Mono\',monospace;font-size:9px;color:#00e87a">' + (lang === 'en' ? 'YES' : 'ТИЙМ') + ' ' + yesW + '%</span>'
+    +     '<span style="font-family:\'Space Mono\',monospace;font-size:9px;color:#e84040">' + noW + '% ' + (lang === 'en' ? 'NO' : 'ҮГҮЙ') + '</span>'
+    +   '</div>'
+    +   '<div style="display:flex;gap:2px;height:5px;border-radius:3px;overflow:hidden">'
+    +     '<div style="width:' + yesW + '%;background:linear-gradient(90deg,#00e87a,#00b85e)"></div>'
+    +     '<div style="width:' + noW + '%;background:linear-gradient(90deg,#e84040,#c02020)"></div>'
+    +   '</div>'
+    + '</div>'
+
+    // Perks
+    + '<div style="background:rgba(232,64,64,.05);border:1px solid rgba(232,64,64,.15);border-radius:8px;padding:14px;margin-bottom:16px">'
+    +   '<div style="font-family:\'Space Mono\',monospace;font-size:9px;letter-spacing:1.5px;color:#e84040;margin-bottom:10px">'
+    +     (lang === 'en' ? 'EARLY ACCESS INCLUDES' : 'ЭРТ ХАНДАЛТАД БАГТАХ ЗҮЙ')
+    +   '</div>'
+    +   perks.map(function(p) {
+        return '<div style="font-family:\'Space Grotesk\',sans-serif;font-size:12px;color:var(--muted);padding:3px 0">' + p + '</div>';
+      }).join('')
+    + '</div>'
+
+    // Email input
+    + '<div style="margin-bottom:10px">'
+    +   '<div style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:7px">'
+    +     (lang === 'en' ? 'YOUR EMAIL' : 'ТАНЫ ИМЭЙЛ')
+    +   '</div>'
+    +   '<input id="pmWaitlistEmail" type="email" placeholder="' + (lang === 'en' ? 'you@email.com' : 'та@имэйл.ком') + '"'
+    +   ' style="width:100%;padding:11px 14px;background:#0c1014;border:1px solid #1c2d38;border-radius:8px;color:#ccd8df;font-family:\'Space Grotesk\',sans-serif;font-size:13px;box-sizing:border-box;outline:none;transition:border .15s"'
+    +   ' onfocus="this.style.borderColor=\'#e84040\'" onblur="this.style.borderColor=\'#1c2d38\'">'
+    + '</div>'
+
+    // X handle
+    + '<div style="margin-bottom:16px">'
+    +   '<div style="font-family:\'Space Mono\',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:7px">'
+    +     (lang === 'en' ? 'YOUR X HANDLE (OPTIONAL)' : 'ТАНЫ X ХАЯГ (ЗААВАЛ БИШ)')
+    +   '</div>'
+    +   '<input id="pmWaitlistX" type="text" placeholder="@username"'
+    +   ' style="width:100%;padding:11px 14px;background:#0c1014;border:1px solid #1c2d38;border-radius:8px;color:#ccd8df;font-family:\'Space Grotesk\',sans-serif;font-size:13px;box-sizing:border-box;outline:none;transition:border .15s"'
+    +   ' onfocus="this.style.borderColor=\'#e84040\'" onblur="this.style.borderColor=\'#1c2d38\'">'
+    + '</div>'
+
+    // Submit button
+    + '<button onclick="pmSubmitWaitlist(\'' + market.id + '\')"'
+    +   ' style="width:100%;padding:13px;background:linear-gradient(135deg,#e84040,#f4c542);border:none;border-radius:8px;font-family:\'Space Mono\',monospace;font-size:11px;font-weight:700;letter-spacing:2px;color:#000;cursor:pointer;transition:opacity .2s;margin-bottom:10px"'
+    +   ' onmouseover="this.style.opacity=\'.85\'" onmouseout="this.style.opacity=\'1\'">'
+    +   '🔔 ' + (lang === 'en' ? 'JOIN WAITLIST →' : 'ЖАГСААЛТАД БҮРТГҮҮЛЭХ →')
+    + '</button>'
+
+    + '<div style="text-align:center;font-family:\'Space Mono\',monospace;font-size:8px;color:var(--muted);line-height:1.7">'
+    +   (lang === 'en' ? 'We respect your privacy. No spam — launch notification only.' : 'Бид таны нууцлалыг хүндэтгэнэ. Зөвхөн нээлтийн мэдэгдэл илгээнэ.')
+    + '</div>'
+    + '</div>';
+}
+
+/* ── SUBMIT WAITLIST ─────────────────────────────────────── */
+function pmSubmitWaitlist(marketId) {
+  var lang    = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
+  var emailEl = document.getElementById('pmWaitlistEmail');
+  var xEl     = document.getElementById('pmWaitlistX');
+  var email   = emailEl ? emailEl.value.trim() : '';
+  var xHandle = xEl     ? xEl.value.trim()     : '';
+
+  if (!email || !email.includes('@')) {
+    if (typeof toast === 'function') toast(lang === 'en' ? 'Please enter a valid email' : 'Зөв имэйл хаяг оруулна уу', '#e84040');
     return;
   }
 
-  grid.innerHTML = filtered.map(function(m) { return buildMarketCard(m, lang); }).join('');
-}
-
-/* ── BUILD SINGLE CARD ───────────────────────────────────── */
-function buildMarketCard(m, lang) {
-  const catInfo   = PM_CAT[m.cat];
-  const question  = lang === 'en' ? m.en : m.mn;
-  const catLabel  = lang === 'en' ? catInfo.en : catInfo.mn;
-  const yesW      = m.yes;
-  const noW       = 100 - m.yes;
-  const yesPrice  = (m.yes / 100).toFixed(2);
-  const noPrice   = ((100 - m.yes) / 100).toFixed(2);
-  const closesDate = formatPMDate(m.closes, lang);
-  const volFmt    = '$' + m.vol.toLocaleString();
-
-  const statusBadge = buildStatusBadge(m.status, lang);
-  const cardCls     = m.status === 'resolving'   ? 'pm-market-card resolving'
-                    : m.status === 'resolved_yes' ? 'pm-market-card resolved-yes'
-                    : m.status === 'resolved_no'  ? 'pm-market-card resolved-no'
-                    : 'pm-market-card';
-
-  const actionBtns = m.status === 'open'
-    ? `<div style="display:flex;gap:8px;margin-top:14px">
-        <button class="pm-vote-yes" onclick="pmBuyShare('${m.id}','yes')"
-          data-mn="ТИЙМ ${yesPrice}¢" data-en="YES ${yesPrice}¢">
-          ${lang === 'en' ? 'YES' : 'ТИЙМ'} <span style="opacity:.7;font-size:9px">${yesPrice}¢</span>
-        </button>
-        <button class="pm-vote-no" onclick="pmBuyShare('${m.id}','no')"
-          data-mn="ҮГҮЙ ${noPrice}¢" data-en="NO ${noPrice}¢">
-          ${lang === 'en' ? 'NO' : 'ҮГҮЙ'} <span style="opacity:.7;font-size:9px">${noPrice}¢</span>
-        </button>
-      </div>`
-    : `<div style="margin-top:14px;padding:10px;background:#0c1014;border-radius:6px;text-align:center;font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${statusBadge}</div>`;
-
-  return `
-    <div class="${cardCls}" onclick="pmCardClick(event,'${m.id}')">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:6px">
-        <span class="pm-cat-pill ${catInfo.cls}">${catLabel}</span>
-        <span style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">${statusBadge}</span>
-      </div>
-
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:14px;font-weight:600;color:#ccd8df;line-height:1.5;margin-bottom:14px;min-height:44px">
-        ${question}
-      </div>
-
-      <!-- Probability bar -->
-      <div style="margin-bottom:8px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:5px">
-          <span style="font-family:'Space Mono',monospace;font-size:9px;color:#00e87a;font-weight:700">
-            ${lang === 'en' ? 'YES' : 'ТИЙМ'} ${yesW}%
-          </span>
-          <span style="font-family:'Space Mono',monospace;font-size:9px;color:#e84040;font-weight:700">
-            ${noW}% ${lang === 'en' ? 'NO' : 'ҮГҮЙ'}
-          </span>
-        </div>
-        <div style="display:flex;gap:2px;height:6px;border-radius:3px;overflow:hidden">
-          <div class="pm-yes-bar" style="width:${yesW}%"></div>
-          <div class="pm-no-bar"  style="width:${noW}%"></div>
-        </div>
-      </div>
-
-      <!-- Meta row -->
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;flex-wrap:wrap;gap:4px">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">
-          <span style="color:#f4c542">${volFmt}</span>
-          &nbsp;${lang === 'en' ? 'vol' : 'эзлэхүүн'}
-        </div>
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)">
-          ${lang === 'en' ? 'Closes' : 'Хаагдах'}: <span style="color:#ccd8df">${closesDate}</span>
-        </div>
-      </div>
-
-      <!-- Bet limits -->
-      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:6px;opacity:.6">
-        ${lang === 'en' ? 'Min' : 'Мин'} $${m.minBet} · ${lang === 'en' ? 'Max' : 'Макс'} $${m.maxBet} ${lang === 'en' ? 'per position' : 'нэг байрлалд'}
-      </div>
-
-      ${actionBtns}
-    </div>`;
-}
-
-/* ── STATUS BADGE TEXT ───────────────────────────────────── */
-function buildStatusBadge(status, lang) {
-  if (status === 'open')         return lang === 'en' ? '🟢 OPEN' : '🟢 НЭЭЛТТЭЙ';
-  if (status === 'resolving')    return lang === 'en' ? '🟡 RESOLVING' : '🟡 ШИЙДВЭРЛЭЖ БАЙНА';
-  if (status === 'resolved_yes') return lang === 'en' ? '✅ RESOLVED YES' : '✅ ТИЙМ ШИЙДВЭРЛЭГДСЭН';
-  if (status === 'resolved_no')  return lang === 'en' ? '❌ RESOLVED NO' : '❌ ҮГҮЙ ШИЙДВЭРЛЭГДСЭН';
-  return status;
-}
-
-/* ── DATE FORMAT ─────────────────────────────────────────── */
-function formatPMDate(iso, lang) {
-  const d = new Date(iso);
-  if (lang === 'mn') {
-    return (d.getFullYear()) + ' оны ' + (d.getMonth() + 1) + ' сарын ' + d.getDate();
+  // Store in localStorage (Railway endpoint can be wired later)
+  var key   = 'pm_waitlist';
+  var list  = [];
+  try { list = JSON.parse(localStorage.getItem(key) || '[]'); } catch(e) {}
+  var exists = list.some(function(r) { return r.email === email && r.market === marketId; });
+  if (!exists) {
+    list.push({ email: email, x: xHandle, market: marketId, ts: Date.now() });
+    try { localStorage.setItem(key, JSON.stringify(list)); } catch(e) {}
   }
-  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+
+  var modal = document.getElementById('pmWaitlistModal');
+  if (modal) modal.remove();
+
+  if (typeof toast === 'function') {
+    toast(
+      lang === 'en' ? "✅ You're on the waitlist! We'll notify you at launch." : '✅ Жагсаалтад бүртгэгдлээ! Нээлтэд мэдэгдэл авна.',
+      '#00e87a'
+    );
+  }
+
+  // Bump trader count display
+  var statEl = document.getElementById('pm-stat-traders');
+  if (statEl) {
+    var cur = parseInt(statEl.textContent.replace(/\D/g,'')) || 340;
+    statEl.textContent = (cur + 1).toLocaleString();
+  }
 }
 
-/* ── CARD CLICK (prevent button double-fire) ─────────────── */
-function pmCardClick(e, id) {
-  if (e.target.tagName === 'BUTTON') return;
-  // Future: open market detail modal
-}
-
-/* ── BUY SHARE HANDLER ───────────────────────────────────── */
+/* ── LEGACY stub so no errors if called ─────────────────── */
 function pmBuyShare(marketId, side) {
-  const lang = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
-  const market = PM_MARKETS.find(function(m) { return m.id === marketId; });
-  if (!market) return;
-
-  const question = lang === 'en' ? market.en : market.mn;
-  const sideLabel = side === 'yes'
-    ? (lang === 'en' ? 'YES' : 'ТИЙМ')
-    : (lang === 'en' ? 'NO'  : 'ҮГҮЙ');
-  const price = side === 'yes'
-    ? (market.yes / 100).toFixed(2)
-    : ((100 - market.yes) / 100).toFixed(2);
-
-  // Build the modal
-  let existing = document.getElementById('pmBuyModal');
-  if (existing) existing.remove();
-
-  const overlay = document.createElement('div');
-  overlay.id = 'pmBuyModal';
-  overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:10000;display:flex;align-items:center;justify-content:center;padding:20px';
-  overlay.innerHTML = buildBuyModal(market, side, sideLabel, price, question, lang);
-  document.body.appendChild(overlay);
-
-  // Recalculate on amount input
-  setTimeout(function() {
-    const inp = document.getElementById('pmAmountInput');
-    if (inp) inp.addEventListener('input', function() { pmRecalc(market, side, price); });
-  }, 50);
-}
-
-/* ── BUY MODAL HTML ──────────────────────────────────────── */
-function buildBuyModal(market, side, sideLabel, price, question, lang) {
-  const sideColor  = side === 'yes' ? '#00e87a' : '#e84040';
-  const minBet     = market.minBet;
-  const maxBet     = market.maxBet;
-  const sharesPreview = Math.floor(minBet / parseFloat(price));
-  const potentialReturn = (sharesPreview * 1).toFixed(2);
-
-  const WALLET_ADDRESS = 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ';
-
-  return `
-    <div style="background:#111820;border:1px solid #1c2d38;border-radius:16px;padding:28px;max-width:420px;width:100%;position:relative;max-height:90vh;overflow-y:auto">
-      <button onclick="document.getElementById('pmBuyModal').remove()"
-        style="position:absolute;top:14px;right:14px;background:transparent;border:none;color:#4d6475;font-size:18px;cursor:pointer;line-height:1">✕</button>
-
-      <!-- Header -->
-      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:${sideColor};margin-bottom:10px">
-        ${lang === 'en' ? 'BUY' : 'ХУДАЛДАЖ АВАХ'} · ${sideLabel}
-      </div>
-      <div style="font-family:'Space Grotesk',sans-serif;font-size:13px;color:#ccd8df;line-height:1.5;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid #1c2d38">
-        ${question}
-      </div>
-
-      <!-- Current price -->
-      <div style="display:flex;justify-content:space-between;margin-bottom:16px">
-        <div style="text-align:center;flex:1;padding:12px;background:#0c1014;border-radius:8px;margin-right:6px">
-          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">
-            ${lang === 'en' ? 'SHARE PRICE' : 'ХУВЬЦААНЫ ҮНЭ'}
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:${sideColor}">${price}¢</div>
-          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:2px">per share</div>
-        </div>
-        <div style="text-align:center;flex:1;padding:12px;background:#0c1014;border-radius:8px;margin-left:6px">
-          <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:4px">
-            ${lang === 'en' ? 'WIN RETURN' : 'ЯЛБАЛ БУЦААНА'}
-          </div>
-          <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#f4c542">$1.00</div>
-          <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:2px">per share</div>
-        </div>
-      </div>
-
-      <!-- Amount input -->
-      <div style="margin-bottom:14px">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:7px">
-          ${lang === 'en' ? 'YOUR POSITION (USD)' : 'ТАНЫ БАЙРЛАЛ (USD)'}
-        </div>
-        <input id="pmAmountInput" type="number" min="${minBet}" max="${maxBet}" value="${minBet}" step="1"
-          style="width:100%;padding:11px 14px;background:#0c1014;border:1px solid #1c2d38;border-radius:8px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:14px;box-sizing:border-box;outline:none;transition:border .15s"
-          onfocus="this.style.borderColor='${sideColor}'" onblur="this.style.borderColor='#1c2d38'">
-        <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);margin-top:4px">
-          Min $${minBet} · Max $${maxBet}
-        </div>
-      </div>
-
-      <!-- Live calc -->
-      <div id="pmCalcBox" style="background:#0c1014;border:1px solid #1c2d38;border-radius:8px;padding:14px;margin-bottom:16px">
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${lang === 'en' ? 'Shares' : 'Хувьцаа'}</span>
-          <span id="pmSharesOut" style="font-family:'Space Mono',monospace;font-size:10px;color:#ccd8df">${sharesPreview}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between;margin-bottom:8px">
-          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${lang === 'en' ? 'If correct' : 'Зөв бол'}</span>
-          <span id="pmReturnOut" style="font-family:'Space Mono',monospace;font-size:10px;color:#00e87a">$${potentialReturn}</span>
-        </div>
-        <div style="display:flex;justify-content:space-between">
-          <span style="font-family:'Space Mono',monospace;font-size:10px;color:var(--muted)">${lang === 'en' ? 'Profit' : 'Ашиг'}</span>
-          <span id="pmProfitOut" style="font-family:'Space Mono',monospace;font-size:10px;color:#f4c542">$${(potentialReturn - minBet).toFixed(2)}</span>
-        </div>
-      </div>
-
-      <!-- Payment instructions -->
-      <div style="background:rgba(0,232,122,.04);border:1px solid rgba(0,232,122,.15);border-radius:8px;padding:14px;margin-bottom:16px">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:#00e87a;margin-bottom:10px">
-          ${lang === 'en' ? '📋 HOW TO ENTER' : '📋 ХЭРХЭН ОРОЛЦОХ'}
-        </div>
-        <ol style="font-family:'Space Grotesk',sans-serif;font-size:12px;color:var(--muted);line-height:2;margin:0;padding-left:16px">
-          <li>${lang === 'en'
-            ? 'Send USDT (TRC20) or SOL to the address below'
-            : 'Доорх хаяг руу USDT (TRC20) эсвэл SOL илгээнэ үү'}</li>
-          <li>${lang === 'en'
-            ? 'Copy your TX Hash after sending'
-            : 'Илгээсний дараа TX Hash-ийг хуулна уу'}</li>
-          <li>${lang === 'en'
-            ? 'DM <strong style="color:#ccd8df">@DeFiMongo</strong> on X with: TX Hash + Market + YES/NO + Amount'
-            : 'X дээр <strong style="color:#ccd8df">@DeFiMongo</strong> руу: TX Hash + Зах зээл + ТИЙМ/ҮГҮЙ + Дүн илгээнэ үү'}</li>
-          <li>${lang === 'en'
-            ? 'We confirm your position within 24 hours'
-            : 'Бид 24 цагийн дотор байрлалыг баталгаажуулна'}</li>
-        </ol>
-      </div>
-
-      <!-- Wallet address -->
-      <div style="margin-bottom:16px">
-        <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:7px">
-          ${lang === 'en' ? 'PAYMENT ADDRESS (USDT TRC20 / SOL)' : 'ТӨЛБӨРИЙН ХАЯГ (USDT TRC20 / SOL)'}
-        </div>
-        <div style="display:flex;align-items:center;gap:8px">
-          <div style="flex:1;font-family:'Space Mono',monospace;font-size:10px;color:#ccd8df;background:#0c1014;border:1px solid #1c2d38;border-radius:6px;padding:10px 12px;word-break:break-all;line-height:1.5">
-            ${WALLET_ADDRESS}
-          </div>
-          <button onclick="pmCopyAddr('${WALLET_ADDRESS}')"
-            style="padding:10px 14px;background:rgba(0,232,122,.1);border:1px solid rgba(0,232,122,.3);border-radius:6px;color:#00e87a;font-family:'Space Mono',monospace;font-size:10px;cursor:pointer;white-space:nowrap;flex-shrink:0">
-            ${lang === 'en' ? 'Copy' : 'Хуулах'}
-          </button>
-        </div>
-      </div>
-
-      <!-- X DM button -->
-      <a href="https://x.com/DeFiMongo" target="_blank"
-        style="display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:13px;background:#000;border:1px solid #333;border-radius:8px;text-decoration:none;color:#fff;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:1.5px;box-sizing:border-box;transition:background .2s;margin-bottom:10px"
-        onmouseover="this.style.background='#111'" onmouseout="this.style.background='#000'">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="white"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.742l7.737-8.835L1.254 2.25H8.08l4.253 5.622L18.244 2.25zm-1.161 17.52h1.833L7.084 4.126H5.117L17.083 19.77z"/></svg>
-        ${lang === 'en' ? 'DM @DeFiMongo ON X →' : 'X ДЭЭР @DeFiMongo РУУ →'}
-      </a>
-
-      <div style="font-family:'Space Mono',monospace;font-size:8px;color:var(--muted);text-align:center;line-height:1.6">
-        ${lang === 'en'
-          ? 'By participating you agree that DeFiMongo is not liable for any losses. 18+ only.'
-          : 'Оролцсоноор та DeFiMongo нь аливаа алдагдалд хариуцлага хүлээхгүй гэдгийг зөвшөөрч байна. 18+.'}
-      </div>
-    </div>`;
-}
-
-/* ── LIVE RECALCULATE ────────────────────────────────────── */
-function pmRecalc(market, side, price) {
-  const lang   = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
-  const inp    = document.getElementById('pmAmountInput');
-  if (!inp) return;
-  const amt    = Math.max(market.minBet, Math.min(market.maxBet, parseFloat(inp.value) || market.minBet));
-  const shares = Math.floor(amt / parseFloat(price));
-  const ret    = (shares * 1).toFixed(2);
-  const profit = (ret - amt).toFixed(2);
-
-  const sharesEl = document.getElementById('pmSharesOut');
-  const returnEl = document.getElementById('pmReturnOut');
-  const profitEl = document.getElementById('pmProfitOut');
-  if (sharesEl) sharesEl.textContent = shares;
-  if (returnEl) returnEl.textContent = '$' + ret;
-  if (profitEl) {
-    profitEl.textContent = '$' + profit;
-    profitEl.style.color = parseFloat(profit) >= 0 ? '#f4c542' : '#e84040';
-  }
-}
-
-/* ── COPY WALLET ADDRESS ─────────────────────────────────── */
-function pmCopyAddr(addr) {
-  const lang = (typeof SITE_LANG !== 'undefined') ? SITE_LANG : 'mn';
-  navigator.clipboard.writeText(addr).then(function() {
-    if (typeof toast === 'function') {
-      toast(lang === 'en' ? 'Address copied!' : 'Хаяг хуулагдлаа!', '#00e87a');
-    }
-  }).catch(function() {
-    if (typeof toast === 'function') {
-      toast(lang === 'en' ? 'Copy failed — copy manually' : 'Хуулж чадсангүй — гараар хуулна уу', '#e84040');
-    }
-  });
+  pmOpenWaitlist(marketId);
 }
 
 /* ── LANGUAGE SYNC ───────────────────────────────────────── */
-// Hook into setSiteLang so predict page re-renders on lang switch
 const _origSetSiteLang = window.setSiteLang;
 window.setSiteLang = function(lang) {
   if (_origSetSiteLang) _origSetSiteLang(lang);
-  // Re-render markets if predict page is open
-  const overlay = document.getElementById('predictOverlay');
+  var overlay = document.getElementById('predictOverlay');
   if (overlay && overlay.classList.contains('on')) {
     renderPMMarkets(pmCurrentCat);
   }
-  // Sync predict page lang toggle buttons
-  const pmMn = document.getElementById('pm-lang-mn');
-  const pmEn = document.getElementById('pm-lang-en');
+  var pmMn = document.getElementById('pm-lang-mn');
+  var pmEn = document.getElementById('pm-lang-en');
   if (pmMn && pmEn) {
     if (lang === 'mn') {
       pmMn.style.background = '#e84040'; pmMn.style.color = '#fff';
@@ -565,6 +394,6 @@ window.openPredictPage   = openPredictPage;
 window.closePredictPage  = closePredictPage;
 window.filterPMMarkets   = filterPMMarkets;
 window.pmBuyShare        = pmBuyShare;
-window.pmCopyAddr        = pmCopyAddr;
+window.pmOpenWaitlist    = pmOpenWaitlist;
+window.pmSubmitWaitlist  = pmSubmitWaitlist;
 window.pmCardClick       = pmCardClick;
-window.pmRecalc          = pmRecalc;
