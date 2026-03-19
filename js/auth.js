@@ -514,6 +514,11 @@ function go(id, el){
   document.body.style.overflow='';
   // Init news panel on first open
   if(id==='news' && typeof window._newsInit==='function') window._newsInit();
+  // Init portfolio dashboard on first open
+  if(id==='portfolio') {
+    if(!CR_USER){ openAuth('register'); return; }
+    if(typeof window.initPortfolioDashboard==='function') window.initPortfolioDashboard();
+  }
   // Trigger TradingView chart inits for macro panels (lazy load)
   const tvMap = {
     'halving':    'initTVHalving',
