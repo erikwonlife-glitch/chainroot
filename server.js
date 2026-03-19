@@ -49,6 +49,15 @@ function setCache(key, data, ttl) {
   CACHE[key] = { ts: Date.now(), data: data, ttl: ttl || CACHE_TTL };
 }
 
+// Periodically evict expired cache entries to prevent unbounded memory growth
+setInterval(function() {
+  const now = Date.now();
+  Object.keys(CACHE).forEach(function(key) {
+    const e = CACHE[key];
+    if (e && now - e.ts > (e.ttl || CACHE_TTL)) delete CACHE[key];
+  });
+}, 30 * 60 * 1000); // run every 30 minutes
+
 // ── DATA FETCHERS ─────────────────────────────────────────────────────────────
 async function fetchStooq(symbol, rows) {
   rows = rows || 400;

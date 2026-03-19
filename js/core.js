@@ -315,6 +315,8 @@ async function init(){
     renderTicker(markets);
     renderCoins(markets);
     renderTrending(markets);
+    const tsEl=document.getElementById('pricesLastUpdated');
+    if(tsEl){const t=new Date();tsEl.textContent='LIVE · UPDATED '+t.toLocaleTimeString('en',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
   }
   if(global) renderGlobal(global);
   if(fg)     renderFearGreed(fg);
