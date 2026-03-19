@@ -343,6 +343,21 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 .port-empty-icon{font-size:44px;margin-bottom:14px}
 .port-empty-title{font-family:'Space Grotesk',sans-serif;font-size:18px;font-weight:700;color:#fff;margin-bottom:8px}
 .port-empty-sub{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);line-height:1.9;max-width:340px;margin:0 auto 22px}
+/* portfolio dashboard */
+.port-stat-cell{background:var(--bg1);padding:14px 20px}
+.port-stat-lbl{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--muted);text-transform:uppercase;margin-bottom:5px}
+.port-stat-val{font-family:'Space Mono',monospace;font-size:17px;font-weight:700;color:#fff}
+.port-holding-row{display:grid;grid-template-columns:2fr 1fr 1fr 1fr 40px;gap:8px;align-items:center;padding:10px 12px;border-radius:6px;transition:background .15s}
+.port-holding-row:hover{background:var(--bg2)}
+.port-holding-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.port-holding-name{font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.port-holding-sym{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted)}
+.port-holding-num{font-family:'Space Mono',monospace;font-size:11px;color:var(--text);text-align:right}
+.port-holding-price{font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);text-align:right}
+.port-holding-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;color:#fff;text-align:right}
+.port-holding-chg{font-family:'Space Mono',monospace;font-size:9px;text-align:right}
+.port-remove-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:4px;opacity:0;transition:opacity .15s;text-align:center}
+.port-holding-row:hover .port-remove-btn{opacity:1}
 .port-connect-btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;
   background:var(--accent);border:none;border-radius:7px;font-family:'Space Mono',monospace;
   font-size:11px;font-weight:700;letter-spacing:1px;color:#000;cursor:pointer;transition:all .2s}
@@ -2300,77 +2315,16 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
       </div>
     </div>
 
-    <!-- ═══ FOREX ═══════════════════════════════ -->
-    <div class="mkt-sep">
-      <span class="mkt-sep-dot" style="background:#f4c542"></span>
-      <span class="mkt-sep-lbl" style="color:#f4c542">Forex</span>
-      <span class="mkt-sep-line" style="background:rgba(244,197,66,.18)"></span>
+    <!-- ═══ PORTFOLIO ════════════════════════════ -->
+    <div class="mkt-sep" style="margin-top:8px">
+      <span class="mkt-sep-dot" style="background:#00b4d8"></span>
+      <span class="mkt-sep-lbl" style="color:#00b4d8">Portfolio</span>
+      <span class="mkt-sep-line" style="background:rgba(0,180,216,.18)"></span>
     </div>
-    <div class="ng" id="gFX">
-      <div class="ngh" onclick="tog('gFX')" style="color:#b8941e">Major Pairs <span class="arr">∨</span></div>
-      <div class="nbody">
-        <div class="nl fx-nl" onclick="go('fx-overview',this)">
-          <span class="sb-icon" style="background:rgba(244,197,66,.15);color:#f4c542">FX</span>FX Overview<span class="nt fx-nt">FX</span></div>
-        <div class="nl fx-nl" onclick="go('fx-eurusd',this)">
-          <span class="sb-flag-pair"><span class="sb-flag">🇪🇺</span><span class="sb-flag sb-flag2">🇺🇸</span></span>EUR / USD<span class="nt fx-nt">FX</span></div>
-        <div class="nl fx-nl" onclick="go('fx-gbpusd',this)">
-          <span class="sb-flag-pair"><span class="sb-flag">🇬🇧</span><span class="sb-flag sb-flag2">🇺🇸</span></span>GBP / USD<span class="nt fx-nt">FX</span></div>
-        <div class="nl fx-nl" onclick="go('fx-usdjpy',this)">
-          <span class="sb-flag-pair"><span class="sb-flag">🇺🇸</span><span class="sb-flag sb-flag2">🇯🇵</span></span>USD / JPY<span class="nt fx-nt">FX</span></div>
-        <div class="nl fx-nl" onclick="go('fx-usdchf',this)">
-          <span class="sb-flag-pair"><span class="sb-flag">🇺🇸</span><span class="sb-flag sb-flag2">🇨🇭</span></span>USD / CHF<span class="nt fx-nt">FX</span></div>
-        <div class="nl fx-nl" onclick="go('fx-audusd',this)">
-          <span class="sb-flag-pair"><span class="sb-flag">🇦🇺</span><span class="sb-flag sb-flag2">🇺🇸</span></span>AUD / USD<span class="nt fx-nt">FX</span></div>
-      </div>
-    </div>
-
-    <!-- ═══ COMMODITIES ══════════════════════════ -->
-    <div class="mkt-sep">
-      <span class="mkt-sep-dot" style="background:#ff7c3a"></span>
-      <span class="mkt-sep-lbl" style="color:#ff7c3a"><span data-mn="Бараа" data-en="Commodities">Бараа</span></span>
-      <span class="mkt-sep-line" style="background:rgba(255,124,58,.18)"></span>
-    </div>
-    <div class="ng" id="gCMD">
-      <div class="ngh" onclick="tog('gCMD')" style="color:#cc5a20">Metals &amp; Energy <span class="arr">∨</span></div>
-      <div class="nbody">
-        <div class="nl cmd-nl" onclick="go('cmd-overview',this)">
-          <span class="sb-icon" style="background:rgba(255,124,58,.15);color:#ff7c3a">⬡</span>CMD Overview<span class="nt cmd-nt">CMD</span></div>
-        <div class="nl cmd-nl" onclick="go('cmd-gold',this)">
-          <span class="sb-icon" style="background:rgba(244,197,66,.2);color:#f4c542;font-size:13px">Au</span>Gold · XAU/USD<span class="nt cmd-nt">CMD</span></div>
-        <div class="nl cmd-nl" onclick="go('cmd-silver',this)">
-          <span class="sb-icon" style="background:rgba(200,210,220,.15);color:#c8d2dc;font-size:13px">Ag</span>Silver · XAG/USD<span class="nt cmd-nt">CMD</span></div>
-        <div class="nl cmd-nl" onclick="go('cmd-oil',this)">
-          <span class="sb-icon" style="background:rgba(255,107,53,.15);color:#ff6b35;font-size:14px">🛢</span>Crude Oil · WTI<span class="nt cmd-nt">CMD</span></div>
-        <div class="nl cmd-nl" onclick="go('cmd-natgas',this)">
-          <span class="sb-icon" style="background:rgba(0,180,216,.15);color:#00b4d8;font-size:14px">🔥</span>Natural Gas<span class="nt cmd-nt">CMD</span></div>
-      </div>
-    </div>
-
-    <!-- ═══ STOCKS ════════════════════════════════ -->
-    <div class="mkt-sep">
-      <span class="mkt-sep-dot" style="background:#a78bfa"></span>
-      <span class="mkt-sep-lbl" style="color:#a78bfa">Equities</span>
-      <span class="mkt-sep-line" style="background:rgba(167,139,250,.18)"></span>
-    </div>
-    <div class="ng" id="gEQ">
-      <div class="ngh" onclick="tog('gEQ')" style="color:#7c5ed6">Major Stocks <span class="arr">∨</span></div>
-      <div class="nbody">
-        <div class="nl eq-nl" onclick="go('eq-overview',this)">
-          <span class="sb-icon" style="background:rgba(167,139,250,.15);color:#a78bfa">EQ</span>Stocks Overview<span class="nt eq-nt">EQ</span></div>
-        <div class="nl eq-nl" onclick="go('eq-aapl',this)">
-          <span class="sb-icon sb-stock" style="background:#1c1c1e;color:#fff">
-            <svg width="12" height="14" viewBox="0 0 384 512" fill="currentColor"><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg>
-          </span>Apple · AAPL<span class="nt eq-nt">EQ</span></div>
-        <div class="nl eq-nl" onclick="go('eq-msft',this)">
-          <span class="sb-icon sb-stock" style="background:#1a1a2e;padding:2px">
-            <svg width="13" height="13" viewBox="0 0 21 21" fill="none"><rect width="10" height="10" fill="#F25022"/><rect x="11" width="10" height="10" fill="#7FBA00"/><rect y="11" width="10" height="10" fill="#00A4EF"/><rect x="11" y="11" width="10" height="10" fill="#FFB900"/></svg>
-          </span>Microsoft · MSFT<span class="nt eq-nt">EQ</span></div>
-        <div class="nl eq-nl" onclick="go('eq-nvda',this)">
-          <span class="sb-icon sb-stock" style="background:#76b900;color:#000;font-weight:900;font-size:8px;letter-spacing:-0.5px">NV</span>NVIDIA · NVDA<span class="nt eq-nt">EQ</span></div>
-        <div class="nl eq-nl" onclick="go('eq-tsla',this)">
-          <span class="sb-icon sb-stock" style="background:#cc0000;color:#fff;font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:900;letter-spacing:-1px">T</span>Tesla · TSLA<span class="nt eq-nt">EQ</span></div>
-        <div class="nl eq-nl" onclick="go('eq-spx',this)">
-          <span class="sb-icon sb-stock" style="background:linear-gradient(135deg,#1a3a6b,#2d6abf);color:#fff;font-size:8px;font-weight:800;letter-spacing:-0.5px">SPX</span>S&amp;P 500 · SPX<span class="nt eq-nt">EQ</span></div>
+    <div class="ng" id="gPortfolio">
+      <div class="ngh" onclick="go('portfolio',this)" style="background:rgba(0,180,216,.06);border-radius:4px;margin:2px 8px;padding:10px 12px;border:1px solid rgba(0,180,216,.2);cursor:pointer">
+        <span style="color:#00b4d8;font-weight:700" data-mn="◎ Миний Портфель" data-en="◎ My Portfolio">◎ My Portfolio</span>
+        <span style="font-family:'Space Mono',monospace;font-size:8px;padding:2px 7px;border-radius:3px;background:rgba(0,180,216,.1);color:#00b4d8;border:1px solid rgba(0,180,216,.25);letter-spacing:.5px">LIVE</span>
       </div>
     </div>
 
@@ -2600,8 +2554,6 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
           <button onclick="newsSetCat('all',this)"         class="news-tab on"  data-cat="all"         style="padding:4px 10px;font-size:9px">Бүгд</button>
           <button onclick="newsSetCat('crypto',this)"      class="news-tab"     data-cat="crypto"      style="padding:4px 10px;font-size:9px">Крипто</button>
           <button onclick="newsSetCat('macro',this)"       class="news-tab"     data-cat="macro"       style="padding:4px 10px;font-size:9px">Макро</button>
-          <button onclick="newsSetCat('stocks',this)"      class="news-tab"     data-cat="stocks"      style="padding:4px 10px;font-size:9px">Хувьцаа</button>
-          <button onclick="newsSetCat('commodities',this)" class="news-tab"     data-cat="commodities" style="padding:4px 10px;font-size:9px">Түүхий эд</button>
           <button onclick="newsSetCat('defi',this)"        class="news-tab"     data-cat="defi"        style="padding:4px 10px;font-size:9px"><span data-mn="DeFi" data-en="DeFi">DeFi</span></button>
         </div>
 
@@ -3534,67 +3486,117 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
     </div>
 
     <!-- ═══ FX PANELS ════════════════════════════════════════════════════ -->
-    <div class="pnl" id="P-fx-overview">
-      <div class="ph"><div><div class="pht"><span data-mn="Форекс Тойм" data-en="Forex Overview">Форекс Тойм</span> <span class="pbg fx">FX</span></div><div class="phs">5 major currency pairs · Finnhub live data · RSI-14 + MA20/50/200</div></div></div>
-      <div class="pc">
-        <div class="mkt-cards" id="fx-ov-cards"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading FX data…</div></div>
-        <div class="st"><span data-mn="Дохионы Хураангуй" data-en="Signal Summary">Дохионы Хураангуй</span></div><div class="sig-bar" id="fx-ov-sigs"></div>
-        <div class="mkt-detail">
-          <div class="mkt-box"><div class="mkt-box-title">RSI-14 Overview</div><div id="fx-ov-rsi"></div></div>
-          <div class="mkt-box"><div class="mkt-box-title">Moving Average Signals</div>
-            <table class="ma-table"><thead><tr><th>Pair</th><th>MA20</th><th>MA50</th><th>MA200</th><th>Signal</th></tr></thead><tbody id="fx-ov-ma"></tbody></table>
+
+    <!-- ═══════════════════════════════════════════
+         PORTFOLIO DASHBOARD
+    ════════════════════════════════════════════ -->
+    <div class="pnl" id="P-portfolio">
+      <div class="ph">
+        <div>
+          <div class="pht">
+            <span data-mn="Миний Портфель" data-en="My Portfolio">My Portfolio</span>
+            <span class="pbg d">Solana</span>
           </div>
+          <div class="phs" data-mn="Phantom wallet · шууд үлдэгдэл · CoinGecko үнэ" data-en="Phantom wallet · live balances · CoinGecko prices">Phantom wallet · live balances · CoinGecko prices</div>
+        </div>
+        <div class="phst">
+          <div><div class="phsv" id="port-total-val">$—</div><div class="phsl">Total Value</div></div>
+          <div><div class="phsv" id="port-sol-bal" style="font-size:14px">—</div><div class="phsl">SOL Balance</div></div>
+          <div><div class="phsv" id="port-24h-chg" style="font-size:14px">—</div><div class="phsl">24h Change</div></div>
         </div>
       </div>
-    </div>
-    <div class="pnl" id="P-fx-eurusd"><div class="ph"><div><div class="pht">EUR / USD <span class="pbg fx">FX</span></div><div class="phs">Euro vs US Dollar · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="fx-eurusd-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-fx-gbpusd"><div class="ph"><div><div class="pht">GBP / USD <span class="pbg fx">FX</span></div><div class="phs">British Pound vs US Dollar · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="fx-gbpusd-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-fx-usdjpy"><div class="ph"><div><div class="pht">USD / JPY <span class="pbg fx">FX</span></div><div class="phs">US Dollar vs Japanese Yen · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="fx-usdjpy-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-fx-usdchf"><div class="ph"><div><div class="pht">USD / CHF <span class="pbg fx">FX</span></div><div class="phs">US Dollar vs Swiss Franc · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="fx-usdchf-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-fx-audusd"><div class="ph"><div><div class="pht">AUD / USD <span class="pbg fx">FX</span></div><div class="phs">Australian Dollar vs US Dollar · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="fx-audusd-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
 
-    <!-- ═══ COMMODITY PANELS ══════════════════════════════════════════════ -->
-    <div class="pnl" id="P-cmd-overview">
-      <div class="ph"><div><div class="pht">Commodities Overview <span class="pbg cmd">CMD</span></div><div class="phs">Gold · Silver · Crude Oil · Natural Gas · Finnhub · RSI + MA</div></div></div>
-      <div class="pc">
-        <div class="mkt-cards" id="cmd-ov-cards"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading commodity data…</div></div>
-        <div class="st">Signal Summary</div><div class="sig-bar" id="cmd-ov-sigs"></div>
-        <div class="mkt-detail">
-          <div class="mkt-box"><div class="mkt-box-title">RSI-14 Overview</div><div id="cmd-ov-rsi"></div></div>
-          <div class="mkt-box"><div class="mkt-box-title">Moving Average Signals</div>
-            <table class="ma-table"><thead><tr><th>Asset</th><th>MA20</th><th>MA50</th><th>MA200</th><th>Signal</th></tr></thead><tbody id="cmd-ov-ma"></tbody></table>
+      <div class="pc" id="port-body" style="padding:0">
+
+        <!-- ── NOT SIGNED IN STATE ── -->
+        <div id="port-state-auth" style="display:none;text-align:center;padding:60px 20px">
+          <div style="font-size:48px;margin-bottom:16px">◎</div>
+          <div style="font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;color:#fff;margin-bottom:8px" data-mn="Phantom Wallet холбоно уу" data-en="Connect Your Phantom Wallet">Connect Your Phantom Wallet</div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted);line-height:1.9;max-width:360px;margin:0 auto 28px">Sign in with Phantom to see your real-time Solana portfolio — SOL balance, all SPL tokens, and live USD values.</div>
+          <button onclick="openAuth('register')" style="background:linear-gradient(135deg,#9945FF,#14F195);border:none;border-radius:8px;padding:14px 32px;color:#000;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:.5px">Connect Phantom →</button>
+        </div>
+
+        <!-- ── LOADING STATE ── -->
+        <div id="port-state-loading" style="display:none;text-align:center;padding:60px 20px">
+          <div class="mkt-spinner" style="margin:0 auto 20px"></div>
+          <div style="font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">Fetching on-chain balances…</div>
+        </div>
+
+        <!-- ── MAIN DASHBOARD ── -->
+        <div id="port-state-main" style="display:none">
+
+          <!-- Summary bar -->
+          <div id="port-summary-bar" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:1px;background:var(--border);border-bottom:1px solid var(--border)">
+            <div class="port-stat-cell">
+              <div class="port-stat-lbl">Total Value</div>
+              <div class="port-stat-val" id="ps-total">$—</div>
+            </div>
+            <div class="port-stat-cell">
+              <div class="port-stat-lbl">SOL</div>
+              <div class="port-stat-val" id="ps-sol">—</div>
+            </div>
+            <div class="port-stat-cell">
+              <div class="port-stat-lbl">Tokens</div>
+              <div class="port-stat-val" id="ps-tokens">—</div>
+            </div>
+            <div class="port-stat-cell">
+              <div class="port-stat-lbl">24h Change</div>
+              <div class="port-stat-val" id="ps-chg">—</div>
+            </div>
+            <div class="port-stat-cell" style="cursor:pointer" onclick="refreshPortfolioData()">
+              <div class="port-stat-lbl">Last Refresh</div>
+              <div class="port-stat-val" id="ps-refresh" style="font-size:10px;color:var(--muted)">—  ↻</div>
+            </div>
+          </div>
+
+          <!-- Two-column layout: holdings + allocation -->
+          <div style="display:grid;grid-template-columns:1fr 340px;gap:0;min-height:400px">
+
+            <!-- Holdings table -->
+            <div style="border-right:1px solid var(--border);padding:24px 32px">
+              <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase">Holdings</div>
+                <div style="display:flex;gap:8px">
+                  <button onclick="addManualAsset()" style="background:var(--bg2);border:1px solid var(--border);border-radius:5px;padding:5px 12px;font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);cursor:pointer;letter-spacing:1px">+ MANUAL</button>
+                  <button onclick="refreshPortfolioData()" style="background:var(--accent);border:none;border-radius:5px;padding:5px 12px;font-family:'Space Mono',monospace;font-size:9px;color:#000;font-weight:700;cursor:pointer;letter-spacing:1px">↻ REFRESH</button>
+                </div>
+              </div>
+
+              <!-- Table header -->
+              <div style="display:grid;grid-template-columns:2fr 1fr 1fr 1fr 40px;gap:8px;padding:8px 12px;background:var(--bg2);border-radius:6px;margin-bottom:4px">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1px">ASSET</div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-align:right;letter-spacing:1px">BALANCE</div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-align:right;letter-spacing:1px">PRICE</div>
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);text-align:right;letter-spacing:1px">VALUE</div>
+                <div></div>
+              </div>
+
+              <div id="port-holdings-list">
+                <!-- filled by JS -->
+              </div>
+            </div>
+
+            <!-- Right panel: allocation + wallet info -->
+            <div style="padding:24px">
+              <!-- Wallet address -->
+              <div id="port-wallet-badge" style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:20px">
+                <div style="font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);letter-spacing:1.5px;margin-bottom:6px">CONNECTED WALLET</div>
+                <div id="port-wallet-addr" style="font-family:'Space Mono',monospace;font-size:11px;color:#9945FF;word-break:break-all"></div>
+              </div>
+
+              <!-- Allocation chart -->
+              <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px">Allocation</div>
+              <canvas id="port-alloc-chart" width="292" height="200" style="display:block;margin:0 auto 20px"></canvas>
+              <div id="port-alloc-legend" style="display:flex;flex-direction:column;gap:7px">
+                <!-- filled by JS -->
+              </div>
+            </div>
           </div>
         </div>
+
       </div>
     </div>
-    <div class="pnl" id="P-cmd-gold"><div class="ph"><div><div class="pht">Gold · XAU/USD <span class="pbg cmd">CMD</span></div><div class="phs">Spot Gold · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="cmd-gold-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-cmd-silver"><div class="ph"><div><div class="pht">Silver · XAG/USD <span class="pbg cmd">CMD</span></div><div class="phs">Spot Silver · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="cmd-silver-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-cmd-oil"><div class="ph"><div><div class="pht">Crude Oil · WTI <span class="pbg cmd">CMD</span></div><div class="phs">West Texas Intermediate · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="cmd-oil-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-cmd-natgas"><div class="ph"><div><div class="pht">Natural Gas <span class="pbg cmd">CMD</span></div><div class="phs">Henry Hub · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="cmd-natgas-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
 
-    <!-- ═══ EQUITY PANELS ════════════════════════════════════════════════ -->
-    <div class="pnl" id="P-eq-overview">
-      <div class="ph"><div><div class="pht">Stocks Overview <span class="pbg eq">EQ</span></div><div class="phs">AAPL · MSFT · NVDA · TSLA · SPX · Finnhub live · RSI + MA</div></div></div>
-      <div class="pc">
-        <div class="mkt-cards" id="eq-ov-cards"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading equity data…</div></div>
-        <div class="st">Signal Summary</div><div class="sig-bar" id="eq-ov-sigs"></div>
-        <div class="mkt-detail">
-          <div class="mkt-box"><div class="mkt-box-title">RSI-14 Overview</div><div id="eq-ov-rsi"></div></div>
-          <div class="mkt-box"><div class="mkt-box-title">Moving Average Signals</div>
-            <table class="ma-table"><thead><tr><th>Ticker</th><th>MA20</th><th>MA50</th><th>MA200</th><th>Signal</th></tr></thead><tbody id="eq-ov-ma"></tbody></table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="pnl" id="P-eq-aapl"><div class="ph"><div><div class="pht">Apple · AAPL <span class="pbg eq">EQ</span></div><div class="phs">Apple Inc. · NASDAQ · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-aapl-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-eq-msft"><div class="ph"><div><div class="pht">Microsoft · MSFT <span class="pbg eq">EQ</span></div><div class="phs">Microsoft Corp. · NASDAQ · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-msft-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-eq-nvda"><div class="ph"><div><div class="pht">NVIDIA · NVDA <span class="pbg eq">EQ</span></div><div class="phs">NVIDIA Corp. · NASDAQ · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-nvda-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-eq-tsla"><div class="ph"><div><div class="pht">Tesla · TSLA <span class="pbg eq">EQ</span></div><div class="phs">Tesla Inc. · NASDAQ · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-tsla-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-    <div class="pnl" id="P-eq-spx"><div class="ph"><div><div class="pht">S&amp;P 500 · SPX <span class="pbg eq">EQ</span></div><div class="phs">S&amp;P 500 Index (via SPY ETF) · Finnhub · RSI + MA analysis</div></div></div><div class="pc" id="eq-spx-body"><div class="mkt-loading"><div class="mkt-spinner"></div>Loading…</div></div></div>
-
-    <!-- ═══ NEW FEATURES ══════════════════════════════════════════════════════ -->
-
-    <!-- BIGGEST MOVERS -->
     <div class="pnl" id="P-biggest-movers">
       <div class="ph"><div>
         <div class="pht"><span data-mn="Том Хөдөлгөөнүүд" data-en="Biggest Movers">Том Хөдөлгөөнүүд</span> <span class="pbg d">DeFi</span></div>
@@ -3754,13 +3756,14 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 <script src="js/core.js?v=4"></script>
 <script src="js/charts.js?v=4"></script>
 <script src="js/etf.js?v=4"></script>
-<script src="js/auth.js?v=4"></script>
+<script src="js/auth.js?v=5"></script>
 <script src="js/coin-modal.js?v=4"></script>
 <script src="js/training.js?v=4"></script>
 <script src="js/market-engine.js?v=4"></script>
 <script src="js/global-assets.js?v=4"></script>
 <script src="js/news.js?v=4"></script>
 <script src="js/yield.js?v=5"></script>
+<script src="js/portfolio.js?v=1"></script>
 <script src="js/new-features.js?v=2"></script>
 <script src="js/predict.js?v=1"></script>
 <script src="js/docs.js?v=1"></script>
@@ -3891,7 +3894,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
           <li>━━ Дэмжлэг &amp; Эсэргүүцлийн түвшин</li>
           <li>🎯 Entry gate · Exit gate — тодорхой заагч</li>
           <li>🔔 Мэдэгдлийн систем — шууд мэдэгдэл</li>
-          <li>📊 Крипто + Хувьцаан + Forex дэмжлэг</li>
+          <li>📊 Крипто болон DeFi зах зээлийн дэмжлэг</li>
         </ul>
       </div>
       <div class="tr-indicator-preview" style="padding:0;overflow:hidden;border-radius:12px">
@@ -4263,7 +4266,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
 
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px 22px">
         <div style="font-size:14px;font-weight:600;color:#fff;margin-bottom:6px" data-mn="Ямар биржид ажилладаг вэ?" data-en="Which exchanges does it work on?">Ямар биржид ажилладаг вэ?</div>
-        <div style="font-size:13px;color:var(--muted);line-height:1.7" data-mn="TradingView дэмждэг бүх биржид ажилладаг — Binance, Bybit, OKX, Coinbase болон бусад. Хувьцаан болон Forex дээр мөн ажилладаг." data-en="Works on all exchanges supported by TradingView — Binance, Bybit, OKX, Coinbase and more. Also works on stocks and Forex.">TradingView дэмждэг бүх биржид ажилладаг — Binance, Bybit, OKX, Coinbase болон бусад. Хувьцаан болон Forex дээр мөн ажилладаг.</div>
+        <div style="font-size:13px;color:var(--muted);line-height:1.7" data-mn="TradingView дэмждэг бүх биржид ажилладаг — Binance, Bybit, OKX, Coinbase болон бусад." data-en="Works on all exchanges supported by TradingView — Binance, Bybit, OKX, Coinbase and more.">TradingView дэмждэг бүх биржид ажилладаг — Binance, Bybit, OKX, Coinbase болон бусад.</div>
       </div>
 
       <div style="background:var(--bg2);border:1px solid var(--border);border-radius:8px;padding:18px 22px">
@@ -4458,7 +4461,7 @@ html,body{height:100%;background:var(--bg);color:var(--text);font-family:var(--B
           <li>━━ Дэмжлэг &amp; Эсэргүүцлийн түвшин</li>
           <li>🎯 Entry gate · Exit gate — тодорхой заагч</li>
           <li>🔔 Мэдэгдлийн систем — шууд мэдэгдэл</li>
-          <li>📊 Крипто + Хувьцаан + Forex дэмжлэг</li>
+          <li>📊 Крипто болон DeFi зах зээлийн дэмжлэг</li>
         </ul>
       </div>
 
@@ -5350,8 +5353,8 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
           <thead><tr><th data-mn="ЗАХ ЗЭЭЛ" data-en="MARKET">ЗАХ ЗЭЭЛ</th><th data-mn="ЖИШЭЭ" data-en="EXAMPLES">ЖИШЭЭ</th></tr></thead>
           <tbody>
             <tr><td data-mn="Крипто" data-en="Crypto">Крипто</td><td>Binance, Bybit, OKX, Coinbase, Kraken</td></tr>
-            <tr><td data-mn="Хувьцаа" data-en="Stocks">Хувьцаа</td><td>NYSE, NASDAQ, MSE (Монголын хөрөнгийн бирж)</td></tr>
-            <tr><td data-mn="Форекс" data-en="Forex">Форекс</td><td>EUR/USD, USD/MNT, GBP/USD болон бусад</td></tr>
+            <tr><td data-mn="DeFi протоколууд" data-en="DeFi Protocols">DeFi протоколууд</td><td>Uniswap, Raydium, Orca, Kamino</td></tr>
+            <tr><td data-mn="DEX / Perpetuals" data-en="DEX / Perpetuals">DEX / Perpetuals</td><td>Hyperliquid, Jupiter, dYdX</td></tr>
           </tbody>
         </table>
 
@@ -5406,7 +5409,7 @@ console.log(<span style="color:#f4c542">"Vault address:"</span>, vault.address.t
           <thead><tr><th data-mn="ХУРААМЖИЙН ТӨРӨЛ" data-en="FEE TYPE">ХУРААМЖИЙН ТӨРӨЛ</th><th data-mn="ХЭМЖЭЭ" data-en="AMOUNT">ХЭМЖЭЭ</th><th data-mn="ТАЙЛБАР" data-en="DESCRIPTION">ТАЙЛБАР</th></tr></thead>
           <tbody>
             <tr><td data-mn="Шийдвэрлэлтийн хураамж" data-en="Resolution fee">Шийдвэрлэлтийн хураамж</td><td><span class="docs-badge yellow">2%</span></td><td data-mn="Зах зээл шийдвэрлэгдэхэд ялагчдын нийт санаас авна" data-en="Taken from the winners' pool when a market resolves">Зах зээл шийдвэрлэгдэхэд ялагчдын нийт санаас авна</td></tr>
-            <tr><td data-mn="Арилжааны хураамж" data-en="Trading fee">Арилжааны хураамж</td><td><span class="docs-badge yellow">1%</span></td><td data-mn="Хувьцаа худалдаж авах бүр дээр (смарт гэрэг нэвтрүүлсний дараа)" data-en="Per share purchase (after smart contract launch)">Хувьцаа худалдаж авах бүр дээр (смарт гэрэг нэвтрүүлсний дараа)</td></tr>
+            <tr><td data-mn="Арилжааны хураамж" data-en="Trading fee">Арилжааны хураамж</td><td><span class="docs-badge yellow">1%</span></td><td data-mn="Таамаглалын хувьцаа худалдаж авах бүр дээр" data-en="Per prediction share purchase (after smart contract launch)">Per prediction share purchase</td></tr>
             <tr><td data-mn="Хамгийн бага хураамж" data-en="Minimum fee">Хамгийн бага хураамж</td><td><span class="docs-badge blue">$0.10</span></td><td data-mn="Аливаа гүйлгээний хамгийн бага хураамж" data-en="Minimum fee on any transaction">Аливаа гүйлгээний хамгийн бага хураамж</td></tr>
             <tr><td data-mn="Блокчэйны хийн хураамж" data-en="Blockchain gas fee">Блокчэйны хийн хураамж</td><td><span class="docs-badge blue">~$0.001</span></td><td data-mn="Solana сүлжээний хураамж — DeFiMongo-н хяналтанд байдаггүй" data-en="Solana network fee — outside DeFiMongo control">Solana сүлжээний хураамж — DeFiMongo-н хяналтанд байдаггүй</td></tr>
           </tbody>
