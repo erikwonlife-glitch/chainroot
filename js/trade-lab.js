@@ -15,6 +15,11 @@ const TL = (function(){
   const JOURNAL_KEY = 'dfm_journal_v1';
   let _jDir = 'BUY';
 
+  // ── CALENDAR STATE ────────────────────────────────────────────────────────
+
+  let _calYear  = new Date().getFullYear();
+  let _calMonth = new Date().getMonth();
+
   // ── LOCKED CARD ──────────────────────────────────────────────────────────
 
   function lockedCard(title, desc, btnLabel){
@@ -923,7 +928,189 @@ const TL = (function(){
         'UPGRADE TO PRO'
       );
     }
-    return placeholderCard('📅', 'Trade Calendar', 'Calendar view coming soon.');
+    return `
+      <div>
+        <div style="margin-bottom:20px">
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📅 TRADE CALENDAR</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px">Daily P&amp;L heatmap from your trade journal</div>
+        </div>
+        <div id="tl-cal-body"></div>
+      </div>`;
+  }
+
+  // ── CALENDAR: RENDER ──────────────────────────────────────────────────────
+
+  function cRenderCalendar(){
+    const wrap = document.getElementById('tl-cal-body');
+    if(!wrap) return;
+    const trades = jLoadTrades();
+
+    const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    const DAYS   = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+
+    // Aggregate P&L by date
+    const byDate = {};
+    trades.forEach(function(tr){
+      if(!byDate[tr.date]) byDate[tr.date] = { pnl: 0, count: 0 };
+      byDate[tr.date].pnl   += tr.pnl;
+      byDate[tr.date].count += 1;
+    });
+
+    // Month bounds
+    const firstDay    = new Date(_calYear, _calMonth, 1);
+    const startDow    = firstDay.getDay();
+    const daysInMonth = new Date(_calYear, _calMonth + 1, 0).getDate();
+
+    // Monthly summary
+    const monthPrefix = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-`;
+    let monthPnl = 0, winDays = 0, lossDays = 0;
+    Object.keys(byDate).forEach(function(d){
+      if(d.startsWith(monthPrefix)){
+        monthPnl += byDate[d].pnl;
+        if(byDate[d].pnl > 0) winDays++;
+        else if(byDate[d].pnl < 0) lossDays++;
+      }
+    });
+
+    const pnlColor = monthPnl >= 0 ? '#00e87a' : '#ff4444';
+    const pnlSign  = monthPnl >= 0 ? '+' : '';
+    const today    = new Date().toISOString().slice(0,10);
+
+    // Day header cells
+    const dayHeaders = DAYS.map(function(d){
+      return `<div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;text-align:center;letter-spacing:1px;padding:4px 0">${d}</div>`;
+    }).join('');
+
+    // Empty spacers
+    let cells = '';
+    for(let i = 0; i < startDow; i++) cells += '<div></div>';
+
+    for(let d = 1; d <= daysInMonth; d++){
+      const dateStr = `${_calYear}-${String(_calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const data    = byDate[dateStr];
+      const isToday = dateStr === today;
+
+      let bg = 'rgba(255,255,255,0.03)';
+      let pnlTxt = '';
+
+      if(data){
+        if(data.pnl > 0){
+          const alpha = (0.15 + Math.min(data.pnl / 200, 1) * 0.45).toFixed(2);
+          bg     = `rgba(0,232,122,${alpha})`;
+          pnlTxt = `+$${Math.abs(data.pnl).toFixed(0)}`;
+        } else if(data.pnl < 0){
+          const alpha = (0.15 + Math.min(Math.abs(data.pnl) / 200, 1) * 0.45).toFixed(2);
+          bg     = `rgba(255,68,68,${alpha})`;
+          pnlTxt = `-$${Math.abs(data.pnl).toFixed(0)}`;
+        } else {
+          bg     = 'rgba(255,255,255,0.07)';
+          pnlTxt = '$0';
+        }
+      }
+
+      const border  = isToday ? '1px solid #00b4d8' : '1px solid rgba(255,255,255,0.05)';
+      const dayColor = isToday ? '#00b4d8' : '#4a6070';
+      const dayWeight = isToday ? '700' : '400';
+      const pnlColor2 = data && data.pnl >= 0 ? '#00e87a' : '#ff4444';
+      const clickAttr = data ? `onclick="TL._calDay('${dateStr}')" onmouseover="this.style.opacity='.75'" onmouseout="this.style.opacity='1'" style="cursor:pointer;` : 'style="';
+
+      cells += `
+        <div ${clickAttr}background:${bg};border:${border};border-radius:6px;padding:6px 4px;min-height:52px;transition:opacity .15s">
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:${dayColor};font-weight:${dayWeight}">${d}</div>
+          ${data ? `
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:${pnlColor2};margin-top:4px;word-break:break-all">${pnlTxt}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;margin-top:2px">${data.count} trade${data.count > 1 ? 's' : ''}</div>
+          ` : ''}
+        </div>`;
+    }
+
+    wrap.innerHTML = `
+      <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;padding:20px">
+
+        <!-- Navigation -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+          <button onclick="TL._calNav(-1)"
+            style="background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:6px 16px;font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df;cursor:pointer"
+            onmouseover="this.style.borderColor='#00b4d8'" onmouseout="this.style.borderColor='rgba(0,180,216,0.2)'">‹</button>
+          <div style="font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df;letter-spacing:1px">${MONTHS[_calMonth]} ${_calYear}</div>
+          <button onclick="TL._calNav(1)"
+            style="background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:6px 16px;font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df;cursor:pointer"
+            onmouseover="this.style.borderColor='#00b4d8'" onmouseout="this.style.borderColor='rgba(0,180,216,0.2)'">›</button>
+        </div>
+
+        <!-- Monthly summary -->
+        <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <div style="flex:1;min-width:72px;background:#060d12;border-radius:6px;padding:10px;text-align:center">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">MONTH P&L</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:${pnlColor}">${pnlSign}$${Math.abs(monthPnl).toFixed(2)}</div>
+          </div>
+          <div style="flex:1;min-width:72px;background:#060d12;border-radius:6px;padding:10px;text-align:center">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">WIN DAYS</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:#00e87a">${winDays}</div>
+          </div>
+          <div style="flex:1;min-width:72px;background:#060d12;border-radius:6px;padding:10px;text-align:center">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">LOSS DAYS</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:#ff4444">${lossDays}</div>
+          </div>
+          <div style="flex:1;min-width:72px;background:#060d12;border-radius:6px;padding:10px;text-align:center">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">TRADE DAYS</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df">${winDays + lossDays}</div>
+          </div>
+        </div>
+
+        <!-- Day headers -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-bottom:4px">
+          ${dayHeaders}
+        </div>
+
+        <!-- Day cells -->
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px">
+          ${cells}
+        </div>
+
+        <!-- Day detail panel -->
+        <div id="tl-cal-detail" style="display:none;margin-top:16px;background:#060d12;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:16px"></div>
+      </div>`;
+  }
+
+  function cNavMonth(delta){
+    _calMonth += delta;
+    if(_calMonth > 11){ _calMonth = 0; _calYear++; }
+    if(_calMonth < 0) { _calMonth = 11; _calYear--; }
+    cRenderCalendar();
+  }
+
+  function cDayClick(dateStr){
+    const trades = jLoadTrades().filter(function(tr){ return tr.date === dateStr; });
+    const detail = document.getElementById('tl-cal-detail');
+    if(!detail) return;
+    if(!trades.length){ detail.style.display = 'none'; return; }
+
+    const totalPnl = trades.reduce(function(s,tr){ return s + tr.pnl; }, 0);
+    const pnlColor = totalPnl >= 0 ? '#00e87a' : '#ff4444';
+    const pnlSign  = totalPnl >= 0 ? '+' : '';
+
+    const rows = trades.map(function(tr){
+      const c = tr.pnl >= 0 ? '#00e87a' : '#ff4444';
+      const s = tr.pnl >= 0 ? '+' : '';
+      return `
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.04)">
+          <div>
+            <span style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${tr.symbol}</span>
+            <span style="font-family:'Space Mono',monospace;font-size:9px;color:${tr.direction==='BUY'?'#00e87a':'#ff4444'};margin-left:8px">${tr.direction}</span>
+            ${tr.tags && tr.tags.length ? `<span style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;margin-left:8px">${tr.tags.join(', ')}</span>` : ''}
+          </div>
+          <div style="font-family:'Space Mono',monospace;font-size:12px;color:${c}">${s}$${Math.abs(tr.pnl).toFixed(2)}</div>
+        </div>`;
+    }).join('');
+
+    detail.style.display = 'block';
+    detail.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">${dateStr}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:13px;color:${pnlColor}">${pnlSign}$${Math.abs(totalPnl).toFixed(2)}</div>
+      </div>
+      ${rows}`;
   }
 
   function aiReviewContent(){
@@ -961,8 +1148,9 @@ const TL = (function(){
       btn.style.borderBottom = active ? '2px solid #00e87a' : '2px solid transparent';
       pane.style.display = active ? 'block' : 'none';
     });
-    if(id === 'journal') jRenderList();
-    if(id === 'stats')   sRenderStats();
+    if(id === 'journal')  jRenderList();
+    if(id === 'stats')    sRenderStats();
+    if(id === 'calendar') cRenderCalendar();
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────
@@ -1026,6 +1214,8 @@ const TL = (function(){
     deleteTrade:  jDeleteTrade,
     _exportCsv:   jExportCsv,
     sRenderStats: sRenderStats,
+    _calNav:      cNavMonth,
+    _calDay:      cDayClick,
   };
 
 })();
