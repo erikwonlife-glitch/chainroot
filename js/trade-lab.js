@@ -15,23 +15,13 @@ const TL = (function(){
   const JOURNAL_KEY = 'dfm_journal_v1';
   let _jDir = 'BUY';
 
-  // ── SIGNALS STATE ─────────────────────────────────────────────────────────
+  // ── TV ACCESS STATE ───────────────────────────────────────────────────────
 
-  let _sigData     = [];
-  let _sigTf       = 'ALL';
-  let _sigInterval = null;
-  let _sigCountdown = 60;
-
-  const SIG_META = {
-    GOLDEN_DOT:   { color: '#f0c040', label: '🟡 GOLDEN DOT',   banner: false },
-    PINK_DOT:     { color: '#ff69b4', label: '🩷 PINK DOT',      banner: false },
-    STRONG_BUY:   { color: '#00e87a', label: '💚 STRONG BUY',    banner: true  },
-    STRONG_SELL:  { color: '#ff4444', label: '❤️ STRONG SELL',   banner: true  },
-    BULL_REENTRY: { color: '#00b4d8', label: '🟢 BULL RE-ENTRY', banner: false },
-    BEAR_REENTRY: { color: '#ff6b35', label: '🔴 BEAR RE-ENTRY', banner: false },
-  };
-
-  const SIG_TFS = ['ALL','15m','45m','1H','2H','4H','1D','1W'];
+  const TV_LS_EMAIL = 'dfm_tv_email';
+  const TV_LS_USER  = 'dfm_tv_username';
+  const TV_BACKEND  = (typeof window !== 'undefined' && window.BACKEND_URL)
+    ? window.BACKEND_URL
+    : 'https://chainroot-production-b7d1.up.railway.app';
 
   // ── CALENDAR STATE ────────────────────────────────────────────────────────
 
@@ -64,163 +54,201 @@ const TL = (function(){
 
   // ── TAB CONTENT BUILDERS ─────────────────────────────────────────────────
 
-  function signalsContent(){
-    const t = tier();
-    const tfPills = SIG_TFS.map(function(tf){
-      const active = tf === 'ALL';
-      return `<button onclick="TL.setTfFilter('${tf}')" id="tl-sig-tf-${tf}"
-        style="background:${active?'rgba(0,180,216,0.15)':'transparent'};border:1px solid ${active?'#00b4d8':'rgba(255,255,255,0.1)'};border-radius:20px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:10px;color:${active?'#00b4d8':'#4a6070'};cursor:pointer;letter-spacing:1px;transition:all .15s">${tf}</button>`;
-    }).join('');
+  // ── TV ACCESS: CONTENT & LOGIC ────────────────────────────────────────────
 
+  function tvAccessContent(){
+    const inp = `width:100%;box-sizing:border-box;background:#060d12;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:10px 14px;color:#ccd8df;font-size:13px;font-family:'Space Mono',monospace;outline:none`;
+    const lbl = `display:block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px`;
     return `
       <div>
-        <!-- Header row -->
-        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df">📡 SIGNAL FEED</div>
-          <div style="display:flex;align-items:center;gap:10px">
-            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">
-              Refresh in <span id="tl-sig-countdown" style="color:#00b4d8">60</span>s
-            </span>
-            <button onclick="TL.refreshSignals()"
-              style="background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:4px 10px;font-family:'Space Mono',monospace;font-size:12px;color:#4a6070;cursor:pointer;transition:border-color .15s"
-              onmouseover="this.style.borderColor='#00b4d8'" onmouseout="this.style.borderColor='rgba(0,180,216,0.2)'">↻</button>
+        <div style="margin-bottom:20px">
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📺 TRADINGVIEW ACCESS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px">Register your details to receive indicator access</div>
+        </div>
+
+        <!-- How it works -->
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px">
+          <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.1);border-radius:8px;padding:14px">
+            <div style="font-family:'Space Mono',monospace;font-size:18px;margin-bottom:8px">1️⃣</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;letter-spacing:1px;margin-bottom:4px">UPGRADE</div>
+            <div style="font-size:11px;color:#4a6070;line-height:1.5">Upgrade to Pro or Elite on DeFiMongo</div>
+          </div>
+          <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.1);border-radius:8px;padding:14px">
+            <div style="font-family:'Space Mono',monospace;font-size:18px;margin-bottom:8px">2️⃣</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;letter-spacing:1px;margin-bottom:4px">REGISTER</div>
+            <div style="font-size:11px;color:#4a6070;line-height:1.5">Submit your email and TradingView username below</div>
+          </div>
+          <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.1);border-radius:8px;padding:14px">
+            <div style="font-family:'Space Mono',monospace;font-size:18px;margin-bottom:8px">3️⃣</div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;letter-spacing:1px;margin-bottom:4px">GET ACCESS</div>
+            <div style="font-size:11px;color:#4a6070;line-height:1.5">We'll invite your TradingView account within 24h</div>
           </div>
         </div>
 
-        <!-- 48h delay banner (free tier) -->
-        ${t < 2 ? `
-        <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:11px;color:#ff6b35">
-          ⏰ 48-hour delay active — upgrade to Pro for live signals
-        </div>` : ''}
-
-        <!-- Timeframe filter pills -->
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
-          ${tfPills}
+        <!-- Dynamic body (form or status card) -->
+        <div id="tl-tv-body">
+          <!-- Form -->
+          <div id="tl-tv-form" style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;padding:24px">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:16px">
+              <div>
+                <label style="${lbl}">Email Address</label>
+                <input id="tl-tv-email" type="email" placeholder="your@email.com" style="${inp}"
+                  onfocus="this.style.borderColor='#00b4d8'" onblur="this.style.borderColor='rgba(0,180,216,0.2)'"/>
+              </div>
+              <div>
+                <label style="${lbl}">TradingView Username</label>
+                <input id="tl-tv-user" type="text" placeholder="your_tv_username" style="${inp}"
+                  onfocus="this.style.borderColor='#00b4d8'" onblur="this.style.borderColor='rgba(0,180,216,0.2)'"/>
+              </div>
+            </div>
+            <div id="tl-tv-err" style="display:none;font-family:'Space Mono',monospace;font-size:11px;color:#ff4444;margin-bottom:12px"></div>
+            <button onclick="TL.tvSubmit()"
+              style="background:#00e87a;color:#000;border:none;border-radius:8px;padding:14px;width:100%;font-family:'Space Mono',monospace;font-size:11px;font-weight:700;letter-spacing:2px;cursor:pointer;transition:opacity .15s"
+              onmouseover="this.style.opacity='.85'" onmouseout="this.style.opacity='1'">
+              SUBMIT REQUEST
+            </button>
+          </div>
+          <!-- Status card rendered by tvRenderStatus() -->
+          <div id="tl-tv-status" style="display:none"></div>
         </div>
-
-        <!-- Signal list -->
-        <div id="tl-sig-list" style="max-height:500px;overflow-y:auto"></div>
       </div>`;
   }
 
-  // ── SIGNALS: FETCH & RENDER ───────────────────────────────────────────────
-
-  function sFetchSignals(){
-    const t    = tier();
-    const base = (typeof window !== 'undefined' && window.BACKEND_URL)
-      ? window.BACKEND_URL
-      : 'https://chainroot-production-b7d1.up.railway.app';
-    const url  = base + '/api/signals' + (t < 2 ? '?delay=true' : '');
-    fetch(url)
-      .then(function(r){ return r.json(); })
-      .then(function(data){ _sigData = data.signals || []; sRenderSignals(); })
-      .catch(function(){ sRenderSignals(); });
+  function tvFmtDate(d){
+    if(!d) return '—';
+    return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
   }
 
-  function sTimeAgo(ms){
-    const diff = Date.now() - ms;
-    const m = Math.floor(diff / 60000);
-    if(m < 1)  return 'just now';
-    if(m < 60) return m + 'm ago';
-    const h = Math.floor(m / 60);
-    if(h < 24) return h + 'h ago';
-    return Math.floor(h / 24) + 'd ago';
-  }
+  function tvRenderStatus(data){
+    const formEl   = document.getElementById('tl-tv-form');
+    const statusEl = document.getElementById('tl-tv-status');
+    if(!statusEl) return;
 
-  function sRenderSignals(){
-    const listEl = document.getElementById('tl-sig-list');
-    if(!listEl) return;
-
-    const filtered = _sigTf === 'ALL'
-      ? _sigData
-      : _sigData.filter(function(s){ return s.tf === _sigTf; });
-
-    if(!filtered.length){
-      listEl.innerHTML = `<div style="text-align:center;padding:48px 0;font-family:'Space Mono',monospace;font-size:13px;color:#4a6070">📭 No signals yet. Waiting for TradingView alerts...</div>`;
+    if(!data || !data.found){
+      if(formEl) formEl.style.display = 'block';
+      statusEl.style.display = 'none';
       return;
     }
 
-    listEl.innerHTML = filtered.map(function(s){
-      const meta   = SIG_META[s.type] || { color: '#4a6070', label: s.type, banner: false };
-      const color  = meta.color;
-      const ago    = sTimeAgo(s.receivedAt);
-      const priceStr = s.price != null ? '$' + Number(s.price).toLocaleString() : '—';
-      const tfBadge  = s.tf ? `<span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:2px 8px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${s.tf}</span>` : '';
+    if(formEl) formEl.style.display = 'none';
+    statusEl.style.display = 'block';
 
-      if(meta.banner){
-        return `
-          <div style="border:1px solid ${color};border-radius:10px;padding:16px 20px;margin-bottom:10px;background:${color}18;box-shadow:0 0 20px ${color}28">
-            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-              <div>
-                <div style="font-family:'Space Mono',monospace;font-size:11px;color:${color};font-weight:700;letter-spacing:1px;margin-bottom:6px">${meta.label}</div>
-                <div style="font-family:'Space Mono',monospace;font-size:20px;color:#00b4d8;font-weight:700">${s.symbol || '—'}</div>
-              </div>
-              <div style="text-align:right">
-                <div style="font-family:'Space Mono',monospace;font-size:18px;color:#ccd8df;margin-bottom:6px">${priceStr}</div>
-                <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-                  ${tfBadge}
-                  <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${ago}</span>
-                </div>
-              </div>
-            </div>
-          </div>`;
-      }
+    const STATUS_CFG = {
+      pending:  { color: '#00b4d8', icon: '⏳', label: 'PENDING ACTIVATION',  msg: 'Your request has been received. We\'ll invite your TradingView account within 24 hours of payment confirmation.' },
+      active:   { color: '#00e87a', icon: '✅', label: 'ACCESS ACTIVE',        msg: 'You have access to the DeFiMongo TradingView indicator.' },
+      expired:  { color: '#ff4444', icon: '❌', label: 'ACCESS EXPIRED',       msg: 'Your membership has expired. Renew your subscription to restore access.' },
+      revoked:  { color: '#4a6070', icon: '🚫', label: 'ACCESS REVOKED',       msg: 'Your access has been revoked. Contact support if you believe this is an error.' },
+    };
+    const cfg = STATUS_CFG[data.status] || STATUS_CFG.pending;
+    const color = cfg.color;
 
-      return `
-        <div style="border-left:3px solid ${color};border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:8px;background:#0a1520;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
-          <div>
-            <div style="font-family:'Space Mono',monospace;font-size:10px;color:${color};letter-spacing:1px;margin-bottom:4px">${meta.label}</div>
-            <div style="font-family:'Space Mono',monospace;font-size:14px;color:#00b4d8;font-weight:700">${s.symbol || '—'}</div>
+    // Days remaining bar
+    let daysHtml = '';
+    if(data.status === 'active' && data.membershipEnd){
+      const total = new Date(data.membershipEnd) - new Date(data.membershipStart || data.membershipEnd);
+      const used  = Date.now() - new Date(data.membershipStart || data.membershipEnd);
+      const pct   = Math.max(0, Math.min(100, (used / total) * 100)).toFixed(1);
+      const barColor = pct > 85 ? '#ff4444' : pct > 60 ? '#f4c542' : '#00e87a';
+      const left = data.daysLeft !== null ? data.daysLeft : '—';
+      daysHtml = `
+        <div style="margin-top:16px">
+          <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-bottom:6px">
+            <span>MEMBERSHIP PERIOD</span>
+            <span style="color:${barColor}">${left} days remaining</span>
           </div>
-          <div style="text-align:right">
-            <div style="font-family:'Space Mono',monospace;font-size:13px;color:#ccd8df;margin-bottom:4px">${priceStr}</div>
-            <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
-              ${tfBadge}
-              <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${ago}</span>
-            </div>
+          <div style="background:rgba(255,255,255,0.06);border-radius:3px;height:6px">
+            <div style="width:${pct}%;background:${barColor};border-radius:3px;height:100%;transition:width .5s"></div>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;margin-top:4px">
+            <span>${tvFmtDate(data.membershipStart)}</span>
+            <span>${tvFmtDate(data.membershipEnd)}</span>
           </div>
         </div>`;
-    }).join('');
+    }
+
+    statusEl.innerHTML = `
+      <div style="background:#0a1520;border:1px solid ${color}44;border-radius:12px;padding:24px;margin-bottom:16px">
+        <div style="display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+          <span style="font-size:24px">${cfg.icon}</span>
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:13px;color:${color};font-weight:700;letter-spacing:1px">${cfg.label}</div>
+            <div style="font-size:11px;color:#4a6070;margin-top:2px;line-height:1.5">${cfg.msg}</div>
+          </div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px">
+          <div style="background:#060d12;border-radius:6px;padding:10px">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">EMAIL</div>
+            <div style="font-size:11px;color:#ccd8df;word-break:break-all">${data.email || localStorage.getItem(TV_LS_EMAIL) || '—'}</div>
+          </div>
+          <div style="background:#060d12;border-radius:6px;padding:10px">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">TRADINGVIEW</div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;color:#00b4d8;font-weight:700">@${data.tvUsername || '—'}</div>
+          </div>
+          <div style="background:#060d12;border-radius:6px;padding:10px">
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-bottom:4px">TIER</div>
+            <div style="font-family:'Space Mono',monospace;font-size:12px;color:${tierColor()};font-weight:700">${data.tierName || tierName()}</div>
+          </div>
+        </div>
+        ${daysHtml}
+        <button onclick="TL.tvReset()"
+          style="margin-top:16px;background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;padding:8px 16px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;cursor:pointer;transition:border-color .15s"
+          onmouseover="this.style.borderColor='#00b4d8'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)'">
+          UPDATE DETAILS
+        </button>
+      </div>`;
   }
 
-  function sSetTfFilter(tf){
-    _sigTf = tf;
-    SIG_TFS.forEach(function(t){
-      const btn = document.getElementById('tl-sig-tf-' + t);
-      if(!btn) return;
-      const active = t === tf;
-      btn.style.background  = active ? 'rgba(0,180,216,0.15)' : 'transparent';
-      btn.style.borderColor = active ? '#00b4d8' : 'rgba(255,255,255,0.1)';
-      btn.style.color       = active ? '#00b4d8' : '#4a6070';
-    });
-    sRenderSignals();
+  function tvLoadStatus(){
+    const email = localStorage.getItem(TV_LS_EMAIL);
+    if(!email){ tvRenderStatus(null); return; }
+    // Pre-fill form in case user wants to update
+    const formEmail = document.getElementById('tl-tv-email');
+    const formUser  = document.getElementById('tl-tv-user');
+    if(formEmail) formEmail.value = email;
+    if(formUser)  formUser.value  = localStorage.getItem(TV_LS_USER) || '';
+    // Fetch live status
+    fetch(TV_BACKEND + '/api/tv-access/status?email=' + encodeURIComponent(email))
+      .then(function(r){ return r.json(); })
+      .then(function(d){ d.email = email; tvRenderStatus(d); })
+      .catch(function(){ tvRenderStatus(null); });
   }
 
-  function sStartCountdown(){
-    if(_sigInterval) clearInterval(_sigInterval);
-    _sigCountdown = 60;
-    const el = document.getElementById('tl-sig-countdown');
-    if(el) el.textContent = _sigCountdown;
-    _sigInterval = setInterval(function(){
-      _sigCountdown--;
-      const cdEl = document.getElementById('tl-sig-countdown');
-      if(cdEl) cdEl.textContent = _sigCountdown;
-      if(_sigCountdown <= 0){
-        _sigCountdown = 60;
-        if(cdEl) cdEl.textContent = _sigCountdown;
-        sFetchSignals();
-      }
-    }, 1000);
+  function tvSubmit(){
+    const emailEl = document.getElementById('tl-tv-email');
+    const userEl  = document.getElementById('tl-tv-user');
+    const errEl   = document.getElementById('tl-tv-err');
+    const email   = (emailEl ? emailEl.value : '').trim();
+    const tvUser  = (userEl  ? userEl.value  : '').trim();
+    if(!email || !tvUser){
+      if(errEl){ errEl.textContent = 'Both fields are required.'; errEl.style.display = 'block'; }
+      return;
+    }
+    if(errEl) errEl.style.display = 'none';
+    const btn = document.querySelector('#tl-tv-form button');
+    if(btn){ btn.textContent = 'SUBMITTING...'; btn.disabled = true; }
+    fetch(TV_BACKEND + '/api/tv-access', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ email, tvUsername: tvUser, tier: tier(), tierName: tierName() }),
+    })
+      .then(function(r){ return r.json(); })
+      .then(function(d){
+        localStorage.setItem(TV_LS_EMAIL, email.toLowerCase());
+        localStorage.setItem(TV_LS_USER,  tvUser);
+        if(typeof toast === 'function') toast('Request submitted!', '#00e87a');
+        tvLoadStatus();
+      })
+      .catch(function(){
+        if(errEl){ errEl.textContent = 'Network error. Please try again.'; errEl.style.display = 'block'; }
+        if(btn){ btn.textContent = 'SUBMIT REQUEST'; btn.disabled = false; }
+      });
   }
 
-  function sInitSignals(){
-    sFetchSignals();
-    sStartCountdown();
-  }
-
-  function sRefreshSignals(){
-    sFetchSignals();
-    sStartCountdown();
+  function tvReset(){
+    const formEl   = document.getElementById('tl-tv-form');
+    const statusEl = document.getElementById('tl-tv-status');
+    if(formEl)   formEl.style.display   = 'block';
+    if(statusEl) statusEl.style.display = 'none';
   }
 
   // ── JOURNAL: STORAGE ─────────────────────────────────────────────────────
@@ -1289,7 +1317,7 @@ const TL = (function(){
   // ── TAB CONFIG ────────────────────────────────────────────────────────────
 
   const TABS = [
-    { id: 'signals',   label: 'SIGNALS',   build: signalsContent  },
+    { id: 'signals',   label: 'TV ACCESS', build: tvAccessContent },
     { id: 'journal',   label: 'JOURNAL',   build: journalContent  },
     { id: 'risk',      label: 'RISK CALC', build: riskContent     },
     { id: 'stats',     label: 'STATS',     build: statsContent    },
@@ -1309,7 +1337,7 @@ const TL = (function(){
       btn.style.borderBottom = active ? '2px solid #00e87a' : '2px solid transparent';
       pane.style.display = active ? 'block' : 'none';
     });
-    if(id === 'signals')  sInitSignals();
+    if(id === 'signals')  tvLoadStatus();
     if(id === 'journal')  jRenderList();
     if(id === 'stats')    sRenderStats();
     if(id === 'calendar') cRenderCalendar();
@@ -1375,11 +1403,11 @@ const TL = (function(){
     saveTrade:    jSaveTrade,
     deleteTrade:  jDeleteTrade,
     _exportCsv:   jExportCsv,
-    sRenderStats:   sRenderStats,
-    setTfFilter:    sSetTfFilter,
-    refreshSignals: sRefreshSignals,
-    _calNav:        cNavMonth,
-    _calDay:        cDayClick,
+    sRenderStats: sRenderStats,
+    tvSubmit:     tvSubmit,
+    tvReset:      tvReset,
+    _calNav:      cNavMonth,
+    _calDay:      cDayClick,
   };
 
 })();

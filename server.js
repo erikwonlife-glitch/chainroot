@@ -8,8 +8,68 @@ const app    = express();
 const PORT   = process.env.PORT || 8080;
 const FH_KEY = process.env.FINNHUB_KEY || '';
 
-// ── SIGNALS STORE ─────────────────────────────────────────────────────────────
-const SIGNALS = [];
+// ── TV ACCESS — DATABASE ──────────────────────────────────────────────────────
+const TV_REGISTRATIONS = []; // in-memory fallback when MONGODB_URI not set
+let _tvClient = null;
+let _tvCol    = null;
+
+async function getTvCol() {
+  if (!process.env.MONGODB_URI) return null;
+  if (_tvCol) return _tvCol;
+  try {
+    const { MongoClient } = require('mongodb');
+    _tvClient = new MongoClient(process.env.MONGODB_URI);
+    await _tvClient.connect();
+    _tvCol = _tvClient.db('defimongo').collection('tv_access');
+    await _tvCol.createIndex({ email: 1 }, { unique: true });
+    console.log('[MongoDB] Connected — tv_access collection ready');
+    return _tvCol;
+  } catch(e) {
+    console.warn('[MongoDB] Connection failed:', e.message);
+    return null;
+  }
+}
+
+function tvCalcStatus(reg) {
+  if (!reg) return null;
+  if (reg.status === 'active' && reg.membershipEnd && new Date(reg.membershipEnd) < new Date()) {
+    return 'expired';
+  }
+  return reg.status || 'pending';
+}
+
+function tvDaysLeft(date) {
+  if (!date) return null;
+  return Math.ceil((new Date(date) - new Date()) / 86400000);
+}
+
+async function tvFind(email) {
+  const col = await getTvCol();
+  if (col) return col.findOne({ email });
+  return TV_REGISTRATIONS.find(function(r){ return r.email === email; }) || null;
+}
+
+async function tvUpsert(email, fields) {
+  const col = await getTvCol();
+  if (col) {
+    await col.updateOne({ email }, { $set: fields }, { upsert: true });
+    return col.findOne({ email });
+  }
+  const idx = TV_REGISTRATIONS.findIndex(function(r){ return r.email === email; });
+  if (idx >= 0) {
+    TV_REGISTRATIONS[idx] = Object.assign({}, TV_REGISTRATIONS[idx], fields);
+    return TV_REGISTRATIONS[idx];
+  }
+  const doc = Object.assign({ email }, fields);
+  TV_REGISTRATIONS.push(doc);
+  return doc;
+}
+
+async function tvAll() {
+  const col = await getTvCol();
+  if (col) return col.find({}).sort({ submittedAt: -1 }).toArray();
+  return TV_REGISTRATIONS.slice().reverse();
+}
 
 // ── TIMEOUT-SAFE FETCH — node-fetch v2 ignores {timeout}, use AbortController ─
 function fetchT(url, options, ms) {
@@ -1056,32 +1116,289 @@ app.get('/api/fred/liquidity', async function(req, res) {
   } catch(e) { res.status(502).json({ error: e.message }); }
 });
 
-// ── SIGNALS ───────────────────────────────────────────────────────────────────
+// ── TV ACCESS — ROUTES ────────────────────────────────────────────────────────
 
-// POST /api/signals/webhook — receives alerts from TradingView Pine Script
-app.post('/api/signals/webhook', function(req, res) {
-  const secret   = req.headers['x-webhook-secret'];
+function tvAdminAuth(req, res) {
+  const secret   = req.query.secret || req.headers['x-admin-secret'];
   const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
   if (!secret || secret !== expected) {
-    return res.status(401).json({ error: 'Unauthorized' });
+    res.status(401).json({ error: 'Unauthorized' });
+    return false;
   }
-  const { type, symbol, price, tf, time } = req.body || {};
-  const signal = {
-    id:         Date.now() + '' + Math.floor(Math.random() * 9000 + 1000),
-    type, symbol, price, tf, time,
-    receivedAt: Date.now(),
+  return true;
+}
+
+// POST /api/tv-access — submit or update registration
+app.post('/api/tv-access', async function(req, res) {
+  const { email, tvUsername, tier, tierName } = req.body || {};
+  if (!email || !tvUsername) return res.status(400).json({ error: 'email and tvUsername required' });
+  const clean = email.toLowerCase().trim();
+  const existing = await tvFind(clean);
+  const fields = {
+    tvUsername: tvUsername.trim(),
+    tier:       tier     || 1,
+    tierName:   tierName || 'FREE',
+    submittedAt: existing ? existing.submittedAt : new Date(),
+    updatedAt:   new Date(),
+    status:      existing ? existing.status : 'pending',
+    membershipStart: existing ? existing.membershipStart : null,
+    membershipEnd:   existing ? existing.membershipEnd   : null,
   };
-  SIGNALS.unshift(signal);
-  if (SIGNALS.length > 200) SIGNALS.length = 200;
+  const saved = await tvUpsert(clean, fields);
+  res.json({ ok: true, status: tvCalcStatus(saved) });
+});
+
+// GET /api/tv-access/status?email=
+app.get('/api/tv-access/status', async function(req, res) {
+  const email = (req.query.email || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const reg = await tvFind(email);
+  if (!reg) return res.json({ found: false });
+  const status = tvCalcStatus(reg);
+  // Auto-persist expired status
+  if (status !== reg.status) {
+    await tvUpsert(email, { status });
+  }
+  res.json({
+    found: true, status,
+    tvUsername:      reg.tvUsername,
+    tier:            reg.tier,
+    tierName:        reg.tierName,
+    submittedAt:     reg.submittedAt,
+    membershipStart: reg.membershipStart,
+    membershipEnd:   reg.membershipEnd,
+    daysLeft:        tvDaysLeft(reg.membershipEnd),
+  });
+});
+
+// POST /api/tv-access/admin/activate?secret=&email=  (30 days from today)
+app.post('/api/tv-access/admin/activate', async function(req, res) {
+  if (!tvAdminAuth(req, res)) return;
+  const email = (req.query.email || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const start = new Date();
+  const end   = new Date(start.getTime() + 30 * 86400000);
+  await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+  res.json({ ok: true, membershipStart: start, membershipEnd: end });
+});
+
+// POST /api/tv-access/admin/extend?secret=&email=  (+30 days from current end or today)
+app.post('/api/tv-access/admin/extend', async function(req, res) {
+  if (!tvAdminAuth(req, res)) return;
+  const email = (req.query.email || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const reg  = await tvFind(email);
+  const base = (reg && reg.membershipEnd && new Date(reg.membershipEnd) > new Date())
+    ? new Date(reg.membershipEnd) : new Date();
+  const end  = new Date(base.getTime() + 30 * 86400000);
+  const start = (reg && reg.membershipStart) ? reg.membershipStart : new Date();
+  await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+  res.json({ ok: true, membershipEnd: end });
+});
+
+// POST /api/tv-access/admin/revoke?secret=&email=
+app.post('/api/tv-access/admin/revoke', async function(req, res) {
+  if (!tvAdminAuth(req, res)) return;
+  const email = (req.query.email || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'email required' });
+  await tvUpsert(email, { status: 'revoked', membershipEnd: new Date() });
   res.json({ ok: true });
 });
 
-// GET /api/signals — returns stored signals, optionally delay-filtered
-app.get('/api/signals', function(req, res) {
-  const delay = req.query.delay === 'true';
-  const cutoff = Date.now() - 48 * 60 * 60 * 1000;
-  const filtered = delay ? SIGNALS.filter(function(s) { return s.receivedAt < cutoff; }) : SIGNALS;
-  res.json({ signals: filtered.slice(0, 50), total: SIGNALS.length });
+// GET /api/tv-access/admin/data?secret=  (JSON data for admin page)
+app.get('/api/tv-access/admin/data', async function(req, res) {
+  if (!tvAdminAuth(req, res)) return;
+  const all = await tvAll();
+  const rows = all.map(function(r) {
+    const status = tvCalcStatus(r);
+    return {
+      email:           r.email,
+      tvUsername:      r.tvUsername,
+      tier:            r.tier,
+      tierName:        r.tierName,
+      status,
+      submittedAt:     r.submittedAt,
+      membershipStart: r.membershipStart,
+      membershipEnd:   r.membershipEnd,
+      daysLeft:        tvDaysLeft(r.membershipEnd),
+    };
+  });
+  const summary = {
+    total:    rows.length,
+    active:   rows.filter(function(r){ return r.status === 'active'; }).length,
+    expiring: rows.filter(function(r){ return r.status === 'active' && r.daysLeft !== null && r.daysLeft <= 7; }).length,
+    pending:  rows.filter(function(r){ return r.status === 'pending'; }).length,
+    expired:  rows.filter(function(r){ return r.status === 'expired' || r.status === 'revoked'; }).length,
+  };
+  res.json({ summary, rows });
+});
+
+// GET /admin/access?secret=  (HTML admin dashboard)
+app.get('/admin/access', function(req, res) {
+  const secret = req.query.secret || '';
+  const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
+  if (!secret || secret !== expected) {
+    return res.status(401).send('<h2 style="font-family:monospace;color:red">401 Unauthorized</h2>');
+  }
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DeFiMongo — TV Access Admin</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#030a0f;color:#ccd8df;font-family:'Space Mono',monospace;padding:24px;min-height:100vh}
+  h1{font-size:20px;color:#fff;margin-bottom:4px}
+  .sub{font-size:10px;color:#4a6070;letter-spacing:1px;margin-bottom:24px}
+  .cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
+  .card{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:10px;padding:16px 20px;flex:1;min-width:100px;text-align:center}
+  .card .val{font-size:26px;font-weight:700;margin-bottom:4px}
+  .card .lbl{font-size:9px;color:#4a6070;letter-spacing:1px}
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{font-size:9px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap}
+  td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+  tr:hover td{background:rgba(255,255,255,0.02)}
+  .badge{display:inline-block;border-radius:4px;padding:3px 8px;font-size:9px;letter-spacing:1px;font-weight:700}
+  .s-active{background:rgba(0,232,122,0.15);color:#00e87a;border:1px solid rgba(0,232,122,0.3)}
+  .s-expiring{background:rgba(244,197,66,0.15);color:#f4c542;border:1px solid rgba(244,197,66,0.3)}
+  .s-pending{background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25)}
+  .s-expired{background:rgba(255,68,68,0.12);color:#ff4444;border:1px solid rgba(255,68,68,0.25)}
+  .s-revoked{background:rgba(100,100,100,0.15);color:#4a6070;border:1px solid rgba(255,255,255,0.08)}
+  .btn{border:none;border-radius:5px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .15s}
+  .btn:hover{opacity:.8}
+  .btn-activate{background:#00e87a;color:#000}
+  .btn-extend{background:#00b4d8;color:#000}
+  .btn-revoke{background:#ff4444;color:#fff}
+  .wrap{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;overflow:auto}
+  .empty{text-align:center;padding:48px;color:#4a6070;font-size:13px}
+  .refresh{background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:6px 14px;color:#ccd8df;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;float:right}
+  .refresh:hover{border-color:#00b4d8}
+  .toast{position:fixed;bottom:24px;right:24px;background:#0a1520;border:1px solid rgba(0,232,122,0.4);border-radius:8px;padding:12px 20px;font-size:11px;color:#00e87a;opacity:0;transition:opacity .3s;pointer-events:none}
+  .tv{color:#00b4d8;font-weight:700}
+  .days-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:4px;width:120px}
+  .days-fill{height:100%;border-radius:2px}
+</style>
+</head>
+<body>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:8px">
+  <div>
+    <h1>📺 TV ACCESS ADMIN</h1>
+    <div class="sub">DEFIMONGO · TRADINGVIEW INDICATOR MANAGEMENT</div>
+  </div>
+  <button class="refresh" onclick="load()">↻ REFRESH</button>
+</div>
+
+<div class="cards" id="summary-cards">
+  <div class="card"><div class="val" id="s-total">—</div><div class="lbl">TOTAL</div></div>
+  <div class="card"><div class="val" style="color:#00e87a" id="s-active">—</div><div class="lbl">ACTIVE</div></div>
+  <div class="card"><div class="val" style="color:#f4c542" id="s-expiring">—</div><div class="lbl">EXPIRING ≤7D</div></div>
+  <div class="card"><div class="val" style="color:#00b4d8" id="s-pending">—</div><div class="lbl">PENDING</div></div>
+  <div class="card"><div class="val" style="color:#ff4444" id="s-expired">—</div><div class="lbl">EXPIRED</div></div>
+</div>
+
+<div class="wrap">
+  <table id="members-table">
+    <thead>
+      <tr>
+        <th>TRADINGVIEW</th>
+        <th>EMAIL</th>
+        <th>TIER</th>
+        <th>STATUS</th>
+        <th>START</th>
+        <th>END</th>
+        <th>DAYS LEFT</th>
+        <th>ACTIONS</th>
+      </tr>
+    </thead>
+    <tbody id="members-body">
+      <tr><td colspan="8" class="empty">Loading...</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const SECRET = ${JSON.stringify(secret)};
+const BASE   = '';
+
+function fmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function statusBadge(row) {
+  if (row.status === 'active' && row.daysLeft !== null && row.daysLeft <= 7) {
+    return '<span class="badge s-expiring">⚠ EXPIRING</span>';
+  }
+  const map = { active:'s-active', pending:'s-pending', expired:'s-expired', revoked:'s-revoked' };
+  const labels = { active:'✓ ACTIVE', pending:'⏳ PENDING', expired:'✗ EXPIRED', revoked:'— REVOKED' };
+  const cls = map[row.status] || 's-pending';
+  return '<span class="badge '+cls+'">'+(labels[row.status]||row.status.toUpperCase())+'</span>';
+}
+
+function daysBar(row) {
+  if (!row.membershipStart || !row.membershipEnd) return '';
+  const total = new Date(row.membershipEnd) - new Date(row.membershipStart);
+  const used  = Date.now() - new Date(row.membershipStart);
+  const pct   = Math.max(0, Math.min(100, (used / total) * 100));
+  const color = pct > 85 ? '#ff4444' : pct > 60 ? '#f4c542' : '#00e87a';
+  return '<div class="days-bar"><div class="days-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+}
+
+async function action(endpoint, email) {
+  const r = await fetch('/api/tv-access/admin/'+endpoint+'?secret='+SECRET+'&email='+encodeURIComponent(email), { method:'POST' });
+  const d = await r.json();
+  if (d.ok) { showToast('Done'); load(); } else { showToast('Error: '+(d.error||'unknown'), true); }
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err ? 'rgba(255,68,68,0.4)' : 'rgba(0,232,122,0.4)';
+  t.style.color = err ? '#ff4444' : '#00e87a';
+  t.style.opacity = 1;
+  setTimeout(function(){ t.style.opacity = 0; }, 2500);
+}
+
+async function load() {
+  const r = await fetch('/api/tv-access/admin/data?secret='+SECRET);
+  const d = await r.json();
+  document.getElementById('s-total').textContent    = d.summary.total;
+  document.getElementById('s-active').textContent   = d.summary.active;
+  document.getElementById('s-expiring').textContent = d.summary.expiring;
+  document.getElementById('s-pending').textContent  = d.summary.pending;
+  document.getElementById('s-expired').textContent  = d.summary.expired;
+  const tbody = document.getElementById('members-body');
+  if (!d.rows.length) {
+    tbody.innerHTML = '<tr><td colspan="8" class="empty">No registrations yet.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = d.rows.map(function(row) {
+    const dl = row.daysLeft !== null ? (row.daysLeft <= 0 ? '<span style="color:#ff4444">Expired</span>' : row.daysLeft + ' days') : '—';
+    return '<tr>' +
+      '<td><span class="tv">@'+row.tvUsername+'</span></td>' +
+      '<td>'+row.email+'</td>' +
+      '<td>'+( row.tierName || 'FREE' )+'</td>' +
+      '<td>'+statusBadge(row)+'</td>' +
+      '<td>'+fmt(row.membershipStart)+'</td>' +
+      '<td>'+fmt(row.membershipEnd)+'</td>' +
+      '<td>'+dl+daysBar(row)+'</td>' +
+      '<td style="white-space:nowrap">' +
+        '<button class="btn btn-activate" onclick="action(\'activate\',\''+row.email+'\')">ACTIVATE</button> ' +
+        '<button class="btn btn-extend"   onclick="action(\'extend\',\''+row.email+'\')">+30D</button> ' +
+        '<button class="btn btn-revoke"   onclick="action(\'revoke\',\''+row.email+'\')">REVOKE</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+load();
+</script>
+</body>
+</html>`);
 });
 
 // ── HEALTH & ROOT ─────────────────────────────────────────────────────────────
