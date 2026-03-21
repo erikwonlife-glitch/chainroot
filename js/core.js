@@ -290,7 +290,8 @@ async function init(){
     BTC_RAW_CHART = btcChart;
     BTC_365D.prices = btcChart.prices.map(p=>p[1]);
     BTC_365D.labels = btcChart.prices.map(p=>new Date(p[0]).toLocaleDateString('en',{month:'short',day:'numeric'}));
-    BTC_CURRENT     = BTC_365D.prices[BTC_365D.prices.length-1];
+    // Only set from chart if we don't already have a live price — never overwrite Binance price with stale cache
+    if (!BTC_CURRENT || BTC_CURRENT < 1000) BTC_CURRENT = BTC_365D.prices[BTC_365D.prices.length-1];
     BTC_30D.prices  = BTC_365D.prices.slice(-30);
     BTC_30D.labels  = BTC_365D.labels.slice(-30);
     // 12 monthly samples
@@ -379,9 +380,16 @@ async function init(){
   setTimeout(init, 60000);
 }
 
-// ── FAST BTC PRICE REFRESH — every 30s via Binance, updates all chart live segs
+// ── FAST BTC PRICE REFRESH — every 30s via Railway /api/btc/price → Binance fallback
 async function refreshBTCPrice() {
-  const p = await fetchLiveBTCPrice();
+  let p = null;
+  // Try Railway endpoint first (Binance primary on server, CoinGecko fallback)
+  try {
+    const r = await fetch(`${CR_API}/api/btc/price`, {signal: AbortSignal.timeout(6000)});
+    if (r.ok) { const d = await r.json(); if (d && d.price > 1000) p = d.price; }
+  } catch(_) {}
+  // Fall back to direct Binance if Railway is slow
+  if (!p) p = await fetchLiveBTCPrice();
   if (p && p !== BTC_CURRENT) {
     BTC_CURRENT = p;
     updateAllPriceCards();

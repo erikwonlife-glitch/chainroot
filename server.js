@@ -80,6 +80,28 @@ function fetchT(url, options, ms) {
   return fetch(url, opts).finally(function() { clearTimeout(timer); });
 }
 
+// ── LIVE BTC PRICE HELPER — Binance primary, CoinGecko fallback ───────────────
+async function fetchBTCPrice() {
+  try {
+    var r = await fetchT('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {}, 5000);
+    var d = await r.json();
+    if (d && d.price) {
+      var p = parseFloat(d.price);
+      console.log('[BTC] Live price from Binance:', p);
+      return p;
+    }
+  } catch(e) { console.warn('[BTC] Binance failed:', e.message); }
+  try {
+    var r2 = await fetchT('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', {}, 8000);
+    var d2 = await r2.json();
+    if (d2 && d2.bitcoin) {
+      console.log('[BTC] Live price from CoinGecko:', d2.bitcoin.usd);
+      return d2.bitcoin.usd;
+    }
+  } catch(e2) { console.warn('[BTC] CoinGecko also failed:', e2.message); }
+  return null;
+}
+
 app.use(cors({
   origin: function(origin, callback) {
     // Allow requests with no origin (mobile apps, curl, Postman)
@@ -101,6 +123,12 @@ app.use(express.json());
 // ── CACHE ─────────────────────────────────────────────────────────────────────
 const CACHE     = {};
 const CACHE_TTL = 60 * 60 * 1000; // 1 hour default (individual endpoints override)
+
+// Nuke all cache on startup so stale data never persists across deploys
+setTimeout(function() {
+  Object.keys(CACHE).forEach(function(k) { delete CACHE[k]; });
+  console.log('[Cache] Cleared all cache on startup');
+}, 0);
 
 // ── BTC price stale-detection ─────────────────────────────────────────────────
 let _lastCgBtcPrice = 0;
@@ -400,7 +428,13 @@ app.get('/api/crypto/btcchart', async function(req, res) {
     const r = await fetchT('https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily', {}, 14000);
     if (!r.ok) return res.status(502).json({error:'CoinGecko '+r.status});
     const data = await r.json();
-    setCache('crypto/btcchart', data);
+    // Overwrite last candle with live price so charts show current price
+    const livePrice = await fetchBTCPrice();
+    if (livePrice && data && data.prices && data.prices.length) {
+      data.prices[data.prices.length - 1][1] = livePrice;
+      data.btcPrice = livePrice;
+    }
+    setCache('crypto/btcchart', data, 15 * 60 * 1000);
     res.json(data);
   } catch(e) { res.status(502).json({error:e.message}); }
 });
@@ -424,7 +458,7 @@ app.get('/api/crypto/btc-monthly', async function(req, res) {
       );
       if (!r2.ok) return res.status(502).json({error:'CoinGecko '+r.status});
       const d2 = await r2.json();
-      setCache('crypto/btc-monthly', d2);
+      setCache('crypto/btc-monthly', d2, 60 * 60 * 1000);
       return res.json(d2);
     }
     const data = await r.json();
@@ -440,10 +474,10 @@ app.get('/api/crypto/btc-monthly', async function(req, res) {
         }
       });
       const result = { prices: monthly, source: 'coingecko-monthly' };
-      setCache('crypto/btc-monthly', result);
+      setCache('crypto/btc-monthly', result, 60 * 60 * 1000);
       return res.json(result);
     }
-    setCache('crypto/btc-monthly', data);
+    setCache('crypto/btc-monthly', data, 60 * 60 * 1000);
     res.json(data);
   } catch(e) { res.status(502).json({error:e.message}); }
 });
@@ -683,7 +717,9 @@ app.get('/api/global/prices', async function(req, res) {
     })
   ]);
 
-  setCache('global/prices', out);
+  const livePrice = await fetchBTCPrice();
+  if (livePrice) out.btcPrice = livePrice;
+  setCache('global/prices', out, 60 * 1000); // 60s
   res.json(out);
 });
 
@@ -714,9 +750,14 @@ app.get('/api/crypto/btc-daily', async function(req, res) {
       return { ts: Math.floor(p[0]/1000), date: d.toISOString().slice(0,10), price: +p[1].toFixed(2) };
     });
 
-    const result = { daily: daily, count: daily.length, updated: Date.now() };
-    setCache(cacheKey, result, 15 * 60 * 1000); // 15 min — price data
-    console.log('[DataFix] btc-daily: ok, ' + daily.length + ' days, latest $' + (daily[daily.length-1] && daily[daily.length-1].price));
+    // Overwrite last candle with live Binance price
+    const livePrice = await fetchBTCPrice();
+    if (livePrice && daily.length) {
+      daily[daily.length - 1].price = +livePrice.toFixed(2);
+    }
+    const result = { daily: daily, count: daily.length, btcPrice: livePrice, updated: Date.now() };
+    setCache(cacheKey, result, 15 * 60 * 1000); // 15 min
+    console.log('[DataFix] btc-daily: ok, ' + daily.length + ' days, live price $' + (livePrice || daily[daily.length-1].price));
     res.json(result);
   } catch(e) {
     console.log('[DataFix] btc-daily: failed:', e.message);
@@ -809,7 +850,8 @@ app.get('/api/market/dxy', async function(req, res) {
       rows.push({ date: d.toISOString().slice(0, 10), price: +c.toFixed(4) });
     }
     if (!rows.length) throw new Error('No valid DXY rows');
-    const result = { daily: rows, count: rows.length, updated: Date.now() };
+    const livePrice = await fetchBTCPrice();
+    const result = { daily: rows, count: rows.length, btcPrice: livePrice, updated: Date.now() };
     setCache(cacheKey, result, 6 * 60 * 60 * 1000); // 6h — daily macro data
     console.log('[DataFix] dxy: Yahoo ok, ' + rows.length + ' days, latest ' + rows[rows.length-1].price);
     res.json(result);
@@ -1145,6 +1187,7 @@ app.get('/api/onchain/btc', async function(req, res) {
       exchangeBalance: exchangeBalance,
       exchangeChart:   exchangeChart,
       nupl:            nupl,
+      btcPrice:        await fetchBTCPrice(),
       updated:         Date.now()
     };
     setCache('onchain/btc', result, 30*60*1000);
@@ -1179,13 +1222,13 @@ app.get('/api/etf/flows', async function(req, res) {
         arkb:  d.arkb  || d.ARKB  || null,
       };
     });
-    const result = { flows, fallback: false, updated: Date.now() };
+    const livePrice = await fetchBTCPrice();
+    const result = { flows, fallback: false, btcPrice: livePrice, updated: Date.now() };
     setCache('etf/flows', result, 60 * 60 * 1000); // 1h
     console.log('[DataFix] etf/flows: CoinGlass ok, ' + flows.length + ' days');
     res.json(result);
   } catch(e) {
     console.log('[DataFix] etf/flows: CoinGlass failed:', e.message, '— using hardcoded fallback');
-    // Hardcoded recent approximate data (Mar 2024–Mar 2026 approximate averages)
     const fallbackFlows = [
       {date:'2026-03-15',total: 218,  ibit: 142, fbtc: 56,  bitb: 12,  arkb: 8},
       {date:'2026-03-14',total:-89,   ibit:-52,  fbtc:-28,  bitb:-6,   arkb:-3},
@@ -1195,8 +1238,9 @@ app.get('/api/etf/flows', async function(req, res) {
       {date:'2026-03-10',total: 156,  ibit: 95,  fbtc: 38,  bitb: 14,  arkb: 9},
       {date:'2026-03-07',total:-203,  ibit:-127, fbtc:-48,  bitb:-17,  arkb:-11},
     ];
-    const result = { flows: fallbackFlows, fallback: true, updated: Date.now() };
-    setCache('etf/flows', result, 15 * 60 * 1000); // short cache when falling back
+    const livePrice = await fetchBTCPrice();
+    const result = { flows: fallbackFlows, fallback: true, btcPrice: livePrice, updated: Date.now() };
+    setCache('etf/flows', result, 15 * 60 * 1000);
     res.json(result);
   }
 });
@@ -1246,13 +1290,15 @@ app.get('/api/fred/walcl', async function(req, res) {
       .sort(function(a, b) { return a[0] < b[0] ? -1 : 1; })
       .map(function(e) { return { date: e[0], value: e[1] }; });
     if (!series.length) throw new Error('No valid WALCL data');
-    const result = { series: series, latest: series[series.length - 1], updated: Date.now() };
+    const livePrice = await fetchBTCPrice();
+    const result = { series: series, latest: series[series.length - 1], btcPrice: livePrice, updated: Date.now() };
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     console.log('[DataFix] walcl: FRED API ok, latest', result.latest);
     res.json(result);
   } catch(e) {
     console.log('[DataFix] walcl: FRED unavailable (' + e.message + ') — serving fallback data');
-    const result = { series: WALCL_FALLBACK, latest: WALCL_FALLBACK[WALCL_FALLBACK.length-1], fallback: true, updated: Date.now() };
+    const livePrice = await fetchBTCPrice();
+    const result = { series: WALCL_FALLBACK, latest: WALCL_FALLBACK[WALCL_FALLBACK.length-1], btcPrice: livePrice, fallback: true, updated: Date.now() };
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     res.json(result);
   }
@@ -1349,6 +1395,7 @@ app.get('/api/fred/liquidity', async function(req, res) {
     result.total = totalSeries2;
     result.latestFed = finalFedSeries[finalFedSeries.length-1];
     result.fallback  = usedFallback;
+    result.btcPrice  = await fetchBTCPrice();
 
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     console.log('[DataFix] liquidity: fed=' + (result.latestFed&&result.latestFed.value) + 'T ecb=' + (result.latestEcb&&result.latestEcb.value) + 'T boj=' + (result.latestBoj&&result.latestBoj.value) + 'T');
@@ -1357,6 +1404,16 @@ app.get('/api/fred/liquidity', async function(req, res) {
     console.log('[DataFix] liquidity: failed:', e.message);
     res.status(502).json({ error: e.message });
   }
+});
+
+// ── LIVE BTC PRICE — dedicated endpoint, 30s cache ───────────────────────────
+app.get('/api/btc/price', async function(req, res) {
+  const cached = getCache('btc/price');
+  if (cached) return res.json(cached);
+  const price = await fetchBTCPrice();
+  const result = { price: price, source: 'binance', ts: Date.now() };
+  setCache('btc/price', result, 30 * 1000); // 30s cache
+  res.json(result);
 });
 
 // GENERIC ROUTES — MUST COME AFTER ALL SPECIFIC /api/crypto/* ROUTES
