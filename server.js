@@ -1128,6 +1128,28 @@ function tvAdminAuth(req, res) {
   return true;
 }
 
+// ── SIGNALS ──────────────────────────────────────────────────────────────────
+const SIGNALS = []; // in-memory; holds last 500 webhook signals
+
+// POST /api/signals/webhook — receive signal from TradingView alert
+app.post('/api/signals/webhook', function(req, res) {
+  const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
+  const provided  = req.headers['x-webhook-secret'] || '';
+  if(provided !== expected) return res.status(401).json({ error: 'unauthorized' });
+
+  const { symbol, tf, signal, price } = req.body || {};
+  if(!symbol || !tf || !signal) return res.status(400).json({ error: 'symbol, tf, signal required' });
+
+  SIGNALS.unshift({ symbol: symbol.toUpperCase(), tf, signal, price: price || null, receivedAt: Date.now() });
+  if(SIGNALS.length > 500) SIGNALS.length = 500;
+  res.json({ ok: true });
+});
+
+// GET /api/signals — return all stored signals
+app.get('/api/signals', function(req, res) {
+  res.json(SIGNALS);
+});
+
 // POST /api/tv-access — submit or update registration
 app.post('/api/tv-access', async function(req, res) {
   const { email, tvUsername, tier, tierName } = req.body || {};

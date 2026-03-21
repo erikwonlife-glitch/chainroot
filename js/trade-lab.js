@@ -1329,152 +1329,230 @@ const TL = (function(){
       ${rows}`;
   }
 
-  // ── AI REVIEW: HELPERS ────────────────────────────────────────────────────
+  // ── MARKET SCANNER ────────────────────────────────────────────────────────
 
-  const AI_KEY_LS = 'dfm_ai_key';
+  let _scanFilter    = 'ALL';
+  let _scanInterval  = null;
+  let _scanCountdown = 60;
+  let _scanLastFetch = null;
 
-  function aiErrCard(msg){
-    return `<div style="background:rgba(255,60,60,0.08);border:1px solid rgba(255,60,60,0.2);border-radius:8px;padding:16px;font-family:'Space Mono',monospace;font-size:12px;color:#ff6b6b">${msg}</div>`;
+  function scTimeAgo(ms){
+    var s = Math.floor((Date.now() - ms) / 1000);
+    if(s < 60)  return s + 's ago';
+    var m = Math.floor(s / 60);
+    if(m < 60)  return m + 'm ago';
+    var h = Math.floor(m / 60);
+    if(h < 24)  return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
   }
 
-  function aiRenderSections(text){
-    const SECS = [
-      { key: 'ASSESSMENT',      color: '#00b4d8', bg: 'rgba(0,180,216,0.06)',  border: 'rgba(0,180,216,0.2)'  },
-      { key: 'ENTRY QUALITY',   color: '#00e87a', bg: 'rgba(0,232,122,0.06)',  border: 'rgba(0,232,122,0.2)'  },
-      { key: 'RISK MANAGEMENT', color: '#ff9f43', bg: 'rgba(255,159,67,0.06)', border: 'rgba(255,159,67,0.2)' },
-      { key: 'KEY TAKEAWAY',    color: '#ffd700', bg: 'rgba(255,215,0,0.06)',  border: 'rgba(255,215,0,0.2)'  },
-    ];
-    const parsed = {};
-    SECS.forEach(function(sec, i){
-      var nextKey = SECS[i+1] ? SECS[i+1].key : null;
-      var re = new RegExp(sec.key + '[:\\s*]*([\\s\\S]*?)' + (nextKey ? '(?=' + nextKey + ')' : '$'), 'i');
-      var m = text.match(re);
-      parsed[sec.key] = m ? m[1].trim() : '';
-    });
-    if(!SECS.some(function(s){ return parsed[s.key]; })){
-      return `<div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:16px;font-family:'Space Mono',monospace;font-size:12px;color:#ccd8df;white-space:pre-wrap">${text}</div>`;
+  function scTimeSince(ms){
+    var total = Math.floor((Date.now() - ms) / 1000);
+    var w = Math.floor(total / 604800); total %= 604800;
+    var d = Math.floor(total / 86400);  total %= 86400;
+    var h = Math.floor(total / 3600);   total %= 3600;
+    var m = Math.floor(total / 60);
+    var parts = [];
+    if(w) parts.push(w + 'W');
+    if(d) parts.push(d + 'D');
+    if(h) parts.push(h + 'H');
+    if(m && parts.length < 3) parts.push(m + 'm');
+    return parts.length ? parts.join(' ') : '< 1m';
+  }
+
+  function scannerRefresh(){
+    fetch(TV_BACKEND + '/api/signals')
+      .then(function(r){ return r.json(); })
+      .then(function(signals){
+        _scanLastFetch = Date.now();
+        // Keep only 4H and 1D signals
+        var filtered = signals.filter(function(s){ return s.tf === '4H' || s.tf === '1D'; });
+        // Latest signal per symbol
+        var bySymbol = {};
+        filtered.forEach(function(s){
+          if(!bySymbol[s.symbol] || s.receivedAt > bySymbol[s.symbol].receivedAt){
+            bySymbol[s.symbol] = s;
+          }
+        });
+        // Keep only STRONG_BUY and STRONG_SELL
+        var rows = Object.values(bySymbol).filter(function(s){
+          return s.signal === 'STRONG_BUY' || s.signal === 'STRONG_SELL';
+        });
+        rows.sort(function(a, b){ return b.receivedAt - a.receivedAt; });
+        scRenderTable(rows);
+        scUpdateMeta(rows);
+      })
+      .catch(function(){ /* silent — keep stale data */ });
+  }
+
+  function scRenderTable(allRows){
+    var tableEl = document.getElementById('tl-sc-table');
+    if(!tableEl) return;
+
+    var rows = _scanFilter === 'BULLISH'
+      ? allRows.filter(function(s){ return s.signal === 'STRONG_BUY'; })
+      : _scanFilter === 'BEARISH'
+        ? allRows.filter(function(s){ return s.signal === 'STRONG_SELL'; })
+        : allRows;
+
+    if(rows.length === 0){
+      tableEl.innerHTML = `<div style="padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070;line-height:1.8">
+        No 4H/1D trend flips detected yet.<br>
+        Make sure your TradingView alerts are configured and firing to the webhook.
+      </div>`;
+      return;
     }
-    return SECS.map(function(sec){
-      return `<div style="background:${sec.bg};border:1px solid ${sec.border};border-radius:8px;padding:16px;margin-bottom:12px">
-        <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:2px;color:${sec.color};margin-bottom:8px">${sec.key}</div>
-        <div style="font-size:13px;color:#ccd8df;line-height:1.7">${parsed[sec.key] || '—'}</div>
+
+    var header = `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 100px 160px;gap:0;padding:8px 16px;background:#060d12;border-bottom:1px solid rgba(0,180,216,0.08)">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">#</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">ASSET</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">TREND</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">FLIPPED</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">PRICE</div>
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">CHART</div>
+    </div>`;
+
+    var rowsHtml = rows.map(function(s, i){
+      var bull     = s.signal === 'STRONG_BUY';
+      var accent   = bull ? '#00e87a' : '#ff4444';
+      var bg       = i % 2 === 0 ? '#0a1520' : '#060d12';
+      var trend    = bull
+        ? `<span style="background:rgba(0,232,122,0.12);color:#00e87a;border:1px solid rgba(0,232,122,0.25);border-radius:4px;padding:3px 8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">↑ BULLISH</span>`
+        : `<span style="background:rgba(255,68,68,0.12);color:#ff4444;border:1px solid rgba(255,68,68,0.25);border-radius:4px;padding:3px 8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">↓ BEARISH</span>`;
+      var price    = s.price != null ? '$' + Number(s.price).toLocaleString('en-US', {maximumFractionDigits:4}) : '—';
+      var tvUrl    = 'https://www.tradingview.com/chart/?symbol=BINANCE:' + encodeURIComponent(s.symbol);
+      var ticker   = s.symbol.replace(/USDT$|USD$/, '');
+
+      return `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 100px 160px;gap:0;padding:12px 16px;background:${bg};border-left:3px solid ${accent};border-bottom:1px solid rgba(0,180,216,0.05);align-items:center;transition:background 0.15s"
+        onmouseover="this.style.background='rgba(0,180,216,0.04)'" onmouseout="this.style.background='${bg}'">
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">${i+1}</div>
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:13px;color:#fff;font-weight:700">${ticker}</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;margin-top:2px">${s.symbol} · ${s.tf}</div>
+        </div>
+        <div>${trend}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${scTimeSince(s.receivedAt)}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${price}</div>
+        <div><a href="${tvUrl}" target="_blank" style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;text-decoration:none;letter-spacing:0.5px"
+          onmouseover="this.style.color='#ccd8df'" onmouseout="this.style.color='#00b4d8'">Open in TradingView ↗</a></div>
       </div>`;
     }).join('');
+
+    tableEl.innerHTML = header + rowsHtml;
   }
 
-  function aiAnalyze(){
-    var trades = jLoadTrades();
-    var selEl  = document.getElementById('tl-ai-select');
-    var keyEl  = document.getElementById('tl-ai-key');
-    var btnEl  = document.getElementById('tl-ai-btn');
-    var resEl  = document.getElementById('tl-ai-results');
-    if(!selEl || !keyEl || !resEl) return;
+  function scUpdateMeta(rows){
+    var bullCount  = rows.filter(function(s){ return s.signal === 'STRONG_BUY';  }).length;
+    var bearCount  = rows.filter(function(s){ return s.signal === 'STRONG_SELL'; }).length;
+    var totalEl    = document.getElementById('tl-sc-total');
+    var bullEl     = document.getElementById('tl-sc-bull');
+    var bearEl     = document.getElementById('tl-sc-bear');
+    var lastEl     = document.getElementById('tl-sc-last');
+    if(totalEl) totalEl.textContent = rows.length;
+    if(bullEl)  bullEl.textContent  = bullCount;
+    if(bearEl)  bearEl.textContent  = bearCount;
+    if(lastEl)  lastEl.textContent  = _scanLastFetch ? scTimeAgo(_scanLastFetch) : '—';
+  }
 
-    var apiKey = keyEl.value.trim();
-    if(!apiKey){ resEl.innerHTML = aiErrCard('Enter your Anthropic API key.'); return; }
-
-    var idx = parseInt(selEl.value, 10);
-    if(isNaN(idx) || !trades[idx]){ resEl.innerHTML = aiErrCard('Select a trade to analyze.'); return; }
-
-    var tr = trades[idx];
-    try { localStorage.setItem(AI_KEY_LS, apiKey); } catch(e){}
-
-    var summary = [
-      'Symbol: '        + (tr.symbol    || 'Unknown'),
-      'Direction: '     + tr.direction,
-      'Date: '          + tr.date,
-      'Entry Price: '   + (tr.entry     || 'N/A'),
-      'Exit Price: '    + (tr.exit      || 'N/A'),
-      'Position Size: ' + (tr.size      || 'N/A'),
-      'P&L: '           + (tr.pnl !== undefined ? tr.pnl.toFixed(2) + '%' : 'N/A'),
-      'Trade Type: '    + (tr.tag       || 'N/A'),
-      tr.notes ? 'Notes: ' + tr.notes : null,
-    ].filter(Boolean).join('\n');
-
-    btnEl.disabled    = true;
-    btnEl.textContent = 'ANALYZING...';
-    resEl.innerHTML   = '';
-
-    fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type':                              'application/json',
-        'x-api-key':                                 apiKey,
-        'anthropic-version':                         '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true',
-      },
-      body: JSON.stringify({
-        model:      'claude-sonnet-4-20250514',
-        max_tokens: 1000,
-        system:     'You are an expert crypto trading coach. Structure response with: ASSESSMENT, ENTRY QUALITY, RISK MANAGEMENT, KEY TAKEAWAY. Each section 2-3 sentences max.',
-        messages:   [{ role: 'user', content: 'Analyze this trade:\n\n' + summary }],
-      }),
-    })
-    .then(function(r){ return r.json(); })
-    .then(function(data){
-      btnEl.disabled    = false;
-      btnEl.textContent = 'ANALYZE TRADE';
-      if(data.error){ resEl.innerHTML = aiErrCard(data.error.message); return; }
-      var text = data.content && data.content[0] && data.content[0].text;
-      if(!text){ resEl.innerHTML = aiErrCard('No response received.'); return; }
-      resEl.innerHTML = aiRenderSections(text);
-    })
-    .catch(function(err){
-      btnEl.disabled    = false;
-      btnEl.textContent = 'ANALYZE TRADE';
-      resEl.innerHTML   = aiErrCard(err.message || 'Request failed.');
+  function scSetFilter(f){
+    _scanFilter = f;
+    ['ALL','BULLISH','BEARISH'].forEach(function(k){
+      var el = document.getElementById('tl-sc-f-' + k.toLowerCase());
+      if(!el) return;
+      var active = k === f;
+      el.style.background    = active ? '#00b4d8' : 'transparent';
+      el.style.color         = active ? '#060d12' : '#4a6070';
+      el.style.borderColor   = active ? '#00b4d8' : 'rgba(0,180,216,0.2)';
     });
+    // Re-render table with current data (no re-fetch needed)
+    fetch(TV_BACKEND + '/api/signals')
+      .then(function(r){ return r.json(); })
+      .then(function(signals){
+        var filtered = signals.filter(function(s){ return s.tf === '4H' || s.tf === '1D'; });
+        var bySymbol = {};
+        filtered.forEach(function(s){
+          if(!bySymbol[s.symbol] || s.receivedAt > bySymbol[s.symbol].receivedAt) bySymbol[s.symbol] = s;
+        });
+        var rows = Object.values(bySymbol).filter(function(s){
+          return s.signal === 'STRONG_BUY' || s.signal === 'STRONG_SELL';
+        });
+        rows.sort(function(a, b){ return b.receivedAt - a.receivedAt; });
+        scRenderTable(rows);
+      })
+      .catch(function(){});
   }
 
-  // ── AI REVIEW: CONTENT ────────────────────────────────────────────────────
+  function scStartTimer(){
+    if(_scanInterval) clearInterval(_scanInterval);
+    _scanCountdown = 60;
+    _scanInterval  = setInterval(function(){
+      _scanCountdown--;
+      var el = document.getElementById('tl-sc-countdown');
+      if(el) el.textContent = _scanCountdown + 's';
+      if(_scanCountdown <= 0){
+        _scanCountdown = 60;
+        scannerRefresh();
+      }
+    }, 1000);
+  }
 
-  function aiReviewContent(){
+  function scannerContent(){
     const tlvl = tier();
-    const disc = tlDisclaimer('Хиймэл оюун ухаан таны арилжааны тэмдэглэлийг шинжилж, алдаа болон давуу талыг тодорхойлно. Арилжаа бүрийн эрсдэл, орох цэг, гарах цэгийн зөв байдлыг AI-аар үнэлүүлж, хурдан хугацаанд дэвших боломжтой. Elite гишүүнчлэл шаардлагатай.', 'tradelab-ai');
+    const disc = tlDisclaimer('4H болон 1D хүрээн дэх хамгийн сүүлийн тренд эргэлтүүдийг харуулна. STRONG_BUY болон STRONG_SELL дохионоор тренд эргэлтийг тодорхойлно. Elite гишүүнчлэл шаардлагатай.', 'tradelab-ai');
     if(tlvl < 3){
       return disc + lockedCard(
-        '<span data-mn="AI Арилжааны Шинжилгээ" data-en="AI Trade Review">AI Арилжааны Шинжилгээ</span>',
-        '<span data-mn="Elite шат онцгой. AI-аар дэмжигдсэн арилжааны шинжилгээ авна уу — юу зөв, юу буруу байсан, эрсдэлийн оноо." data-en="Elite tier exclusive. Get AI-powered analysis of every trade — what went right, what went wrong, risk scoring.">Elite шат онцгой. AI-аар дэмжигдсэн арилжааны шинжилгээ авна уу — юу зөв, юу буруу байсан, эрсдэлийн оноо.</span>',
-        '<span data-mn="ELITE РУУ ШИНЭЧЛЭХ" data-en="UPGRADE TO ELITE">ELITE РУУ ШИНЭЧЛЭХ</span>'
+        '🔍 Market Scanner',
+        'See which assets just flipped Bullish or Bearish on the 4H and 1D timeframes. Elite only.',
+        'UPGRADE TO ELITE'
       );
     }
 
-    const trades = jLoadTrades();
-    const inp = `width:100%;box-sizing:border-box;background:#060d12;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:10px 14px;color:#ccd8df;font-size:13px;font-family:'Space Mono',monospace;outline:none`;
-    const lbl = `display:block;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px`;
-
-    const tradeOptions = trades.length === 0
-      ? `<option value="">— No trades in journal —</option>`
-      : trades.slice().reverse().map(function(tr, i){
-          var idx    = trades.length - 1 - i;
-          var pnlStr = tr.pnl >= 0 ? '+' + tr.pnl.toFixed(2) + '%' : tr.pnl.toFixed(2) + '%';
-          return `<option value="${idx}">${tr.date} · ${tr.symbol || '?'} · ${tr.direction} · ${pnlStr}</option>`;
-        }).join('');
-
-    var savedKey = '';
-    try { savedKey = localStorage.getItem(AI_KEY_LS) || ''; } catch(e){}
-
     return `${disc}
-      <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;padding:24px;margin-bottom:20px">
-        <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">🤖 AI TRADE REVIEW</div>
-        <div style="font-family:'Space Mono',monospace;font-size:10px;color:#9945FF;letter-spacing:1px;margin-bottom:20px">ELITE · POWERED BY CLAUDE</div>
-
-        <div style="margin-bottom:16px">
-          <label style="${lbl}">Select Trade</label>
-          <select id="tl-ai-select" style="${inp};background:#060d12">${tradeOptions}</select>
+      <!-- Header -->
+      <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;padding:20px 24px;margin-bottom:16px">
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df">🔍 MARKET SCANNER</div>
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            <span style="background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px">4H</span>
+            <span style="background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px">1D</span>
+            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">Refresh in <span id="tl-sc-countdown">60s</span></span>
+          </div>
         </div>
-
-        <div style="margin-bottom:20px">
-          <label style="${lbl}">Anthropic API Key</label>
-          <input id="tl-ai-key" type="password" placeholder="sk-ant-..." style="${inp}" value="${savedKey}">
-          <div style="font-size:10px;color:#4a6070;margin-top:5px">Stored locally in your browser only.</div>
-        </div>
-
-        <button id="tl-ai-btn" onclick="TL.aiAnalyze()" style="background:linear-gradient(135deg,#9945FF,#7c3aed);color:#fff;border:none;border-radius:8px;padding:12px 24px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:1px;cursor:pointer;width:100%"
-          onmouseover="this.style.opacity='0.85'" onmouseout="this.style.opacity='1'">ANALYZE TRADE</button>
       </div>
 
-      <div id="tl-ai-results"></div>`;
+      <!-- Stats bar -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px">
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:14px 16px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">TOTAL ASSETS</div>
+          <div id="tl-sc-total" style="font-family:'Space Mono',monospace;font-size:22px;color:#ccd8df">—</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,232,122,0.12);border-radius:8px;padding:14px 16px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">BULLISH</div>
+          <div id="tl-sc-bull" style="font-family:'Space Mono',monospace;font-size:22px;color:#00e87a">—</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(255,68,68,0.12);border-radius:8px;padding:14px 16px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">BEARISH</div>
+          <div id="tl-sc-bear" style="font-family:'Space Mono',monospace;font-size:22px;color:#ff4444">—</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:14px 16px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">LAST UPDATE</div>
+          <div id="tl-sc-last" style="font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df;margin-top:4px">—</div>
+        </div>
+      </div>
+
+      <!-- Filter pills -->
+      <div style="display:flex;gap:8px;margin-bottom:16px">
+        <button id="tl-sc-f-all"     onclick="TL.scFilter('ALL')"     style="background:#00b4d8;color:#060d12;border:1px solid #00b4d8;border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">ALL</button>
+        <button id="tl-sc-f-bullish" onclick="TL.scFilter('BULLISH')" style="background:transparent;color:#4a6070;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">BULLISH</button>
+        <button id="tl-sc-f-bearish" onclick="TL.scFilter('BEARISH')" style="background:transparent;color:#4a6070;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">BEARISH</button>
+      </div>
+
+      <!-- Table -->
+      <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;overflow:hidden">
+        <div id="tl-sc-table">
+          <div style="padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">Loading...</div>
+        </div>
+      </div>`;
   }
 
   // ── TAB CONFIG ────────────────────────────────────────────────────────────
@@ -1485,13 +1563,15 @@ const TL = (function(){
     { id: 'risk',      labelMn: 'ЭРСДЭЛ ТООЦ',   labelEn: 'RISK CALC',    build: riskContent     },
     { id: 'stats',     labelMn: 'СТАТИСТИК',      labelEn: 'STATS',        build: statsContent    },
     { id: 'calendar',  labelMn: 'ХУАНЛИ',         labelEn: 'CALENDAR',     build: calendarContent },
-    { id: 'ai-review', labelMn: 'AI ШИНЖИЛГЭЭ',   labelEn: 'AI REVIEW',    build: aiReviewContent },
+    { id: 'scanner',   labelMn: 'СКАННЕР',          labelEn: 'SCANNER',      build: scannerContent  },
   ];
 
   // ── TAB SWITCHER ─────────────────────────────────────────────────────────
 
   function switchTab(id){
     _activeTabId = id;
+    // Stop scanner timer when leaving scanner tab
+    if(id !== 'scanner' && _scanInterval){ clearInterval(_scanInterval); _scanInterval = null; }
     TABS.forEach(function(tab){
       const btn = document.getElementById('tl-tab-'+tab.id);
       const pane = document.getElementById('tl-pane-'+tab.id);
@@ -1505,6 +1585,7 @@ const TL = (function(){
     if(id === 'journal')  jRenderList();
     if(id === 'stats')    sRenderStats();
     if(id === 'calendar') cRenderCalendar();
+    if(id === 'scanner'){ scannerRefresh(); scStartTimer(); }
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────
@@ -1587,9 +1668,10 @@ const TL = (function(){
     sRenderStats: sRenderStats,
     tvSubmit:     tvSubmit,
     tvReset:      tvReset,
-    _calNav:      cNavMonth,
-    _calDay:      cDayClick,
-    aiAnalyze:    aiAnalyze,
+    _calNav:         cNavMonth,
+    _calDay:         cDayClick,
+    scannerRefresh:  scannerRefresh,
+    scFilter:        scSetFilter,
   };
 
 })();
