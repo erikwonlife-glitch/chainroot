@@ -255,6 +255,35 @@ const INSTRUMENTS = {
   'eq/spx':     {stooq:'spy.us',  yf:'SPY',  fhq:'SPY',  dec:2},
 };
 
+// ── SCANNER API ───────────────────────────────────────────────────────────────
+let _scannerCache = null;
+let _scannerCacheAt = 0;
+
+app.get('/api/scanner/status', function(req, res) {
+  res.json(SCANNER_META);
+});
+
+app.get('/api/scanner', function(req, res) {
+  var now = Date.now();
+  if (_scannerCache && now - _scannerCacheAt < 5 * 60 * 1000) return res.json(_scannerCache);
+
+  var assets = Object.values(SCANNER_STATE);
+  var result = {
+    assets:     assets,
+    meta:       SCANNER_META,
+    bullish4h:  assets.filter(function(a) { return a.trend4h === 'BULLISH'; }).length,
+    bearish4h:  assets.filter(function(a) { return a.trend4h === 'BEARISH'; }).length,
+    bullish1d:  assets.filter(function(a) { return a.trend1d === 'BULLISH'; }).length,
+    bearish1d:  assets.filter(function(a) { return a.trend1d === 'BEARISH'; }).length,
+    bullish1w:  assets.filter(function(a) { return a.trend1w === 'BULLISH'; }).length,
+    bearish1w:  assets.filter(function(a) { return a.trend1w === 'BEARISH'; }).length,
+    total:      assets.length,
+  };
+  _scannerCache   = result;
+  _scannerCacheAt = now;
+  res.json(result);
+});
+
 // ══════════════════════════════════════════════════════════════════
 // ALL SPECIFIC /api/crypto/* ROUTES MUST COME BEFORE /api/:type/:id
 // ══════════════════════════════════════════════════════════════════
@@ -1535,35 +1564,6 @@ load();
 </script>
 </body>
 </html>`);
-});
-
-// ── SCANNER API ───────────────────────────────────────────────────────────────
-let _scannerCache = null;
-let _scannerCacheAt = 0;
-
-app.get('/api/scanner', function(req, res) {
-  var now = Date.now();
-  if (_scannerCache && now - _scannerCacheAt < 5 * 60 * 1000) return res.json(_scannerCache);
-
-  var assets = Object.values(SCANNER_STATE);
-  var result = {
-    assets:     assets,
-    meta:       SCANNER_META,
-    bullish4h:  assets.filter(function(a) { return a.trend4h === 'BULLISH'; }).length,
-    bearish4h:  assets.filter(function(a) { return a.trend4h === 'BEARISH'; }).length,
-    bullish1d:  assets.filter(function(a) { return a.trend1d === 'BULLISH'; }).length,
-    bearish1d:  assets.filter(function(a) { return a.trend1d === 'BEARISH'; }).length,
-    bullish1w:  assets.filter(function(a) { return a.trend1w === 'BULLISH'; }).length,
-    bearish1w:  assets.filter(function(a) { return a.trend1w === 'BEARISH'; }).length,
-    total:      assets.length,
-  };
-  _scannerCache   = result;
-  _scannerCacheAt = now;
-  res.json(result);
-});
-
-app.get('/api/scanner/status', function(req, res) {
-  res.json(SCANNER_META);
 });
 
 // ── HEALTH & ROOT ─────────────────────────────────────────────────────────────
