@@ -608,6 +608,293 @@ const TL = (function(){
     }
   }
 
+  // ── STATS: CALCULATIONS ───────────────────────────────────────────────────
+
+  function sCalc(trades){
+    const total   = trades.length;
+    if(!total) return null;
+    const wins    = trades.filter(t => t.pnl > 0);
+    const losses  = trades.filter(t => t.pnl < 0);
+    const totalPnl   = trades.reduce((s, t) => s + (t.pnl||0), 0);
+    const sumWins    = wins.reduce((s, t) => s + t.pnl, 0);
+    const sumLosses  = losses.reduce((s, t) => s + t.pnl, 0);
+    const pf         = sumLosses === 0 ? Infinity : sumWins / Math.abs(sumLosses);
+    const best       = Math.max(...trades.map(t => t.pnl));
+    const worst      = Math.min(...trades.map(t => t.pnl));
+
+    // Streak analysis
+    let curStreak = 0, curType = null;
+    let bestWin = 0, bestLoss = 0, tmpWin = 0, tmpLoss = 0;
+    trades.forEach(t => {
+      const w = t.pnl > 0;
+      if(w){ tmpWin++; tmpLoss=0; } else { tmpLoss++; tmpWin=0; }
+      if(tmpWin  > bestWin)  bestWin  = tmpWin;
+      if(tmpLoss > bestLoss) bestLoss = tmpLoss;
+    });
+    // Current streak from the end
+    for(let i = trades.length - 1; i >= 0; i--){
+      const w = trades[i].pnl > 0;
+      if(curType === null) curType = w;
+      if(w === curType) curStreak++;
+      else break;
+    }
+
+    return {
+      total, wins: wins.length, losses: losses.length,
+      winRate: (wins.length / total * 100),
+      totalPnl, avgPnl: totalPnl / total,
+      pf, best, worst,
+      avgWinner: wins.length  ? sumWins   / wins.length   : 0,
+      avgLoser:  losses.length? sumLosses / losses.length : 0,
+      curStreak, curType, bestWin, bestLoss,
+    };
+  }
+
+  // ── STATS: RENDER ─────────────────────────────────────────────────────────
+
+  function sRenderStats(){
+    const wrap = document.getElementById('tl-stats-body');
+    if(!wrap) return;
+    const trades = jLoadTrades();
+    const s      = sCalc(trades);
+
+    if(!s){
+      wrap.innerHTML = `<div style="text-align:center;padding:40px;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">No trades yet — add trades in the Journal tab.</div>`;
+      return;
+    }
+
+    const usd  = n => (n < 0 ? '-' : '') + '$' + Math.abs(n).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+    const col  = (n, pos='#00e87a', neg='#ff4444', neu='#ccd8df') => n > 0 ? pos : n < 0 ? neg : neu;
+    const card = (label, value, color='#ccd8df') =>
+      `<div style="background:#060d12;border:1px solid rgba(0,180,216,0.12);border-radius:10px;padding:16px 20px">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px">${label}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:${color}">${value}</div>
+      </div>`;
+
+    const pfVal   = s.pf === Infinity ? '∞' : s.pf.toFixed(2);
+    const pfColor = s.pf > 1 ? '#00e87a' : '#ff4444';
+    const wrColor = s.winRate >= 50 ? '#00e87a' : '#ff4444';
+
+    // Win/loss bar
+    const winPct  = (s.wins / s.total * 100).toFixed(1);
+    const lossPct = (s.losses / s.total * 100).toFixed(1);
+
+    // Streak display
+    const streakIcon  = s.curType ? '🔥' : '❄️';
+    const streakLabel = s.curType ? 'Win Streak' : 'Loss Streak';
+    const streakColor = s.curType ? '#00e87a' : '#ff4444';
+
+    wrap.innerHTML = `
+      <!-- Summary cards grid -->
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px">
+        ${card('Total Trades',  s.total,                       '#ccd8df')}
+        ${card('Win Rate',      s.winRate.toFixed(1)+'%',      wrColor)}
+        ${card('Total P&L',     usd(s.totalPnl),               col(s.totalPnl))}
+        ${card('Profit Factor', pfVal,                          pfColor)}
+        ${card('Avg Trade P&L', usd(s.avgPnl),                 col(s.avgPnl))}
+        ${card('Best Trade',    usd(s.best),                    '#00e87a')}
+        ${card('Worst Trade',   usd(s.worst),                   '#ff4444')}
+        ${card('Avg Winner',    usd(s.avgWinner),               '#00e87a')}
+        ${card('Avg Loser',     usd(s.avgLoser),                '#ff4444')}
+      </div>
+
+      <!-- Win/Loss bar -->
+      <div style="background:#0a1520;border-radius:12px;padding:20px;margin-top:4px">
+        <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-bottom:8px">
+          <span style="color:#00e87a">${s.wins} wins</span>
+          <span style="color:#ff4444">${s.losses} losses</span>
+        </div>
+        <div style="height:24px;border-radius:12px;overflow:hidden;display:flex;background:rgba(255,255,255,0.04)">
+          <div style="width:${winPct}%;background:linear-gradient(90deg,#00e87a,#00b85e);transition:width .4s"></div>
+          <div style="width:${lossPct}%;background:linear-gradient(90deg,#e84040,#ff4444);transition:width .4s"></div>
+        </div>
+        <div style="display:flex;justify-content:space-between;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-top:6px">
+          <span>${winPct}%</span><span>${lossPct}%</span>
+        </div>
+      </div>
+
+      <!-- Streaks -->
+      <div style="display:flex;gap:12px;margin-top:16px;flex-wrap:wrap">
+        <div style="background:#060d12;border-radius:8px;padding:14px 18px;flex:1;min-width:140px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px">Current Streak</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:${streakColor}">${streakIcon} ${s.curStreak} ${streakLabel}</div>
+        </div>
+        <div style="background:#060d12;border-radius:8px;padding:14px 18px;flex:1;min-width:140px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px">Best Win Streak</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:#00e87a">🔥 ${s.bestWin}</div>
+        </div>
+        <div style="background:#060d12;border-radius:8px;padding:14px 18px;flex:1;min-width:140px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:6px">Best Loss Streak</div>
+          <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;color:#4a6070">❄️ ${s.bestLoss}</div>
+        </div>
+      </div>
+
+      <!-- P&L bar chart -->
+      <div style="margin-top:16px">
+        <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;text-transform:uppercase;margin-bottom:8px">P&amp;L Per Trade</div>
+        <canvas id="tl-stats-chart" height="200" style="background:#060d12;border-radius:8px;display:block;width:100%;cursor:crosshair"></canvas>
+      </div>`;
+
+    // Draw chart after DOM is updated
+    requestAnimationFrame(() => sDrawChart(trades));
+  }
+
+  // ── STATS: CANVAS CHART ───────────────────────────────────────────────────
+
+  function sDrawChart(trades){
+    const canvas = document.getElementById('tl-stats-chart');
+    if(!canvas) return;
+    const recent = trades.slice(-50);
+    if(!recent.length) return;
+
+    canvas.width  = canvas.offsetWidth || canvas.parentElement?.offsetWidth || 600;
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const PAD   = { top:20, right:16, bottom:28, left:56 };
+    const chartW = W - PAD.left - PAD.right;
+    const chartH = H - PAD.top  - PAD.bottom;
+
+    const vals   = recent.map(t => t.pnl);
+    const maxVal = Math.max(...vals.map(Math.abs), 1);
+    const barW   = Math.max(2, Math.floor(chartW / recent.length) - 2);
+    const zeroY  = PAD.top + chartH / 2;
+
+    // Grid lines
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)';
+    ctx.lineWidth   = 1;
+    [0.25, 0.5, 0.75, 1].forEach(f => {
+      const y = PAD.top + chartH * f;
+      ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W - PAD.right, y); ctx.stroke();
+    });
+
+    // Zero line
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth   = 1;
+    ctx.beginPath(); ctx.moveTo(PAD.left, zeroY); ctx.lineTo(W - PAD.right, zeroY); ctx.stroke();
+
+    // Y axis labels
+    ctx.fillStyle = '#4a6070';
+    ctx.font      = '10px "Space Mono", monospace';
+    ctx.textAlign = 'right';
+    const topVal  = maxVal.toFixed(0);
+    ctx.fillText('+$'+topVal, PAD.left - 4, PAD.top + 4);
+    ctx.fillText('-$'+topVal, PAD.left - 4, PAD.top + chartH + 4);
+    ctx.fillText('$0',        PAD.left - 4, zeroY + 4);
+
+    // Bars
+    const step = chartW / recent.length;
+    recent.forEach((tr, i) => {
+      const x     = PAD.left + i * step + (step - barW) / 2;
+      const ratio = tr.pnl / maxVal;
+      const barH  = Math.abs(ratio) * (chartH / 2);
+      const y     = tr.pnl >= 0 ? zeroY - barH : zeroY;
+      ctx.fillStyle = tr.pnl >= 0 ? '#00e87a' : '#ff4444';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x, y, barW, barH || 1, 2) : ctx.rect(x, y, barW, barH || 1);
+      ctx.fill();
+    });
+
+    // X axis labels (every ~10 trades)
+    ctx.fillStyle = '#4a6070';
+    ctx.font      = '9px "Space Mono", monospace';
+    ctx.textAlign = 'center';
+    recent.forEach((_, i) => {
+      if(i === 0 || (i+1) % 10 === 0 || i === recent.length - 1){
+        const x = PAD.left + i * step + step / 2;
+        ctx.fillText(i+1, x, H - 6);
+      }
+    });
+
+    // Tooltip on hover
+    canvas._trades = recent;
+    canvas._step   = step;
+    canvas._PAD    = PAD;
+    canvas._chartH = chartH;
+    canvas._zeroY  = zeroY;
+    canvas._maxVal = maxVal;
+    canvas._barW   = barW;
+    canvas.onmousemove = function(e){
+      const rect = canvas.getBoundingClientRect();
+      const mx   = (e.clientX - rect.left) * (canvas.width / rect.width);
+      const idx  = Math.floor((mx - PAD.left) / step);
+      if(idx < 0 || idx >= recent.length){ canvas._tip = null; sTipDraw(canvas, ctx, recent); return; }
+      canvas._tip = idx;
+      sTipDraw(canvas, ctx, recent);
+    };
+    canvas.onmouseleave = function(){ canvas._tip = null; sTipDraw(canvas, ctx, recent); };
+  }
+
+  function sTipDraw(canvas, ctx, trades){
+    const W = canvas.width, H = canvas.height;
+    const { _step:step, _PAD:PAD, _zeroY:zeroY, _maxVal:maxVal, _barW:barW, _chartH:chartH } = canvas;
+    ctx.clearRect(0, 0, W, H);
+
+    // Redraw grid + zero line
+    ctx.strokeStyle = 'rgba(255,255,255,0.04)'; ctx.lineWidth = 1;
+    [0.25,0.5,0.75,1].forEach(f => {
+      const y = PAD.top + chartH * f;
+      ctx.beginPath(); ctx.moveTo(PAD.left, y); ctx.lineTo(W-PAD.right, y); ctx.stroke();
+    });
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.beginPath(); ctx.moveTo(PAD.left, zeroY); ctx.lineTo(W-PAD.right, zeroY); ctx.stroke();
+
+    // Y labels
+    ctx.fillStyle = '#4a6070'; ctx.font = '10px "Space Mono",monospace'; ctx.textAlign = 'right';
+    ctx.fillText('+$'+maxVal.toFixed(0), PAD.left-4, PAD.top+4);
+    ctx.fillText('-$'+maxVal.toFixed(0), PAD.left-4, PAD.top+chartH+4);
+    ctx.fillText('$0', PAD.left-4, zeroY+4);
+
+    // Bars
+    trades.forEach((tr, i) => {
+      const x    = PAD.left + i * step + (step - barW) / 2;
+      const bH   = Math.abs(tr.pnl / maxVal) * (chartH / 2);
+      const y    = tr.pnl >= 0 ? zeroY - bH : zeroY;
+      const hot  = i === canvas._tip;
+      ctx.fillStyle = tr.pnl >= 0 ? (hot ? '#33ffaa' : '#00e87a') : (hot ? '#ff7777' : '#ff4444');
+      ctx.globalAlpha = hot ? 1 : 0.85;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x, y, barW, bH||1, 2) : ctx.rect(x, y, barW, bH||1);
+      ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+
+    // X labels
+    ctx.fillStyle = '#4a6070'; ctx.font = '9px "Space Mono",monospace'; ctx.textAlign = 'center';
+    trades.forEach((_, i) => {
+      if(i===0 || (i+1)%10===0 || i===trades.length-1){
+        ctx.fillText(i+1, PAD.left + i*step + step/2, H-6);
+      }
+    });
+
+    // Tooltip bubble
+    const tip = canvas._tip;
+    if(tip == null) return;
+    const tr   = trades[tip];
+    const sign = tr.pnl >= 0 ? '+' : '';
+    const label= `Trade ${tip+1}: ${tr.symbol||'?'}  ${sign}$${Math.abs(tr.pnl).toFixed(2)}`;
+    ctx.font = '11px "Space Mono",monospace';
+    const tw   = ctx.measureText(label).width + 20;
+    const th   = 26;
+    let tx     = PAD.left + tip * step + step / 2 - tw / 2;
+    tx         = Math.max(4, Math.min(W - tw - 4, tx));
+    const bH2  = Math.abs(tr.pnl / maxVal) * (chartH / 2);
+    let ty     = tr.pnl >= 0 ? zeroY - bH2 - th - 6 : zeroY + bH2 + 6;
+    ty         = Math.max(4, Math.min(H - th - 4, ty));
+    ctx.fillStyle = 'rgba(10,21,32,0.95)';
+    ctx.strokeStyle= tr.pnl >= 0 ? '#00e87a' : '#ff4444';
+    ctx.lineWidth  = 1;
+    ctx.beginPath();
+    ctx.roundRect ? ctx.roundRect(tx, ty, tw, th, 6) : ctx.rect(tx, ty, tw, th);
+    ctx.fill(); ctx.stroke();
+    ctx.fillStyle = tr.pnl >= 0 ? '#00e87a' : '#ff4444';
+    ctx.textAlign = 'left';
+    ctx.fillText(label, tx+10, ty+17);
+  }
+
+  // ── STATS: CONTENT SHELL ──────────────────────────────────────────────────
+
   function statsContent(){
     const t = tier();
     if(t < 2){
@@ -617,7 +904,14 @@ const TL = (function(){
         'UPGRADE TO PRO'
       );
     }
-    return placeholderCard('📊', 'Performance Stats', 'Advanced analytics coming soon.');
+    return `
+      <div>
+        <div style="margin-bottom:20px">
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📊 PERFORMANCE STATS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px">Calculated from your trade journal · Updates automatically</div>
+        </div>
+        <div id="tl-stats-body"></div>
+      </div>`;
   }
 
   function calendarContent(){
@@ -668,6 +962,7 @@ const TL = (function(){
       pane.style.display = active ? 'block' : 'none';
     });
     if(id === 'journal') jRenderList();
+    if(id === 'stats')   sRenderStats();
   }
 
   // ── INIT ─────────────────────────────────────────────────────────────────
@@ -723,13 +1018,14 @@ const TL = (function(){
   // Expose all functions called from inline event handlers
   return {
     init,
-    _switchTab:  switchTab,
-    _calcRisk:   calcRisk,
+    _switchTab:   switchTab,
+    _calcRisk:    calcRisk,
     setDirection: jSetDirection,
     calcPnl:      jCalcPnl,
     saveTrade:    jSaveTrade,
     deleteTrade:  jDeleteTrade,
     _exportCsv:   jExportCsv,
+    sRenderStats: sRenderStats,
   };
 
 })();
