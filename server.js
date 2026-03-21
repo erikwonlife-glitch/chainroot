@@ -264,7 +264,18 @@ app.get('/api/scanner/status', function(req, res) {
 });
 
 app.get('/api/scanner/run-now', async function(req, res) {
-  res.json({ message: 'Scanner triggered', time: new Date().toISOString() });
+  // Test Bybit directly before triggering scanner
+  var testUrl = 'https://api.bybit.com/v5/market/kline?category=spot&symbol=BTCUSDT&interval=D&limit=5';
+  var bybitTest = null;
+  var bybitError = null;
+  try {
+    var r = await fetchT(testUrl, {}, 10000);
+    var body = await r.json();
+    bybitTest = { status: r.status, retCode: body && body.retCode, listLen: body && body.result && body.result.list && body.result.list.length, sample: JSON.stringify(body).slice(0, 300) };
+  } catch (e) {
+    bybitError = e.message;
+  }
+  res.json({ message: 'Scanner triggered', time: new Date().toISOString(), bybitTest, bybitError });
   runScanner();
 });
 
