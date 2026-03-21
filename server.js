@@ -1245,7 +1245,7 @@ app.get('/admin/access', function(req, res) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DeFiMongo — Mongo Pulse Access Admin</title>
+<title>DeFiMongo — Money Pulse Line Access Admin</title>
 <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0}
@@ -1284,8 +1284,8 @@ app.get('/admin/access', function(req, res) {
 <body>
 <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:8px">
   <div>
-    <h1>📺 MONGO PULSE ACCESS ADMIN</h1>
-    <div class="sub">DEFIMONGO · MONGO PULSE INDICATOR MANAGEMENT</div>
+    <h1>📺 MONEY PULSE LINE ACCESS ADMIN</h1>
+    <div class="sub">DEFIMONGO · MONEY PULSE LINE INDICATOR MANAGEMENT</div>
   </div>
   <button class="refresh" onclick="load()">↻ REFRESH</button>
 </div>

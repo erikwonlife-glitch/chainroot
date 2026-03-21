@@ -80,11 +80,11 @@ const TL = (function(){
     return `
       <div>
         <div style="margin-bottom:20px">
-          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📺 MONGO PULSE ACCESS</div>
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px" data-mn="Mongo Pulse индикатор хандалтаа авахын тулд мэдээллээ оруулна уу" data-en="Register your details to receive Mongo Pulse indicator access">Mongo Pulse индикатор хандалтаа авахын тулд мэдээллээ оруулна уу</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📺 MONEY PULSE LINE ACCESS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px" data-mn="Money Pulse Line индикатор хандалтаа авахын тулд мэдээллээ оруулна уу" data-en="Register your details to receive Money Pulse Line indicator access">Money Pulse Line индикатор хандалтаа авахын тулд мэдээллээ оруулна уу</div>
         </div>
 
-        ${tlDisclaimer('Pro эсвэл Elite гишүүнчлэл авсны дараа энд имэйл болон TradingView хэрэглэгчийн нэрээ оруулна уу. Бид 24 цагийн дотор таны TradingView дансанд Mongo Pulse индикатор руу хандах эрх олгоно.', 'tradelab-access')}
+        ${tlDisclaimer('Pro эсвэл Elite гишүүнчлэл авсны дараа энд имэйл болон TradingView хэрэглэгчийн нэрээ оруулна уу. Бид 24 цагийн дотор таны TradingView дансанд Money Pulse Line индикатор руу хандах эрх олгоно.', 'tradelab-access')}
 
         <!-- How it works -->
         <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:24px">
@@ -155,7 +155,7 @@ const TL = (function(){
 
     const STATUS_CFG = {
       pending:  { color: '#00b4d8', icon: '⏳', label: t('ИДЭВХЖҮҮЛЭХИЙГ ХҮЛЭЭЖ БУЙ','PENDING ACTIVATION'),  msg: t('Таны хүсэлт хүлээн авагдлаа. Төлбөр баталгаажсаны дараа 24 цагийн дотор TradingView дансанд урилга илгээгдэнэ.','Your request has been received. We\'ll invite your TradingView account within 24 hours of payment confirmation.') },
-      active:   { color: '#00e87a', icon: '✅', label: t('ХАНДАЛТ ИДЭВХТЭЙ','ACCESS ACTIVE'),        msg: t('Та Mongo Pulse TradingView индикаторыг ашиглах эрхтэй байна.','You have access to the DeFiMongo TradingView indicator.') },
+      active:   { color: '#00e87a', icon: '✅', label: t('ХАНДАЛТ ИДЭВХТЭЙ','ACCESS ACTIVE'),        msg: t('Та Money Pulse Line TradingView индикаторыг ашиглах эрхтэй байна.','You have access to the Money Pulse Line TradingView indicator.') },
       expired:  { color: '#ff4444', icon: '❌', label: t('ХАНДАЛТ ДУУССАН','ACCESS EXPIRED'),       msg: t('Таны гишүүнчлэл дууссан байна. Хандалтаа сэргээхийн тулд захиалгаа сунгана уу.','Your membership has expired. Renew your subscription to restore access.') },
       revoked:  { color: '#4a6070', icon: '🚫', label: t('ХАНДАЛТ ЦУЦЛАГДСАН','ACCESS REVOKED'),       msg: t('Таны хандалт цуцлагдсан байна. Алдаа байвал дэмжлэгтэй холбоо барина уу.','Your access has been revoked. Contact support if you believe this is an error.') },
     };
@@ -1480,7 +1480,7 @@ const TL = (function(){
   // ── TAB CONFIG ────────────────────────────────────────────────────────────
 
   const TABS = [
-    { id: 'signals',   labelMn: 'ПУЛЬС ХАНДАЛТ', labelEn: 'PULSE ACCESS', build: tvAccessContent },
+    { id: 'signals',   labelMn: 'Мөнгөний Цохилт Идвэхжүүлэх', labelEn: 'MONEY PULSE LINE ACCESS', build: tvAccessContent },
     { id: 'journal',   labelMn: 'ТЭМДЭГЛЭЛ',     labelEn: 'JOURNAL',      build: journalContent  },
     { id: 'risk',      labelMn: 'ЭРСДЭЛ ТООЦ',   labelEn: 'RISK CALC',    build: riskContent     },
     { id: 'stats',     labelMn: 'СТАТИСТИК',      labelEn: 'STATS',        build: statsContent    },
