@@ -1201,6 +1201,134 @@ app.get('/api/etf/flows', async function(req, res) {
   }
 });
 
+// ── FRED: WALCL — Federal Reserve Total Assets (weekly → monthly) ─────────────
+// Returns {series:[{date:'YYYY-MM',value:$T}], latest:{date,value}, updated:ms}
+app.get('/api/fred/walcl', async function(req, res) {
+  const cacheKey = 'fred/walcl';
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+  try {
+    const r = await fetchT(
+      'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL',
+      { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' } },
+      20000
+    );
+    if (!r.ok) throw new Error('FRED ' + r.status);
+    const csv = await r.text();
+    const monthly = {};
+    csv.trim().split('\n').slice(1).forEach(function(ln) {
+      const p = ln.split(',');
+      if (p.length < 2) return;
+      const v = p[1].trim();
+      if (!v || v === '.') return;
+      const val = parseFloat(v);
+      if (isNaN(val) || val <= 0) return;
+      monthly[p[0].slice(0, 7)] = +(val / 1e6).toFixed(3);
+    });
+    const series = Object.entries(monthly)
+      .sort(function(a, b) { return a[0] < b[0] ? -1 : 1; })
+      .map(function(e) { return { date: e[0], value: e[1] }; });
+    if (!series.length) throw new Error('No valid WALCL data');
+    const result = { series: series, latest: series[series.length - 1], updated: Date.now() };
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    console.log('[DataFix] walcl: ok, latest', result.latest);
+    res.json(result);
+  } catch(e) {
+    console.log('[DataFix] walcl: failed:', e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
+// ── FRED: Liquidity — Fed (WALCL) + ECB (ECBASSETSW) + BOJ (JPNASSETS) ───────
+app.get('/api/fred/liquidity', async function(req, res) {
+  const cacheKey = 'fred/liquidity';
+  const cached = getCache(cacheKey);
+  if (cached) return res.json(cached);
+
+  function parseFredMonthlyL(csv, divisor) {
+    const monthly = {};
+    csv.trim().split('\n').slice(1).forEach(function(ln) {
+      const p = ln.split(',');
+      if (p.length < 2) return;
+      const v = p[1].trim();
+      if (!v || v === '.') return;
+      const val = parseFloat(v);
+      if (isNaN(val) || val <= 0) return;
+      monthly[p[0].slice(0, 7)] = val / divisor;
+    });
+    return monthly;
+  }
+
+  function getLastRateL(csv) {
+    const lines = csv.trim().split('\n').slice(1).filter(Boolean);
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const p = lines[i].split(',');
+      const v = parseFloat(p[1]);
+      if (!isNaN(v) && v > 0) return v;
+    }
+    return null;
+  }
+
+  try {
+    const opts = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' } };
+    const [walclRes, ecbRes, eurusdRes, bojRes, jpyusdRes] = await Promise.allSettled([
+      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL', opts, 20000).then(function(r) { return r.text(); }),
+      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBASSETSW', opts, 20000).then(function(r) { return r.text(); }),
+      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSEU', opts, 15000).then(function(r) { return r.text(); }),
+      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS', opts, 20000).then(function(r) { return r.text(); }),
+      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS', opts, 15000).then(function(r) { return r.text(); })
+    ]);
+
+    let eurusd = 1.08;
+    if (eurusdRes.status === 'fulfilled') eurusd = getLastRateL(eurusdRes.value) || eurusd;
+
+    let jpyusd = 150;
+    if (jpyusdRes.status === 'fulfilled') { const r = getLastRateL(jpyusdRes.value); if (r) jpyusd = r; }
+
+    const fedMonthly = walclRes.status === 'fulfilled' ? parseFredMonthlyL(walclRes.value, 1e6) : {};
+
+    const ecbMonthly = {};
+    if (ecbRes.status === 'fulfilled') {
+      const rawEcb = parseFredMonthlyL(ecbRes.value, 1e6);
+      Object.entries(rawEcb).forEach(function(e) { ecbMonthly[e[0]] = +(e[1] * eurusd).toFixed(3); });
+    }
+
+    const bojMonthly = {};
+    if (bojRes.status === 'fulfilled') {
+      // JPNASSETS is in 100M JPY; convert to USD trillions: val * 1e8 / jpyusd / 1e12
+      const rawBoj = parseFredMonthlyL(bojRes.value, 1);
+      Object.entries(rawBoj).forEach(function(e) {
+        bojMonthly[e[0]] = +(e[1] * 1e8 / jpyusd / 1e12).toFixed(3);
+      });
+    }
+
+    const toSeries = function(map) {
+      return Object.entries(map).sort(function(a,b){return a[0]<b[0]?-1:1;}).map(function(e){return {date:e[0],value:+e[1].toFixed(3)};});
+    };
+
+    const fedSeries = toSeries(fedMonthly);
+    const ecbSeries = toSeries(ecbMonthly);
+    const bojSeries = toSeries(bojMonthly);
+    const allDates  = [...new Set([...Object.keys(fedMonthly),...Object.keys(ecbMonthly),...Object.keys(bojMonthly)])].sort();
+    const totalSeries = allDates.map(function(d){return {date:d,value:+((fedMonthly[d]||0)+(ecbMonthly[d]||0)+(bojMonthly[d]||0)).toFixed(3)};});
+
+    const result = {
+      fed:fedSeries, ecb:ecbSeries, boj:bojSeries, total:totalSeries,
+      eurusd, jpyusd,
+      latestFed: fedSeries.length ? fedSeries[fedSeries.length-1] : null,
+      latestEcb: ecbSeries.length ? ecbSeries[ecbSeries.length-1] : null,
+      latestBoj: bojSeries.length ? bojSeries[bojSeries.length-1] : null,
+      updated: Date.now()
+    };
+    setCache(cacheKey, result, 6 * 60 * 60 * 1000);
+    console.log('[DataFix] liquidity: fed=' + (result.latestFed&&result.latestFed.value) + 'T ecb=' + (result.latestEcb&&result.latestEcb.value) + 'T boj=' + (result.latestBoj&&result.latestBoj.value) + 'T');
+    res.json(result);
+  } catch(e) {
+    console.log('[DataFix] liquidity: failed:', e.message);
+    res.status(502).json({ error: e.message });
+  }
+});
+
 // GENERIC ROUTES — MUST COME AFTER ALL SPECIFIC /api/crypto/* ROUTES
 // ══════════════════════════════════════════════════════════════════
 
@@ -1246,150 +1374,6 @@ app.get('/api/overview/:type', async function(req, res) {
   results.forEach(function(r){if(r)out[r.key]=r.data;});
   setCache(cacheKey, out);
   res.json(out);
-});
-
-// ── FRED: WALCL — Federal Reserve Total Assets (weekly → monthly) ─────────────
-// Returns {series:[{date:'YYYY-MM',value:$T}], latest:{date,value}, updated:ms}
-app.get('/api/fred/walcl', async function(req, res) {
-  const cacheKey = 'fred/walcl';
-  const cached = getCache(cacheKey);
-  if (cached) return res.json(cached);
-  try {
-    const r = await fetchT(
-      'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL',
-      { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' } },
-      20000
-    );
-    if (!r.ok) throw new Error('FRED ' + r.status);
-    const csv = await r.text();
-    const monthly = {};
-    csv.trim().split('\n').slice(1).forEach(function(ln) {
-      const p = ln.split(',');
-      if (p.length < 2) return;
-      const v = p[1].trim();
-      if (!v || v === '.') return;
-      const val = parseFloat(v);
-      if (isNaN(val) || val <= 0) return;
-      // Keep last reading per month; value in millions USD → convert to $T
-      monthly[p[0].slice(0, 7)] = +(val / 1e6).toFixed(3);
-    });
-    const series = Object.entries(monthly)
-      .sort(function(a, b) { return a[0] < b[0] ? -1 : 1; })
-      .map(function(e) { return { date: e[0], value: e[1] }; });
-    if (!series.length) throw new Error('No valid WALCL data');
-    const result = { series: series, latest: series[series.length - 1], updated: Date.now() };
-    setCache(cacheKey, result, 6 * 60 * 60 * 1000); // 6h — weekly macro data
-    console.log('[DataFix] walcl: ok, latest', result.latest);
-    res.json(result);
-  } catch(e) {
-    console.log('[DataFix] walcl: failed:', e.message);
-    res.status(502).json({ error: e.message });
-  }
-});
-
-// ── FRED: Liquidity — Fed (WALCL) + ECB (ECBASSETSW) + BOJ (JPNASSETS) ───────
-// Returns {fed, ecb, boj, total, eurusd, latestFed, latestEcb, latestBoj, updated}
-app.get('/api/fred/liquidity', async function(req, res) {
-  const cacheKey = 'fred/liquidity';
-  const cached = getCache(cacheKey);
-  if (cached) return res.json(cached);
-
-  function parseFredMonthly(csv, divisor) {
-    const monthly = {};
-    csv.trim().split('\n').slice(1).forEach(function(ln) {
-      const p = ln.split(',');
-      if (p.length < 2) return;
-      const v = p[1].trim();
-      if (!v || v === '.') return;
-      const val = parseFloat(v);
-      if (isNaN(val) || val <= 0) return;
-      monthly[p[0].slice(0, 7)] = val / divisor;
-    });
-    return monthly;
-  }
-
-  function getLastRate(csv) {
-    const lines = csv.trim().split('\n').slice(1).filter(Boolean);
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const p = lines[i].split(',');
-      const v = parseFloat(p[1]);
-      if (!isNaN(v) && v > 0) return v;
-    }
-    return null;
-  }
-
-  try {
-    const opts = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,*/*' } };
-    const [walclRes, ecbRes, eurusdRes, bojRes, jpyusdRes] = await Promise.allSettled([
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL', opts, 20000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBASSETSW', opts, 20000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSEU', opts, 15000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS', opts, 20000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS', opts, 15000).then(function(r) { return r.text(); })
-    ]);
-
-    // FX rates
-    let eurusd = 1.08;
-    if (eurusdRes.status === 'fulfilled') eurusd = getLastRate(eurusdRes.value) || eurusd;
-
-    let jpyusd = 1 / 150; // fallback: ~150 JPY per USD
-    if (jpyusdRes.status === 'fulfilled') {
-      const r = getLastRate(jpyusdRes.value);
-      if (r) jpyusd = r; // DEXJPUS is JPY per USD, so 1 JPY = (1/jpyusd) USD
-    }
-
-    // Fed: millions USD → $T
-    const fedMonthly = walclRes.status === 'fulfilled' ? parseFredMonthly(walclRes.value, 1e6) : {};
-
-    // ECB: millions EUR → $T (EUR→USD)
-    const ecbMonthly = {};
-    if (ecbRes.status === 'fulfilled') {
-      const rawEcb = parseFredMonthly(ecbRes.value, 1e6);
-      Object.entries(rawEcb).forEach(function(e) { ecbMonthly[e[0]] = +(e[1] * eurusd).toFixed(3); });
-    }
-
-    // BOJ: billions JPY → $T (JPY→USD: divide by jpyusd rate, then divide by 1000 for billions→trillions)
-    const bojMonthly = {};
-    if (bojRes.status === 'fulfilled') {
-      // JPNASSETS is in 100 millions JPY (億円), so multiply by 1e8 to get JPY, divide by jpyusd, divide by 1e12 for $T
-      const rawBoj = parseFredMonthly(bojRes.value, 1); // raw values in 100M JPY
-      Object.entries(rawBoj).forEach(function(e) {
-        // e[1] is in 100M JPY. Convert: 100M JPY * (1 USD / jpyusd JPY) / 1e12 * 1e8 = e[1] / (jpyusd * 1e4)
-        bojMonthly[e[0]] = +(e[1] * 1e8 / jpyusd / 1e12).toFixed(3);
-      });
-    }
-
-    const toSeries = function(map) {
-      return Object.entries(map)
-        .sort(function(a, b) { return a[0] < b[0] ? -1 : 1; })
-        .map(function(e) { return { date: e[0], value: +e[1].toFixed(3) }; });
-    };
-
-    const fedSeries = toSeries(fedMonthly);
-    const ecbSeries = toSeries(ecbMonthly);
-    const bojSeries = toSeries(bojMonthly);
-
-    // Build total (fed + ecb + boj) aligned by month
-    const allDates = [...new Set([...Object.keys(fedMonthly), ...Object.keys(ecbMonthly), ...Object.keys(bojMonthly)])].sort();
-    const totalSeries = allDates.map(function(d) {
-      return { date: d, value: +((fedMonthly[d] || 0) + (ecbMonthly[d] || 0) + (bojMonthly[d] || 0)).toFixed(3) };
-    });
-
-    const result = {
-      fed: fedSeries, ecb: ecbSeries, boj: bojSeries, total: totalSeries,
-      eurusd: eurusd, jpyusd: jpyusd,
-      latestFed: fedSeries.length ? fedSeries[fedSeries.length - 1] : null,
-      latestEcb: ecbSeries.length ? ecbSeries[ecbSeries.length - 1] : null,
-      latestBoj: bojSeries.length ? bojSeries[bojSeries.length - 1] : null,
-      updated: Date.now()
-    };
-    setCache(cacheKey, result, 6 * 60 * 60 * 1000); // 6h — weekly macro data
-    console.log('[DataFix] liquidity: fed=' + (result.latestFed && result.latestFed.value) + 'T ecb=' + (result.latestEcb && result.latestEcb.value) + 'T boj=' + (result.latestBoj && result.latestBoj.value) + 'T');
-    res.json(result);
-  } catch(e) {
-    console.log('[DataFix] liquidity: failed:', e.message);
-    res.status(502).json({ error: e.message });
-  }
 });
 
 // ── TV ACCESS — ROUTES ────────────────────────────────────────────────────────
