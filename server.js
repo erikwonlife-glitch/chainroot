@@ -1201,29 +1201,32 @@ app.get('/api/etf/flows', async function(req, res) {
   }
 });
 
-// ── FRED: WALCL — Federal Reserve Total Assets (weekly → monthly) ─────────────
-// Returns {series:[{date:'YYYY-MM',value:$T}], latest:{date,value}, updated:ms}
+// ── FRED helpers ──────────────────────────────────────────────────────────────
+const FRED_KEY = process.env.FRED_API_KEY || 'DEMO_KEY'; // set FRED_API_KEY in Railway env for higher limits
+
+async function fetchFredSeries(seriesId, limit) {
+  limit = limit || 200;
+  const url = 'https://api.stlouisfed.org/fred/series/observations?series_id=' + seriesId
+    + '&api_key=' + FRED_KEY + '&file_type=json&sort_order=asc&limit=' + limit
+    + '&observation_start=2000-01-01';
+  const r = await fetchT(url, { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'application/json' } }, 25000);
+  if (!r.ok) throw new Error('FRED API ' + seriesId + ' ' + r.status);
+  const body = await r.json();
+  if (body.error_code) throw new Error('FRED API error: ' + body.error_message);
+  return (body.observations || []).filter(function(o) { return o.value !== '.'; });
+}
+
+// ── FRED: WALCL — Federal Reserve Total Assets ────────────────────────────────
 app.get('/api/fred/walcl', async function(req, res) {
   const cacheKey = 'fred/walcl';
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
   try {
-    const r = await fetchT(
-      'https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL',
-      { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,text/plain,*/*' } },
-      40000
-    );
-    if (!r.ok) throw new Error('FRED ' + r.status);
-    const csv = await r.text();
+    const obs = await fetchFredSeries('WALCL', 500);
     const monthly = {};
-    csv.trim().split('\n').slice(1).forEach(function(ln) {
-      const p = ln.split(',');
-      if (p.length < 2) return;
-      const v = p[1].trim();
-      if (!v || v === '.') return;
-      const val = parseFloat(v);
-      if (isNaN(val) || val <= 0) return;
-      monthly[p[0].slice(0, 7)] = +(val / 1e6).toFixed(3);
+    obs.forEach(function(o) {
+      const val = parseFloat(o.value);
+      if (!isNaN(val) && val > 0) monthly[o.date.slice(0, 7)] = +(val / 1e6).toFixed(3);
     });
     const series = Object.entries(monthly)
       .sort(function(a, b) { return a[0] < b[0] ? -1 : 1; })
@@ -1245,58 +1248,53 @@ app.get('/api/fred/liquidity', async function(req, res) {
   const cached = getCache(cacheKey);
   if (cached) return res.json(cached);
 
-  function parseFredMonthlyL(csv, divisor) {
+  function obsToMonthly(obs, divisor) {
     const monthly = {};
-    csv.trim().split('\n').slice(1).forEach(function(ln) {
-      const p = ln.split(',');
-      if (p.length < 2) return;
-      const v = p[1].trim();
-      if (!v || v === '.') return;
-      const val = parseFloat(v);
-      if (isNaN(val) || val <= 0) return;
-      monthly[p[0].slice(0, 7)] = val / divisor;
+    obs.forEach(function(o) {
+      const val = parseFloat(o.value);
+      if (!isNaN(val) && val > 0) monthly[o.date.slice(0, 7)] = val / divisor;
     });
     return monthly;
   }
 
-  function getLastRateL(csv) {
-    const lines = csv.trim().split('\n').slice(1).filter(Boolean);
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const p = lines[i].split(',');
-      const v = parseFloat(p[1]);
-      if (!isNaN(v) && v > 0) return v;
-    }
-    return null;
-  }
-
   try {
-    const opts = { headers: { 'User-Agent': 'Mozilla/5.0', 'Accept': 'text/csv,text/plain,*/*' } };
     const [walclRes, ecbRes, eurusdRes, bojRes, jpyusdRes] = await Promise.allSettled([
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=WALCL', opts, 40000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=ECBASSETSW', opts, 40000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXUSEU', opts, 25000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=JPNASSETS', opts, 40000).then(function(r) { return r.text(); }),
-      fetchT('https://fred.stlouisfed.org/graph/fredgraph.csv?id=DEXJPUS', opts, 25000).then(function(r) { return r.text(); })
+      fetchFredSeries('WALCL',     500),
+      fetchFredSeries('ECBASSETSW',500),
+      fetchFredSeries('DEXUSEU',   500),
+      fetchFredSeries('JPNASSETS', 500),
+      fetchFredSeries('DEXJPUS',   500),
     ]);
 
+    // Get latest FX spot rates from the observation arrays
+    function lastRate(res) {
+      if (res.status !== 'fulfilled') return null;
+      const obs = res.value;
+      for (let i = obs.length-1; i >= 0; i--) {
+        const v = parseFloat(obs[i].value);
+        if (!isNaN(v) && v > 0) return v;
+      }
+      return null;
+    }
+
     let eurusd = 1.08;
-    if (eurusdRes.status === 'fulfilled') eurusd = getLastRateL(eurusdRes.value) || eurusd;
+    const eu = lastRate(eurusdRes); if (eu) eurusd = eu;
 
     let jpyusd = 150;
-    if (jpyusdRes.status === 'fulfilled') { const r = getLastRateL(jpyusdRes.value); if (r) jpyusd = r; }
+    const jp = lastRate(jpyusdRes); if (jp) jpyusd = jp;
 
-    const fedMonthly = walclRes.status === 'fulfilled' ? parseFredMonthlyL(walclRes.value, 1e6) : {};
+    const fedMonthly = walclRes.status === 'fulfilled' ? obsToMonthly(walclRes.value, 1e6) : {};
 
     const ecbMonthly = {};
     if (ecbRes.status === 'fulfilled') {
-      const rawEcb = parseFredMonthlyL(ecbRes.value, 1e6);
+      const rawEcb = obsToMonthly(ecbRes.value, 1e6);
       Object.entries(rawEcb).forEach(function(e) { ecbMonthly[e[0]] = +(e[1] * eurusd).toFixed(3); });
     }
 
     const bojMonthly = {};
     if (bojRes.status === 'fulfilled') {
-      // JPNASSETS is in 100M JPY; convert to USD trillions: val * 1e8 / jpyusd / 1e12
-      const rawBoj = parseFredMonthlyL(bojRes.value, 1);
+      // JPNASSETS in 100M JPY → USD trillions
+      const rawBoj = obsToMonthly(bojRes.value, 1);
       Object.entries(rawBoj).forEach(function(e) {
         bojMonthly[e[0]] = +(e[1] * 1e8 / jpyusd / 1e12).toFixed(3);
       });
