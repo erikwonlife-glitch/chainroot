@@ -525,7 +525,7 @@ function go(id, el){
   }
   // Init Trade Lab
   if(id==='trade-lab') {
-    if(typeof TL !== 'undefined') TL.init();
+    if(typeof TL !== 'undefined' && typeof TL.init === 'function') TL.init();
   }
   // Trigger TradingView chart inits for macro panels (lazy load)
   const tvMap = {

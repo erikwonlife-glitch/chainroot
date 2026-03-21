@@ -389,6 +389,11 @@ window.setSiteLang = function(lang) {
   }
 };
 
+function filterPMMarkets(markets, filter) {
+  if (!filter || filter === 'all') return markets;
+  return markets.filter(m => m.category === filter);
+}
+
 /* ── EXPORTS ─────────────────────────────────────────────── */
 window.openPredictPage   = openPredictPage;
 window.closePredictPage  = closePredictPage;
