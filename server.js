@@ -82,23 +82,33 @@ function fetchT(url, options, ms) {
 
 // ── LIVE BTC PRICE HELPER — Binance primary, CoinGecko fallback ───────────────
 async function fetchBTCPrice() {
+  // 1. OKX — works from Railway US, real-time
   try {
-    var r = await fetchT('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {}, 5000);
+    var r = await fetchT('https://www.okx.com/api/v5/market/ticker?instId=BTC-USDT', {}, 6000);
     var d = await r.json();
-    if (d && d.price) {
-      var p = parseFloat(d.price);
-      console.log('[BTC] Live price from Binance:', p);
-      return p;
+    if (d && d.data && d.data[0] && d.data[0].last) {
+      var p = parseFloat(d.data[0].last);
+      if (p > 1000) { console.log('[BTC] Live price from OKX:', p); return p; }
     }
-  } catch(e) { console.warn('[BTC] Binance failed:', e.message); }
+  } catch(e) { console.warn('[BTC] OKX failed:', e.message); }
+  // 2. Binance
   try {
-    var r2 = await fetchT('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', {}, 8000);
+    var r2 = await fetchT('https://api.binance.com/api/v3/ticker/price?symbol=BTCUSDT', {}, 5000);
     var d2 = await r2.json();
-    if (d2 && d2.bitcoin) {
-      console.log('[BTC] Live price from CoinGecko:', d2.bitcoin.usd);
-      return d2.bitcoin.usd;
+    if (d2 && d2.price) {
+      var p2 = parseFloat(d2.price);
+      if (p2 > 1000) { console.log('[BTC] Live price from Binance:', p2); return p2; }
     }
-  } catch(e2) { console.warn('[BTC] CoinGecko also failed:', e2.message); }
+  } catch(e2) { console.warn('[BTC] Binance failed:', e2.message); }
+  // 3. CoinGecko simple price
+  try {
+    var r3 = await fetchT('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd', {}, 8000);
+    var d3 = await r3.json();
+    if (d3 && d3.bitcoin && d3.bitcoin.usd > 1000) {
+      console.log('[BTC] Live price from CoinGecko:', d3.bitcoin.usd);
+      return d3.bitcoin.usd;
+    }
+  } catch(e3) { console.warn('[BTC] CoinGecko also failed:', e3.message); }
   return null;
 }
 
