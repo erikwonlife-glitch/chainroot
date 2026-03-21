@@ -15,6 +15,24 @@ const TL = (function(){
   const JOURNAL_KEY = 'dfm_journal_v1';
   let _jDir = 'BUY';
 
+  // ── SIGNALS STATE ─────────────────────────────────────────────────────────
+
+  let _sigData     = [];
+  let _sigTf       = 'ALL';
+  let _sigInterval = null;
+  let _sigCountdown = 60;
+
+  const SIG_META = {
+    GOLDEN_DOT:   { color: '#f0c040', label: '🟡 GOLDEN DOT',   banner: false },
+    PINK_DOT:     { color: '#ff69b4', label: '🩷 PINK DOT',      banner: false },
+    STRONG_BUY:   { color: '#00e87a', label: '💚 STRONG BUY',    banner: true  },
+    STRONG_SELL:  { color: '#ff4444', label: '❤️ STRONG SELL',   banner: true  },
+    BULL_REENTRY: { color: '#00b4d8', label: '🟢 BULL RE-ENTRY', banner: false },
+    BEAR_REENTRY: { color: '#ff6b35', label: '🔴 BEAR RE-ENTRY', banner: false },
+  };
+
+  const SIG_TFS = ['ALL','15m','45m','1H','2H','4H','1D','1W'];
+
   // ── CALENDAR STATE ────────────────────────────────────────────────────────
 
   let _calYear  = new Date().getFullYear();
@@ -48,18 +66,161 @@ const TL = (function(){
 
   function signalsContent(){
     const t = tier();
-    const badge = t >= 2
-      ? `<span style="background:rgba(0,232,122,0.15);color:#00e87a;border:1px solid rgba(0,232,122,0.3);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">LIVE</span>`
-      : `<span style="background:rgba(255,107,53,0.15);color:#ff6b35;border:1px solid rgba(255,107,53,0.3);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">48H DELAY</span>`;
-    return placeholderCard(
-      '📡',
-      'Signal Feed',
-      'Live buy/sell signals from the DeFiMongo TradingView indicator. Free tier sees signals with 48-hour delay.',
-      `<div style="margin-top:16px;display:flex;align-items:center;gap:8px">
-        <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">Your tier:</span>
-        ${badge}
-      </div>`
-    );
+    const tfPills = SIG_TFS.map(function(tf){
+      const active = tf === 'ALL';
+      return `<button onclick="TL.setTfFilter('${tf}')" id="tl-sig-tf-${tf}"
+        style="background:${active?'rgba(0,180,216,0.15)':'transparent'};border:1px solid ${active?'#00b4d8':'rgba(255,255,255,0.1)'};border-radius:20px;padding:4px 12px;font-family:'Space Mono',monospace;font-size:10px;color:${active?'#00b4d8':'#4a6070'};cursor:pointer;letter-spacing:1px;transition:all .15s">${tf}</button>`;
+    }).join('');
+
+    return `
+      <div>
+        <!-- Header row -->
+        <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df">📡 SIGNAL FEED</div>
+          <div style="display:flex;align-items:center;gap:10px">
+            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">
+              Refresh in <span id="tl-sig-countdown" style="color:#00b4d8">60</span>s
+            </span>
+            <button onclick="TL.refreshSignals()"
+              style="background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:4px 10px;font-family:'Space Mono',monospace;font-size:12px;color:#4a6070;cursor:pointer;transition:border-color .15s"
+              onmouseover="this.style.borderColor='#00b4d8'" onmouseout="this.style.borderColor='rgba(0,180,216,0.2)'">↻</button>
+          </div>
+        </div>
+
+        <!-- 48h delay banner (free tier) -->
+        ${t < 2 ? `
+        <div style="background:rgba(255,107,53,0.1);border:1px solid rgba(255,107,53,0.3);border-radius:8px;padding:10px 16px;margin-bottom:16px;font-family:'Space Mono',monospace;font-size:11px;color:#ff6b35">
+          ⏰ 48-hour delay active — upgrade to Pro for live signals
+        </div>` : ''}
+
+        <!-- Timeframe filter pills -->
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px">
+          ${tfPills}
+        </div>
+
+        <!-- Signal list -->
+        <div id="tl-sig-list" style="max-height:500px;overflow-y:auto"></div>
+      </div>`;
+  }
+
+  // ── SIGNALS: FETCH & RENDER ───────────────────────────────────────────────
+
+  function sFetchSignals(){
+    const t    = tier();
+    const base = (typeof window !== 'undefined' && window.BACKEND_URL)
+      ? window.BACKEND_URL
+      : 'https://chainroot-production-b7d1.up.railway.app';
+    const url  = base + '/api/signals' + (t < 2 ? '?delay=true' : '');
+    fetch(url)
+      .then(function(r){ return r.json(); })
+      .then(function(data){ _sigData = data.signals || []; sRenderSignals(); })
+      .catch(function(){ sRenderSignals(); });
+  }
+
+  function sTimeAgo(ms){
+    const diff = Date.now() - ms;
+    const m = Math.floor(diff / 60000);
+    if(m < 1)  return 'just now';
+    if(m < 60) return m + 'm ago';
+    const h = Math.floor(m / 60);
+    if(h < 24) return h + 'h ago';
+    return Math.floor(h / 24) + 'd ago';
+  }
+
+  function sRenderSignals(){
+    const listEl = document.getElementById('tl-sig-list');
+    if(!listEl) return;
+
+    const filtered = _sigTf === 'ALL'
+      ? _sigData
+      : _sigData.filter(function(s){ return s.tf === _sigTf; });
+
+    if(!filtered.length){
+      listEl.innerHTML = `<div style="text-align:center;padding:48px 0;font-family:'Space Mono',monospace;font-size:13px;color:#4a6070">📭 No signals yet. Waiting for TradingView alerts...</div>`;
+      return;
+    }
+
+    listEl.innerHTML = filtered.map(function(s){
+      const meta   = SIG_META[s.type] || { color: '#4a6070', label: s.type, banner: false };
+      const color  = meta.color;
+      const ago    = sTimeAgo(s.receivedAt);
+      const priceStr = s.price != null ? '$' + Number(s.price).toLocaleString() : '—';
+      const tfBadge  = s.tf ? `<span style="background:rgba(255,255,255,0.07);border-radius:4px;padding:2px 8px;font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${s.tf}</span>` : '';
+
+      if(meta.banner){
+        return `
+          <div style="border:1px solid ${color};border-radius:10px;padding:16px 20px;margin-bottom:10px;background:${color}18;box-shadow:0 0 20px ${color}28">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+              <div>
+                <div style="font-family:'Space Mono',monospace;font-size:11px;color:${color};font-weight:700;letter-spacing:1px;margin-bottom:6px">${meta.label}</div>
+                <div style="font-family:'Space Mono',monospace;font-size:20px;color:#00b4d8;font-weight:700">${s.symbol || '—'}</div>
+              </div>
+              <div style="text-align:right">
+                <div style="font-family:'Space Mono',monospace;font-size:18px;color:#ccd8df;margin-bottom:6px">${priceStr}</div>
+                <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+                  ${tfBadge}
+                  <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${ago}</span>
+                </div>
+              </div>
+            </div>
+          </div>`;
+      }
+
+      return `
+        <div style="border-left:3px solid ${color};border:1px solid rgba(255,255,255,0.06);border-left:3px solid ${color};border-radius:0 8px 8px 0;padding:12px 16px;margin-bottom:8px;background:#0a1520;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:10px;color:${color};letter-spacing:1px;margin-bottom:4px">${meta.label}</div>
+            <div style="font-family:'Space Mono',monospace;font-size:14px;color:#00b4d8;font-weight:700">${s.symbol || '—'}</div>
+          </div>
+          <div style="text-align:right">
+            <div style="font-family:'Space Mono',monospace;font-size:13px;color:#ccd8df;margin-bottom:4px">${priceStr}</div>
+            <div style="display:flex;align-items:center;gap:8px;justify-content:flex-end">
+              ${tfBadge}
+              <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">${ago}</span>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+  }
+
+  function sSetTfFilter(tf){
+    _sigTf = tf;
+    SIG_TFS.forEach(function(t){
+      const btn = document.getElementById('tl-sig-tf-' + t);
+      if(!btn) return;
+      const active = t === tf;
+      btn.style.background  = active ? 'rgba(0,180,216,0.15)' : 'transparent';
+      btn.style.borderColor = active ? '#00b4d8' : 'rgba(255,255,255,0.1)';
+      btn.style.color       = active ? '#00b4d8' : '#4a6070';
+    });
+    sRenderSignals();
+  }
+
+  function sStartCountdown(){
+    if(_sigInterval) clearInterval(_sigInterval);
+    _sigCountdown = 60;
+    const el = document.getElementById('tl-sig-countdown');
+    if(el) el.textContent = _sigCountdown;
+    _sigInterval = setInterval(function(){
+      _sigCountdown--;
+      const cdEl = document.getElementById('tl-sig-countdown');
+      if(cdEl) cdEl.textContent = _sigCountdown;
+      if(_sigCountdown <= 0){
+        _sigCountdown = 60;
+        if(cdEl) cdEl.textContent = _sigCountdown;
+        sFetchSignals();
+      }
+    }, 1000);
+  }
+
+  function sInitSignals(){
+    sFetchSignals();
+    sStartCountdown();
+  }
+
+  function sRefreshSignals(){
+    sFetchSignals();
+    sStartCountdown();
   }
 
   // ── JOURNAL: STORAGE ─────────────────────────────────────────────────────
@@ -1148,6 +1309,7 @@ const TL = (function(){
       btn.style.borderBottom = active ? '2px solid #00e87a' : '2px solid transparent';
       pane.style.display = active ? 'block' : 'none';
     });
+    if(id === 'signals')  sInitSignals();
     if(id === 'journal')  jRenderList();
     if(id === 'stats')    sRenderStats();
     if(id === 'calendar') cRenderCalendar();
@@ -1213,9 +1375,11 @@ const TL = (function(){
     saveTrade:    jSaveTrade,
     deleteTrade:  jDeleteTrade,
     _exportCsv:   jExportCsv,
-    sRenderStats: sRenderStats,
-    _calNav:      cNavMonth,
-    _calDay:      cDayClick,
+    sRenderStats:   sRenderStats,
+    setTfFilter:    sSetTfFilter,
+    refreshSignals: sRefreshSignals,
+    _calNav:        cNavMonth,
+    _calDay:        cDayClick,
   };
 
 })();

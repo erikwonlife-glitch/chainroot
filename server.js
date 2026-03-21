@@ -7,6 +7,9 @@ const app    = express();
 const PORT   = process.env.PORT || 8080;
 const FH_KEY = process.env.FINNHUB_KEY || '';
 
+// ── SIGNALS STORE ─────────────────────────────────────────────────────────────
+const SIGNALS = [];
+
 // ── TIMEOUT-SAFE FETCH — node-fetch v2 ignores {timeout}, use AbortController ─
 function fetchT(url, options, ms) {
   ms = ms || 12000;
@@ -1050,6 +1053,33 @@ app.get('/api/fred/liquidity', async function(req, res) {
     setCache(cacheKey, result, 6 * 60 * 60 * 1000);
     res.json(result);
   } catch(e) { res.status(502).json({ error: e.message }); }
+});
+
+// ── SIGNALS ───────────────────────────────────────────────────────────────────
+
+// POST /api/signals/webhook — receives alerts from TradingView Pine Script
+app.post('/api/signals/webhook', function(req, res) {
+  const secret = req.headers['x-webhook-secret'];
+  if (!secret || secret !== process.env.WEBHOOK_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const { type, symbol, price, tf, time } = req.body || {};
+  const signal = {
+    id:         Date.now() + '' + Math.floor(Math.random() * 9000 + 1000),
+    type, symbol, price, tf, time,
+    receivedAt: Date.now(),
+  };
+  SIGNALS.unshift(signal);
+  if (SIGNALS.length > 200) SIGNALS.length = 200;
+  res.json({ ok: true });
+});
+
+// GET /api/signals — returns stored signals, optionally delay-filtered
+app.get('/api/signals', function(req, res) {
+  const delay = req.query.delay === 'true';
+  const cutoff = Date.now() - 48 * 60 * 60 * 1000;
+  const filtered = delay ? SIGNALS.filter(function(s) { return s.receivedAt < cutoff; }) : SIGNALS;
+  res.json({ signals: filtered.slice(0, 50), total: SIGNALS.length });
 });
 
 // ── HEALTH & ROOT ─────────────────────────────────────────────────────────────
