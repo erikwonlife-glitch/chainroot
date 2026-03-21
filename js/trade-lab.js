@@ -62,8 +62,8 @@ const TL = (function(){
     return `
       <div>
         <div style="margin-bottom:20px">
-          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📺 TRADINGVIEW ACCESS</div>
-          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px">Register your details to receive indicator access</div>
+          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df;margin-bottom:4px">📺 MONGO PULSE ACCESS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;letter-spacing:1px">Register your details to receive Mongo Pulse indicator access</div>
         </div>
 
         <!-- How it works -->
@@ -1317,7 +1317,7 @@ const TL = (function(){
   // ── TAB CONFIG ────────────────────────────────────────────────────────────
 
   const TABS = [
-    { id: 'signals',   label: 'TV ACCESS', build: tvAccessContent },
+    { id: 'signals',   label: 'PULSE ACCESS', build: tvAccessContent },
     { id: 'journal',   label: 'JOURNAL',   build: journalContent  },
     { id: 'risk',      label: 'RISK CALC', build: riskContent     },
     { id: 'stats',     label: 'STATS',     build: statsContent    },
