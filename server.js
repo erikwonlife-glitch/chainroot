@@ -1237,24 +1237,23 @@ function getCurrentTrend(smaShort, smaLong) {
 }
 
 async function fetchBinanceKlines(symbol, interval, limit) {
-  // Bybit V5 spot — same symbol format as Binance, not geo-blocked
-  var ivMap = { '4H': '240', '1D': 'D', '1W': 'W' };
-  var iv  = ivMap[interval] || interval;
-  var lim = limit || 250;
-  var url = 'https://api.bybit.com/v5/market/kline?category=spot&symbol=' + symbol + '&interval=' + iv + '&limit=' + lim;
+  // OKX spot — convert BTCUSDT → BTC-USDT
+  var instId = symbol.replace(/^([A-Z0-9]+?)(USDT|BUSD|BTC|ETH)$/, '$1-$2');
+  var lim = Math.min(limit || 250, 300); // OKX max 300
+  var url = 'https://www.okx.com/api/v5/market/candles?instId=' + instId + '&bar=' + interval + '&limit=' + lim;
   try {
     var r    = await fetchT(url, {}, 10000);
     var body = await r.json();
-    var list = body && body.result && body.result.list;
+    var list = body && body.data;
     if (!Array.isArray(list) || list.length === 0) return null;
-    // Bybit returns newest-first; reverse and extract close (index 4)
+    // OKX returns newest-first; reverse and extract close (index 4)
     return list.slice().reverse().map(function(k) { return parseFloat(k[4]); });
   } catch (e) {
     return null;
   }
 }
 
-// Hardcoded top 200 USDT pairs by market cap (avoids Binance ticker endpoint which may be blocked)
+// Hardcoded top 200 USDT pairs by market cap — fetched via OKX (Bybit/Binance geo-blocked on Railway)
 const SCANNER_SYMBOLS = [
   'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','DOGEUSDT','ADAUSDT','AVAXUSDT','SHIBUSDT','DOTUSDT',
   'LINKUSDT','LTCUSDT','BCHUSDT','XLMUSDT','UNIUSDT','ATOMUSDT','ETCUSDT','XMRUSDT','FILUSDT','APTUSDT',
