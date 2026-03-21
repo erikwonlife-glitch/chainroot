@@ -1331,12 +1331,13 @@ const TL = (function(){
 
   // ── MARKET SCANNER ────────────────────────────────────────────────────────
 
-  let _scanFilter    = 'ALL';
-  let _scanInterval  = null;
-  let _scanCountdown = 60;
-  let _scanLastFetch = null;
+  let _scanFilter   = 'ALL';
+  let _scanTF       = '4H';
+  let _scanInterval = null;
+  let _scanData     = null; // last /api/scanner response
 
   function scTimeAgo(ms){
+    if(!ms) return '—';
     var s = Math.floor((Date.now() - ms) / 1000);
     if(s < 60)  return s + 's ago';
     var m = Math.floor(s / 60);
@@ -1347,6 +1348,7 @@ const TL = (function(){
   }
 
   function scTimeSince(ms){
+    if(!ms) return '—';
     var total = Math.floor((Date.now() - ms) / 1000);
     var w = Math.floor(total / 604800); total %= 604800;
     var d = Math.floor(total / 86400);  total %= 86400;
@@ -1360,50 +1362,61 @@ const TL = (function(){
     return parts.length ? parts.join(' ') : '< 1m';
   }
 
-  function scannerRefresh(){
-    fetch(TV_BACKEND + '/api/signals')
-      .then(function(r){ return r.json(); })
-      .then(function(signals){
-        _scanLastFetch = Date.now();
-        // Keep only 4H and 1D signals
-        var filtered = signals.filter(function(s){ return s.tf === '4H' || s.tf === '1D'; });
-        // Latest signal per symbol
-        var bySymbol = {};
-        filtered.forEach(function(s){
-          if(!bySymbol[s.symbol] || s.receivedAt > bySymbol[s.symbol].receivedAt){
-            bySymbol[s.symbol] = s;
-          }
-        });
-        // Keep only STRONG_BUY and STRONG_SELL
-        var rows = Object.values(bySymbol).filter(function(s){
-          return s.signal === 'STRONG_BUY' || s.signal === 'STRONG_SELL';
-        });
-        rows.sort(function(a, b){ return b.receivedAt - a.receivedAt; });
-        scRenderTable(rows);
-        scUpdateMeta(rows);
-      })
-      .catch(function(){ /* silent — keep stale data */ });
+  function scFormatPrice(p){
+    if(p == null) return '—';
+    var n = Number(p);
+    var dec = n >= 1000 ? 2 : n >= 1 ? 4 : n >= 0.01 ? 6 : 8;
+    return '$' + n.toLocaleString('en-US', {minimumFractionDigits: dec, maximumFractionDigits: dec});
   }
 
-  function scRenderTable(allRows){
+  function scSkeletonRows(){
+    return [1,2,3].map(function(){
+      return `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 110px 160px;gap:0;padding:14px 16px;border-bottom:1px solid rgba(0,180,216,0.05);align-items:center">
+        ${[36,80,80,60,70,100].map(function(w){
+          return `<div style="height:10px;width:${w}px;background:rgba(0,180,216,0.06);border-radius:4px;animation:scPulse 1.4s ease-in-out infinite"></div>`;
+        }).join('')}
+      </div>`;
+    }).join('');
+  }
+
+  function scRenderTable(data){
     var tableEl = document.getElementById('tl-sc-table');
     if(!tableEl) return;
 
-    var rows = _scanFilter === 'BULLISH'
-      ? allRows.filter(function(s){ return s.signal === 'STRONG_BUY'; })
-      : _scanFilter === 'BEARISH'
-        ? allRows.filter(function(s){ return s.signal === 'STRONG_SELL'; })
-        : allRows;
-
-    if(rows.length === 0){
+    if(!data || data.meta.running && (!data.assets || !data.assets.length)){
       tableEl.innerHTML = `<div style="padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070;line-height:1.8">
-        No 4H/1D trend flips detected yet.<br>
-        Make sure your TradingView alerts are configured and firing to the webhook.
-      </div>`;
+        Scanner is warming up — first scan runs 10 seconds after server start.</div>`;
       return;
     }
 
-    var header = `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 100px 160px;gap:0;padding:8px 16px;background:#060d12;border-bottom:1px solid rgba(0,180,216,0.08)">
+    var trendKey    = _scanTF === '4H' ? 'trend4h' : _scanTF === '1D' ? 'trend1d' : 'trend1w';
+    var flippedKey  = _scanTF === '4H' ? 'flippedAt4h' : _scanTF === '1D' ? 'flippedAt1d' : 'flippedAt1w';
+
+    var allRows = data.assets.filter(function(a){ return a[trendKey]; });
+
+    var rows = _scanFilter === 'BULLISH'  ? allRows.filter(function(a){ return a[trendKey] === 'BULLISH'; })
+             : _scanFilter === 'BEARISH'  ? allRows.filter(function(a){ return a[trendKey] === 'BEARISH'; })
+             : _scanFilter === 'FLIPPED'  ? allRows.filter(function(a){ return a[flippedKey]; })
+             : allRows;
+
+    // Sort: most recently flipped first, null to bottom
+    rows = rows.slice().sort(function(a, b){
+      var fa = a[flippedKey], fb = b[flippedKey];
+      if(fa && fb) return fb - fa;
+      if(fa) return -1;
+      if(fb) return 1;
+      return 0;
+    });
+
+    if(rows.length === 0){
+      var msg = _scanFilter === 'FLIPPED'
+        ? 'No recent trend flips detected on ' + _scanTF + '.'
+        : 'No ' + _scanFilter + ' assets found for the ' + _scanTF + ' timeframe.';
+      tableEl.innerHTML = `<div style="padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">${msg}</div>`;
+      return;
+    }
+
+    var header = `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 110px 160px;gap:0;padding:8px 16px;background:#060d12;border-bottom:1px solid rgba(0,180,216,0.08)">
       <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">#</div>
       <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">ASSET</div>
       <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">TREND</div>
@@ -1412,28 +1425,27 @@ const TL = (function(){
       <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070">CHART</div>
     </div>`;
 
-    var rowsHtml = rows.map(function(s, i){
-      var bull     = s.signal === 'STRONG_BUY';
-      var accent   = bull ? '#00e87a' : '#ff4444';
-      var bg       = i % 2 === 0 ? '#0a1520' : '#060d12';
-      var trend    = bull
+    var rowsHtml = rows.map(function(a, i){
+      var bull    = a[trendKey] === 'BULLISH';
+      var accent  = bull ? '#00e87a' : '#ff4444';
+      var bg      = i % 2 === 0 ? '#0a1520' : '#060d12';
+      var trend   = bull
         ? `<span style="background:rgba(0,232,122,0.12);color:#00e87a;border:1px solid rgba(0,232,122,0.25);border-radius:4px;padding:3px 8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">↑ BULLISH</span>`
         : `<span style="background:rgba(255,68,68,0.12);color:#ff4444;border:1px solid rgba(255,68,68,0.25);border-radius:4px;padding:3px 8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px">↓ BEARISH</span>`;
-      var price    = s.price != null ? '$' + Number(s.price).toLocaleString('en-US', {maximumFractionDigits:4}) : '—';
-      var tvUrl    = 'https://www.tradingview.com/chart/?symbol=BINANCE:' + encodeURIComponent(s.symbol);
-      var ticker   = s.symbol.replace(/USDT$|USD$/, '');
+      var ticker  = a.symbol.replace(/USDT$/, '');
+      var tvUrl   = 'https://www.tradingview.com/chart/?symbol=BINANCE:' + encodeURIComponent(a.symbol);
 
-      return `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 100px 160px;gap:0;padding:12px 16px;background:${bg};border-left:3px solid ${accent};border-bottom:1px solid rgba(0,180,216,0.05);align-items:center;transition:background 0.15s"
+      return `<div style="display:grid;grid-template-columns:36px 1fr 130px 130px 110px 160px;gap:0;padding:12px 16px;background:${bg};border-left:3px solid ${accent};border-bottom:1px solid rgba(0,180,216,0.05);align-items:center"
         onmouseover="this.style.background='rgba(0,180,216,0.04)'" onmouseout="this.style.background='${bg}'">
         <div style="font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">${i+1}</div>
         <div>
           <div style="font-family:'Space Mono',monospace;font-size:13px;color:#fff;font-weight:700">${ticker}</div>
-          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;margin-top:2px">${s.symbol} · ${s.tf}</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;margin-top:2px">${a.symbol}</div>
         </div>
         <div>${trend}</div>
-        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${scTimeSince(s.receivedAt)}</div>
-        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${price}</div>
-        <div><a href="${tvUrl}" target="_blank" style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;text-decoration:none;letter-spacing:0.5px"
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${scTimeSince(a[flippedKey])}</div>
+        <div style="font-family:'Space Mono',monospace;font-size:11px;color:#ccd8df">${scFormatPrice(a.price)}</div>
+        <div><a href="${tvUrl}" target="_blank" rel="noopener" style="font-family:'Space Mono',monospace;font-size:10px;color:#00b4d8;text-decoration:none"
           onmouseover="this.style.color='#ccd8df'" onmouseout="this.style.color='#00b4d8'">Open in TradingView ↗</a></div>
       </div>`;
     }).join('');
@@ -1441,81 +1453,94 @@ const TL = (function(){
     tableEl.innerHTML = header + rowsHtml;
   }
 
-  function scUpdateMeta(rows){
-    var bullCount  = rows.filter(function(s){ return s.signal === 'STRONG_BUY';  }).length;
-    var bearCount  = rows.filter(function(s){ return s.signal === 'STRONG_SELL'; }).length;
-    var totalEl    = document.getElementById('tl-sc-total');
-    var bullEl     = document.getElementById('tl-sc-bull');
-    var bearEl     = document.getElementById('tl-sc-bear');
-    var lastEl     = document.getElementById('tl-sc-last');
-    if(totalEl) totalEl.textContent = rows.length;
+  function scUpdateStats(data){
+    if(!data) return;
+    var suffix    = _scanTF === '4H' ? '4h' : _scanTF === '1D' ? '1d' : '1w';
+    var bullCount = data['bullish' + suffix] || 0;
+    var bearCount = data['bearish' + suffix] || 0;
+    var totalEl = document.getElementById('tl-sc-total');
+    var bullEl  = document.getElementById('tl-sc-bull');
+    var bearEl  = document.getElementById('tl-sc-bear');
+    var lastEl  = document.getElementById('tl-sc-last');
+    if(totalEl) totalEl.textContent = data.total || '—';
     if(bullEl)  bullEl.textContent  = bullCount;
     if(bearEl)  bearEl.textContent  = bearCount;
-    if(lastEl)  lastEl.textContent  = _scanLastFetch ? scTimeAgo(_scanLastFetch) : '—';
+    if(lastEl)  lastEl.textContent  = data.meta && data.meta.running ? 'Scanning...' : scTimeAgo(data.meta && data.meta.lastRun);
+  }
+
+  function scSetTF(tf){
+    _scanTF = tf;
+    ['4H','1D','1W'].forEach(function(k){
+      var el = document.getElementById('tl-sc-tf-' + k.toLowerCase());
+      if(!el) return;
+      var active = k === tf;
+      el.style.background  = active ? '#00b4d8' : 'rgba(0,180,216,0.08)';
+      el.style.color       = active ? '#060d12' : '#00b4d8';
+      el.style.borderColor = active ? '#00b4d8' : 'rgba(0,180,216,0.2)';
+    });
+    scUpdateStats(_scanData);
+    scRenderTable(_scanData);
   }
 
   function scSetFilter(f){
     _scanFilter = f;
-    ['ALL','BULLISH','BEARISH'].forEach(function(k){
+    ['ALL','BULLISH','BEARISH','FLIPPED'].forEach(function(k){
       var el = document.getElementById('tl-sc-f-' + k.toLowerCase());
       if(!el) return;
       var active = k === f;
-      el.style.background    = active ? '#00b4d8' : 'transparent';
-      el.style.color         = active ? '#060d12' : '#4a6070';
-      el.style.borderColor   = active ? '#00b4d8' : 'rgba(0,180,216,0.2)';
+      el.style.background  = active ? '#00b4d8' : 'transparent';
+      el.style.color       = active ? '#060d12' : '#4a6070';
+      el.style.borderColor = active ? '#00b4d8' : 'rgba(0,180,216,0.2)';
     });
-    // Re-render table with current data (no re-fetch needed)
-    fetch(TV_BACKEND + '/api/signals')
+    scRenderTable(_scanData);
+  }
+
+  function scannerRefresh(){
+    var tableEl = document.getElementById('tl-sc-table');
+    if(tableEl && !_scanData){
+      tableEl.innerHTML = `<style>@keyframes scPulse{0%,100%{opacity:.3}50%{opacity:.7}}</style>` + scSkeletonRows();
+    }
+    fetch(TV_BACKEND + '/api/scanner')
       .then(function(r){ return r.json(); })
-      .then(function(signals){
-        var filtered = signals.filter(function(s){ return s.tf === '4H' || s.tf === '1D'; });
-        var bySymbol = {};
-        filtered.forEach(function(s){
-          if(!bySymbol[s.symbol] || s.receivedAt > bySymbol[s.symbol].receivedAt) bySymbol[s.symbol] = s;
-        });
-        var rows = Object.values(bySymbol).filter(function(s){
-          return s.signal === 'STRONG_BUY' || s.signal === 'STRONG_SELL';
-        });
-        rows.sort(function(a, b){ return b.receivedAt - a.receivedAt; });
-        scRenderTable(rows);
+      .then(function(data){
+        _scanData = data;
+        scUpdateStats(data);
+        scRenderTable(data);
       })
       .catch(function(){});
   }
 
   function scStartTimer(){
     if(_scanInterval) clearInterval(_scanInterval);
-    _scanCountdown = 60;
-    _scanInterval  = setInterval(function(){
-      _scanCountdown--;
-      var el = document.getElementById('tl-sc-countdown');
-      if(el) el.textContent = _scanCountdown + 's';
-      if(_scanCountdown <= 0){
-        _scanCountdown = 60;
-        scannerRefresh();
-      }
-    }, 1000);
+    // Re-fetch every 4 hours (matches server scan interval)
+    _scanInterval = setInterval(scannerRefresh, 4 * 60 * 60 * 1000);
   }
 
   function scannerContent(){
     const tlvl = tier();
-    const disc = tlDisclaimer('4H болон 1D хүрээн дэх хамгийн сүүлийн тренд эргэлтүүдийг харуулна. STRONG_BUY болон STRONG_SELL дохионоор тренд эргэлтийг тодорхойлно. Elite гишүүнчлэл шаардлагатай.', 'tradelab-ai');
+    const disc = tlDisclaimer('Binance дээрх шилдэг 200 USDT хослолыг SMA50/SMA200 огтлолцлоор 4H, 1D, 1W хүрээнд тасралтгүй хянана. Тренд эргэлтийг автоматаар илрүүлж харуулна. Elite гишүүнчлэл шаардлагатай.', 'tradelab-ai');
     if(tlvl < 3){
       return disc + lockedCard(
         '🔍 Market Scanner',
-        'See which assets just flipped Bullish or Bearish on the 4H and 1D timeframes. Elite only.',
+        'Autonomous SMA50/SMA200 crossover scanner across top 200 Binance pairs on 4H, 1D and 1W. Elite only.',
         'UPGRADE TO ELITE'
       );
     }
 
     return `${disc}
+      <style>@keyframes scPulse{0%,100%{opacity:.3}50%{opacity:.7}}</style>
+
       <!-- Header -->
       <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;padding:20px 24px;margin-bottom:16px">
         <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px">
-          <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df">🔍 MARKET SCANNER</div>
-          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-            <span style="background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px">4H</span>
-            <span style="background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25);border-radius:4px;padding:3px 10px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px">1D</span>
-            <span style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070">Refresh in <span id="tl-sc-countdown">60s</span></span>
+          <div>
+            <div style="font-family:'Space Mono',monospace;font-size:16px;color:#ccd8df">🔍 MARKET SCANNER</div>
+            <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:1px;margin-top:4px">SMA50 / SMA200 · TOP 200 USDT PAIRS · AUTO EVERY 4H</div>
+          </div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap">
+            <button id="tl-sc-tf-4h" onclick="TL.scTF('4H')" style="background:#00b4d8;color:#060d12;border:1px solid #00b4d8;border-radius:5px;padding:5px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">4H</button>
+            <button id="tl-sc-tf-1d" onclick="TL.scTF('1D')" style="background:rgba(0,180,216,0.08);color:#00b4d8;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:5px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">1D</button>
+            <button id="tl-sc-tf-1w" onclick="TL.scTF('1W')" style="background:rgba(0,180,216,0.08);color:#00b4d8;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:5px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">1W</button>
           </div>
         </div>
       </div>
@@ -1523,7 +1548,7 @@ const TL = (function(){
       <!-- Stats bar -->
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px">
         <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:14px 16px">
-          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">TOTAL ASSETS</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">TOTAL SCANNED</div>
           <div id="tl-sc-total" style="font-family:'Space Mono',monospace;font-size:22px;color:#ccd8df">—</div>
         </div>
         <div style="background:#0a1520;border:1px solid rgba(0,232,122,0.12);border-radius:8px;padding:14px 16px">
@@ -1535,22 +1560,24 @@ const TL = (function(){
           <div id="tl-sc-bear" style="font-family:'Space Mono',monospace;font-size:22px;color:#ff4444">—</div>
         </div>
         <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:14px 16px">
-          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">LAST UPDATE</div>
-          <div id="tl-sc-last" style="font-family:'Space Mono',monospace;font-size:14px;color:#ccd8df;margin-top:4px">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;color:#4a6070;margin-bottom:6px">LAST SCAN</div>
+          <div id="tl-sc-last" style="font-family:'Space Mono',monospace;font-size:13px;color:#ccd8df;margin-top:4px">—</div>
         </div>
       </div>
 
       <!-- Filter pills -->
-      <div style="display:flex;gap:8px;margin-bottom:16px">
+      <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap">
         <button id="tl-sc-f-all"     onclick="TL.scFilter('ALL')"     style="background:#00b4d8;color:#060d12;border:1px solid #00b4d8;border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">ALL</button>
         <button id="tl-sc-f-bullish" onclick="TL.scFilter('BULLISH')" style="background:transparent;color:#4a6070;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">BULLISH</button>
         <button id="tl-sc-f-bearish" onclick="TL.scFilter('BEARISH')" style="background:transparent;color:#4a6070;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">BEARISH</button>
+        <button id="tl-sc-f-flipped" onclick="TL.scFilter('FLIPPED')" style="background:transparent;color:#4a6070;border:1px solid rgba(0,180,216,0.2);border-radius:5px;padding:6px 14px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1px;cursor:pointer">FLIPPED</button>
       </div>
 
       <!-- Table -->
       <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;overflow:hidden">
         <div id="tl-sc-table">
-          <div style="padding:40px;text-align:center;font-family:'Space Mono',monospace;font-size:11px;color:#4a6070">Loading...</div>
+          <style>@keyframes scPulse{0%,100%{opacity:.3}50%{opacity:.7}}</style>
+          ${scSkeletonRows()}
         </div>
       </div>`;
   }
@@ -1570,8 +1597,6 @@ const TL = (function(){
 
   function switchTab(id){
     _activeTabId = id;
-    // Stop scanner timer when leaving scanner tab
-    if(id !== 'scanner' && _scanInterval){ clearInterval(_scanInterval); _scanInterval = null; }
     TABS.forEach(function(tab){
       const btn = document.getElementById('tl-tab-'+tab.id);
       const pane = document.getElementById('tl-pane-'+tab.id);
@@ -1672,6 +1697,7 @@ const TL = (function(){
     _calDay:         cDayClick,
     scannerRefresh:  scannerRefresh,
     scFilter:        scSetFilter,
+    scTF:            scSetTF,
   };
 
 })();

@@ -1131,6 +1131,120 @@ function tvAdminAuth(req, res) {
 // ── SIGNALS ──────────────────────────────────────────────────────────────────
 const SIGNALS = []; // in-memory; holds last 500 webhook signals
 
+// ── AUTONOMOUS MARKET SCANNER ─────────────────────────────────────────────────
+const SCANNER_STATE = {}; // symbol -> { symbol, trend4h, trend1d, trend1w, price, flippedAt4h, flippedAt1d, flippedAt1w, updatedAt }
+const SCANNER_META  = { lastRun: null, running: false, totalScanned: 0 };
+
+function calculateSMA(closes, period) {
+  var result = new Array(closes.length).fill(null);
+  for (var i = period - 1; i < closes.length; i++) {
+    var sum = 0;
+    for (var j = i - period + 1; j <= i; j++) sum += closes[j];
+    result[i] = sum / period;
+  }
+  return result;
+}
+
+function detectCross(smaShort, smaLong) {
+  var n = smaShort.length;
+  if (n < 2) return null;
+  var s1 = smaShort[n-1], s2 = smaShort[n-2];
+  var l1 = smaLong[n-1],  l2 = smaLong[n-2];
+  if (s1 == null || s2 == null || l1 == null || l2 == null) return null;
+  if (s1 > l1 && s2 <= l2) return 'BULLISH';
+  if (s1 < l1 && s2 >= l2) return 'BEARISH';
+  return null;
+}
+
+function getCurrentTrend(smaShort, smaLong) {
+  var n = smaShort.length;
+  var s = smaShort[n-1], l = smaLong[n-1];
+  if (s == null || l == null) return null;
+  return s > l ? 'BULLISH' : 'BEARISH';
+}
+
+async function fetchBinanceKlines(symbol, interval, limit) {
+  var ivMap = { '4H': '4h', '1D': '1d', '1W': '1w' };
+  var iv = ivMap[interval] || interval;
+  var url = 'https://api.binance.com/api/v3/klines?symbol=' + symbol + '&interval=' + iv + '&limit=' + (limit || 250);
+  try {
+    var r = await fetchT(url, {}, 10000);
+    var data = await r.json();
+    if (!Array.isArray(data)) return null;
+    return data.map(function(k) { return parseFloat(k[4]); }); // close prices
+  } catch (e) {
+    return null;
+  }
+}
+
+async function runScanner() {
+  if (SCANNER_META.running) return;
+  SCANNER_META.running = true;
+  console.log('[Scanner] Starting scan...');
+
+  try {
+    // Step 1 — top 200 USDT pairs by volume
+    var tickerRes = await fetchT('https://api.binance.com/api/v3/ticker/24hr', {}, 15000);
+    var tickers   = await tickerRes.json();
+    var usdt = tickers
+      .filter(function(t) { return t.symbol.endsWith('USDT') && parseFloat(t.quoteVolume) > 0; })
+      .sort(function(a, b) { return parseFloat(b.quoteVolume) - parseFloat(a.quoteVolume); })
+      .slice(0, 200)
+      .map(function(t) { return t.symbol; });
+
+    // Step 2 — process in batches of 10
+    var BATCH = 10;
+    for (var i = 0; i < usdt.length; i += BATCH) {
+      var batch = usdt.slice(i, i + BATCH);
+      await Promise.all(batch.map(async function(sym) {
+        try {
+          var [closes4h, closes1d, closes1w] = await Promise.all([
+            fetchBinanceKlines(sym, '4H', 250),
+            fetchBinanceKlines(sym, '1D', 250),
+            fetchBinanceKlines(sym, '1W', 250),
+          ]);
+
+          var existing = SCANNER_STATE[sym] || {};
+          var entry = { symbol: sym, price: null, trend4h: null, trend1d: null, trend1w: null,
+            flippedAt4h: existing.flippedAt4h || null,
+            flippedAt1d: existing.flippedAt1d || null,
+            flippedAt1w: existing.flippedAt1w || null,
+            updatedAt: Date.now() };
+
+          function processTF(closes, trendKey, flippedKey) {
+            if (!closes) return;
+            entry.price = closes[closes.length - 1];
+            var sma50  = calculateSMA(closes, 50);
+            var sma200 = calculateSMA(closes, 200);
+            entry[trendKey]   = getCurrentTrend(sma50, sma200);
+            var cross         = detectCross(sma50, sma200);
+            if (cross) entry[flippedKey] = Date.now();
+          }
+
+          processTF(closes4h, 'trend4h', 'flippedAt4h');
+          processTF(closes1d, 'trend1d', 'flippedAt1d');
+          processTF(closes1w, 'trend1w', 'flippedAt1w');
+
+          SCANNER_STATE[sym] = entry;
+        } catch (e) { /* skip symbol on error */ }
+      }));
+
+      if (i + BATCH < usdt.length) await new Promise(function(r) { setTimeout(r, 500); });
+    }
+  } catch (e) {
+    console.error('[Scanner] Error:', e.message);
+  }
+
+  SCANNER_META.running      = false;
+  SCANNER_META.lastRun      = Date.now();
+  SCANNER_META.totalScanned = Object.keys(SCANNER_STATE).length;
+  console.log('[Scanner] Scan complete. Scanned:', SCANNER_META.totalScanned, 'symbols');
+}
+
+// Auto-run: 10s after startup, then every 4 hours
+setTimeout(runScanner, 10000);
+setInterval(runScanner, 4 * 60 * 60 * 1000);
+
 // POST /api/signals/webhook — receive signal from TradingView alert
 app.post('/api/signals/webhook', function(req, res) {
   const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
@@ -1421,6 +1535,35 @@ load();
 </script>
 </body>
 </html>`);
+});
+
+// ── SCANNER API ───────────────────────────────────────────────────────────────
+let _scannerCache = null;
+let _scannerCacheAt = 0;
+
+app.get('/api/scanner', function(req, res) {
+  var now = Date.now();
+  if (_scannerCache && now - _scannerCacheAt < 5 * 60 * 1000) return res.json(_scannerCache);
+
+  var assets = Object.values(SCANNER_STATE);
+  var result = {
+    assets:     assets,
+    meta:       SCANNER_META,
+    bullish4h:  assets.filter(function(a) { return a.trend4h === 'BULLISH'; }).length,
+    bearish4h:  assets.filter(function(a) { return a.trend4h === 'BEARISH'; }).length,
+    bullish1d:  assets.filter(function(a) { return a.trend1d === 'BULLISH'; }).length,
+    bearish1d:  assets.filter(function(a) { return a.trend1d === 'BEARISH'; }).length,
+    bullish1w:  assets.filter(function(a) { return a.trend1w === 'BULLISH'; }).length,
+    bearish1w:  assets.filter(function(a) { return a.trend1w === 'BEARISH'; }).length,
+    total:      assets.length,
+  };
+  _scannerCache   = result;
+  _scannerCacheAt = now;
+  res.json(result);
+});
+
+app.get('/api/scanner/status', function(req, res) {
+  res.json(SCANNER_META);
 });
 
 // ── HEALTH & ROOT ─────────────────────────────────────────────────────────────
