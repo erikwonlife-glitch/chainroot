@@ -1253,29 +1253,25 @@ async function fetchBinanceKlines(symbol, interval, limit) {
   }
 }
 
-// Hardcoded top 200 USDT pairs by market cap — fetched via OKX (Bybit/Binance geo-blocked on Railway)
-const SCANNER_SYMBOLS = [
-  'BTCUSDT','ETHUSDT','BNBUSDT','SOLUSDT','XRPUSDT','DOGEUSDT','ADAUSDT','AVAXUSDT','SHIBUSDT','DOTUSDT',
-  'LINKUSDT','LTCUSDT','BCHUSDT','XLMUSDT','UNIUSDT','ATOMUSDT','ETCUSDT','XMRUSDT','FILUSDT','APTUSDT',
-  'ARBUSDT','OPUSDT','NEARUSDT','INJUSDT','RUNEUSDT','AAVEUSDT','MKRUSDT','SNXUSDT','COMPUSDT','CRVUSDT',
-  'LDOUSDT','STXUSDT','EGLDUSDT','FLOWUSDT','XTZUSDT','ALGOUSDT','VETUSDT','ICPUSDT','HBARUSDT','SANDUSDT',
-  'MANAUSDT','AXSUSDT','GALAUSDT','CHZUSDT','APEUSDT','GMTUSDT','SPELLUSDT','PEOPLEUSDT','WOOUSDT','RLCUSDT',
-  'FTMUSDT','KLAYUSDT','ZILUSDT','WAVESUSDT','BATUSDT','ENJUSDT','COTIUSDT','CELRUSDT','SKLUSDT','CVCUSDT',
-  'STORJUSDT','DENTUSDT','HOTUSDT','REEFUSDT','XVGUSDT','WANUSDT','IOTAUSDT','NKNUSDT','CTKUSDT',
-  'SUPERUSDT','CFXUSDT','PROSUSDT','POLYXUSDT','SXPUSDT','MDTUSDT','DOCKUSDT','AGLDUSDT','RADUSDT',
-  'RAREUSDT','CHESSUSDT','ADXUSDT','AUCTIONUSDT','DARUSDT','BNXUSDT','CITYUSDT','LOOKSUSDT','FLUXUSDT',
-  'VOXELUSDT','ACHUSDT','IMXUSDT','STGUSDT','XECUSDT','GMXUSDT','FIDAUSDT','FRONTUSDT','CTSIUSDT',
-  'TRUUSDT','LQTYUSDT','SSVUSDT','EDUUSDT','IDUSDT','SUIUSDT','PEPEUSDT','FLOKIUSDT','TURBOUSDT',
-  'CYBERUSDT','ARKUSDT','IQUSDT','WLDUSDT','SEIUSDT','TIAUSDT','MNTUSDT','PYTHUSDT','JTOUSDT',
-  'ACEUSDT','NFPUSDT','AIUSDT','XAIUSDT','MANTAUSDT','ALTUSDT','JUPUSDT','ZETAUSDT','RONINUSDT',
-  'DYMUSDT','PIXELUSDT','PORTALUSDT','AXLUSDT','STRKUSDT','ETHFIUSDT','AEVOUSDT','VANRYUSDT',
-  'BONDUSDT','TAOUSDT','NOTUSDT','IOUSDT','ZKUSDT','LISTAUSDT','ZROUSDT','RENDERUSDT','WUSDT',
-  'SAGAUSDT','REZUSDT','BBUSDT','ENAUSDT','EIGENUSDT','SCRUSDT','CATIUSDT','HMSTRUSDT','REIUSDT',
-  'IOSTUSDT','COWUSDT','AKTUSDT','POLUSDT','MOODENGUSDT','KAIAUSDT','ACTUSDT','PNUTUSDT',
-  'GRASSUSDT','MOVEUSDT','MEUSDT','VIRTUALUSDT','PENGUUSDT','ONDOUSDT','TRUMPUSDT','MELANIAUSDT',
-  'UXLINKUSDT','HYPERUSDT','BRUSDT','BEAMXUSDT','STEEMUSDT','OSMOUSDT','LUNCUSDT','USTCUSDT',
-  'AMBUSDT','PHBUSDT','BLUEBIRDUSDT','LEVERUSDT','LDOUSDT','PIVXUSDT','FORTHUSDT','BURGERUSDT',
-];
+// Dynamically fetched from OKX — top USDT spot pairs sorted by 24h volume
+let SCANNER_SYMBOLS = [];
+
+async function refreshOKXSymbols() {
+  try {
+    var r = await fetchT('https://www.okx.com/api/v5/market/tickers?instType=SPOT', {}, 15000);
+    var body = await r.json();
+    if (!body || !Array.isArray(body.data)) throw new Error('bad response');
+    var symbols = body.data
+      .filter(function(t) { return t.instId.endsWith('-USDT'); })
+      .sort(function(a, b) { return parseFloat(b.volCcy24h) - parseFloat(a.volCcy24h); })
+      .slice(0, 300)
+      .map(function(t) { return t.instId.replace('-', ''); }); // BTC-USDT -> BTCUSDT
+    SCANNER_SYMBOLS = symbols;
+    console.log('[Scanner] OKX symbols refreshed:', symbols.length, 'USDT pairs');
+  } catch(e) {
+    console.log('[Scanner] Failed to refresh OKX symbols:', e.message);
+  }
+}
 
 async function runScanner() {
   if (SCANNER_META.running) return;
@@ -1309,7 +1305,9 @@ async function runScanner() {
           }
 
           var existing = SCANNER_STATE[sym] || {};
-          var entry = { symbol: sym, price: null, trend4h: null, trend1d: null, trend1w: null,
+          var base = sym.replace('USDT', '').toLowerCase();
+          var entry = { symbol: sym, logo: 'https://assets.coincap.io/assets/icons/' + base + '@2x.png',
+            price: null, trend4h: null, trend1d: null, trend1w: null,
             flippedAt4h: existing.flippedAt4h || null,
             flippedAt1d: existing.flippedAt1d || null,
             flippedAt1w: existing.flippedAt1w || null,
@@ -1348,8 +1346,9 @@ async function runScanner() {
   console.log('[Scanner] Scan complete. Scanned:', SCANNER_META.totalScanned, 'symbols');
 }
 
-// Auto-run: 10s after startup, then every 4 hours
-setTimeout(runScanner, 10000);
+// Auto-run: fetch OKX symbols first, then scan. Refresh symbols daily.
+refreshOKXSymbols().then(function() { setTimeout(runScanner, 2000); });
+setInterval(refreshOKXSymbols, 24 * 60 * 60 * 1000);
 setInterval(runScanner, 4 * 60 * 60 * 1000);
 
 // POST /api/signals/webhook — receive signal from TradingView alert
