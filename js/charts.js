@@ -1,3 +1,18 @@
+// ── Shared helper: replace broken "01 Jan 70" crosshair label with "Day X" ───
+function addDayTooltip(chart, wrap) {
+  var tip = document.createElement('div');
+  tip.style.cssText = 'position:absolute;display:none;padding:3px 8px;background:#1c2d38;color:#c8d8e4;font-family:Space Mono,monospace;font-size:10px;border-radius:4px;pointer-events:none;z-index:50;border:1px solid #2d4a5a;white-space:nowrap;bottom:28px;transform:translateX(-50%);';
+  wrap.style.position = 'relative';
+  wrap.appendChild(tip);
+  chart.subscribeCrosshairMove(function(param) {
+    if (!param || param.time == null || !param.point) { tip.style.display = 'none'; return; }
+    tip.textContent = 'Day ' + param.time;
+    tip.style.display = 'block';
+    var x = Math.max(30, Math.min(param.point.x, wrap.offsetWidth - 30));
+    tip.style.left = x + 'px';
+  });
+}
+
 // ── DRAW ALL CHARTS — called once after BTC price history is loaded ───────────
 async function drawAllCharts(){
   const p  = BTC_CURRENT;
@@ -1324,7 +1339,7 @@ async function drawAllCharts(){
         height: wrap.offsetHeight || 500,
         layout: { background:{color:'transparent'}, textColor:'#4d6475' },
         grid:   { vertLines:{color:'rgba(28,45,56,.4)'}, horzLines:{color:'rgba(28,45,56,.4)'} },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { labelVisible: false } },
         rightPriceScale: { borderColor:'#1c2d38', scaleMargins:{top:0.06,bottom:0.06} },
         timeScale: {
           borderColor:'#1c2d38',
@@ -1333,6 +1348,7 @@ async function drawAllCharts(){
         handleScroll: true, handleScale: true,
       });
       window._ypChart = chart;
+      addDayTooltip(chart, wrap);
 
       const legend  = document.getElementById('ypLegend');
       const summary = document.getElementById('ypSummary');
@@ -1514,7 +1530,7 @@ async function drawAllCharts(){
         height: wrap.offsetHeight || 500,
         layout: { background:{color:'transparent'}, textColor:'#4d6475' },
         grid:   { vertLines:{color:'rgba(28,45,56,.5)'}, horzLines:{color:'rgba(28,45,56,.5)'} },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { labelVisible: false } },
         rightPriceScale: { borderColor:'#1c2d38', scaleMargins:{top:0.08,bottom:0.08} },
         timeScale: {
           borderColor:'#1c2d38',
@@ -1524,6 +1540,7 @@ async function drawAllCharts(){
         handleScale:  true,
       });
       window._btcdChart = chart;
+      addDayTooltip(chart, wrap);
       window._btcdSeries = {};
 
       const legend = document.getElementById('btcdLegend');
@@ -1788,12 +1805,13 @@ async function drawAllCharts(){
         height: wrap.offsetHeight || 500,
         layout: { background:{color:'transparent'}, textColor:'#4d6475' },
         grid:   { vertLines:{color:'rgba(28,45,56,.4)'}, horzLines:{color:'rgba(28,45,56,.4)'} },
-        crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+        crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { labelVisible: false } },
         rightPriceScale: { borderColor:'#1c2d38', scaleMargins:{top:0.06,bottom:0.06} },
         timeScale: { borderColor:'#1c2d38', tickMarkFormatter:function(v){return 'Day '+v;} },
         handleScroll: true, handleScale: true,
       });
       chartInst = chart;
+      addDayTooltip(chart, wrap);
 
       const legend  = document.getElementById(cfg.legendId);
       const summary = document.getElementById(cfg.summaryId);
@@ -2462,7 +2480,7 @@ async function drawAllCharts(){
       height: wrap.offsetHeight || 520,
       layout: { background:{color:'transparent'}, textColor:'#4d6475' },
       grid:   { vertLines:{color:'rgba(28,45,56,.4)'}, horzLines:{color:'rgba(28,45,56,.4)'} },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { labelVisible: false } },
       rightPriceScale: {
         borderColor:'#1c2d38',
         mode: LightweightCharts.PriceScaleMode.Logarithmic,
@@ -2476,6 +2494,7 @@ async function drawAllCharts(){
     });
 
     window._halvingChart = chart;
+    addDayTooltip(chart, wrap);
     window._halvingSeries = {};
     window._halvingVisible = {0:true, 1:true, 2:true, 3:true};
 
@@ -2704,7 +2723,7 @@ async function drawAllCharts(){
       height: wrap.offsetHeight || 520,
       layout: { background:{color:'transparent'}, textColor:'#4d6475' },
       grid:   { vertLines:{color:'rgba(28,45,56,.5)'}, horzLines:{color:'rgba(28,45,56,.5)'} },
-      crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+      crosshair: { mode: LightweightCharts.CrosshairMode.Normal, vertLine: { labelVisible: false } },
       rightPriceScale: {
         borderColor: '#1c2d38',
         mode: LightweightCharts.PriceScaleMode.Logarithmic,
@@ -2718,6 +2737,7 @@ async function drawAllCharts(){
     });
 
     window._epochChart   = chart;
+    addDayTooltip(chart, wrap);
     window._epochSeries  = {};
     window._epochVisible = {0:true, 1:true, 2:true};
 
