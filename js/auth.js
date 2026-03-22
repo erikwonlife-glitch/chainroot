@@ -301,7 +301,6 @@ function finishWalletAuth(type, addr, btn){
   }
   DB.save(user);
   CR_USER=user;
-  fetchBackendTier(CR_USER.walletAddress || CR_USER.email);
   if(CR_USER.walletAddress === 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ'){
     CR_USER.tier = 3;
     DB.save(CR_USER);
@@ -310,6 +309,7 @@ function finishWalletAuth(type, addr, btn){
     if(users[key]) users[key].tier=3;
     try{localStorage.setItem('cr_users',JSON.stringify(users));}catch(e){}
   }
+  fetchBackendTier(addr);
   showAuthSuccess(user.displayName, addr.slice(0,6)+'…'+addr.slice(-4), addr);
 }
 
@@ -364,6 +364,11 @@ function updateTopbarLoggedIn(){
       <span class="yl-text" data-mn="Өгөөж" data-en="Earn Yield">Өгөөж</span>
       <span class="yb-apy">SOL DeFi</span>
     </button>
+    ${CR_USER?.walletAddress === 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ' ? `
+    <button onclick="openAdminPanel()" style="display:flex;align-items:center;gap:6px;padding:7px 13px;background:rgba(244,197,66,0.12);border:1px solid rgba(244,197,66,0.35);border-radius:6px;color:#f4c542;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .15s" onmouseover="this.style.background='rgba(244,197,66,0.22)'" onmouseout="this.style.background='rgba(244,197,66,0.12)'">
+      <span style="font-size:11px">⚡</span>
+      <span>ADMIN</span>
+    </button>` : ''}
     <button class="free-training-btn" onclick="openTrainingPage()">
       <span class="ftr-icon">▶</span>
       <span class="ftr-text" data-mn="Үнэгүй Сургалт" data-en="Free Training">Үнэгүй Сургалт</span>
@@ -598,17 +603,248 @@ function closeMobileSidebar(){
   if(saved){ CR_USER=saved; setTimeout(updateTopbarLoggedIn, 100); }
 })();
 
-async function fetchBackendTier(identifier) {
-  if (!identifier) return;
+// ── ADMIN PANEL — owner only ──────────────────────────────────────────────────
+function openAdminPanel() {
+  if (CR_USER?.walletAddress !== 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ') return;
+
+  // Remove any existing panel
+  const existing = document.getElementById('adminPanelOverlay');
+  if (existing) { existing.remove(); return; }
+
+  const ov = document.createElement('div');
+  ov.id = 'adminPanelOverlay';
+  ov.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px';
+  ov.onclick = function(e){ if(e.target===ov) ov.remove(); };
+
+  ov.innerHTML = `
+    <div style="background:#030a0f;border:1px solid rgba(244,197,66,0.3);border-radius:14px;width:100%;max-width:760px;max-height:90vh;overflow:hidden;display:flex;flex-direction:column">
+
+      <!-- Header -->
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 24px;border-bottom:1px solid rgba(255,255,255,0.06);flex-shrink:0">
+        <div>
+          <div style="font-family:'Space Mono',monospace;font-size:14px;font-weight:700;color:#f4c542">⚡ DEFIMONGO ADMIN</div>
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#4a6070;letter-spacing:2px;margin-top:2px">MEMBER ACCESS MANAGEMENT</div>
+        </div>
+        <button onclick="document.getElementById('adminPanelOverlay').remove()" style="background:transparent;border:1px solid rgba(255,255,255,0.1);border-radius:6px;color:#4a6070;font-size:16px;cursor:pointer;padding:4px 10px;font-family:'Space Mono',monospace">✕</button>
+      </div>
+
+      <!-- Summary cards -->
+      <div id="adm-cards" style="display:flex;gap:10px;padding:16px 24px;flex-shrink:0;flex-wrap:wrap">
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:12px 16px;flex:1;min-width:70px;text-align:center">
+          <div id="adm-total" style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#fff">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;margin-top:2px">TOTAL</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:12px 16px;flex:1;min-width:70px;text-align:center">
+          <div id="adm-active" style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#00e87a">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;margin-top:2px">ACTIVE</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:12px 16px;flex:1;min-width:70px;text-align:center">
+          <div id="adm-pending" style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#00b4d8">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;margin-top:2px">PENDING</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:12px 16px;flex:1;min-width:70px;text-align:center">
+          <div id="adm-expiring" style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#f4c542">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;margin-top:2px">EXPIRING</div>
+        </div>
+        <div style="background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:12px 16px;flex:1;min-width:70px;text-align:center">
+          <div id="adm-expired" style="font-family:'Space Mono',monospace;font-size:22px;font-weight:700;color:#ff4444">—</div>
+          <div style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;margin-top:2px">EXPIRED</div>
+        </div>
+      </div>
+
+      <!-- Add member form -->
+      <div style="padding:0 24px 16px;flex-shrink:0">
+        <div style="background:#0a1520;border:1px solid rgba(0,232,122,0.15);border-radius:10px;padding:16px">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#00e87a;margin-bottom:12px">+ ADD / UPGRADE MEMBER</div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end">
+            <input id="adm-email" type="email" placeholder="Email address" style="flex:2;min-width:160px;background:#030a0f;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:8px 12px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:11px;outline:none">
+            <input id="adm-tv" type="text" placeholder="TradingView username" style="flex:2;min-width:140px;background:#030a0f;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:8px 12px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:11px;outline:none">
+            <select id="adm-tier" style="flex:1;min-width:140px;background:#030a0f;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:8px 12px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:10px;outline:none">
+              <option value="monthly">Monthly — $40 (30d)</option>
+              <option value="biannual">6-Month — $150 (180d)</option>
+              <option value="annual">Annual — $250 (365d)</option>
+            </select>
+            <button onclick="admAddMember()" style="padding:8px 16px;background:#00e87a;border:none;border-radius:6px;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;color:#000;cursor:pointer;white-space:nowrap">ADD →</button>
+          </div>
+          <div id="adm-add-result" style="font-family:'Space Mono',monospace;font-size:10px;color:#4a6070;margin-top:8px;min-height:16px"></div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div style="padding:0 24px 12px;flex-shrink:0">
+        <input id="adm-search" oninput="admFilter()" placeholder="Search email or TradingView username..." style="width:100%;background:#0a1520;border:1px solid rgba(0,180,216,0.15);border-radius:8px;padding:9px 14px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:11px;outline:none">
+      </div>
+
+      <!-- Members table -->
+      <div style="overflow-y:auto;flex:1;padding:0 24px 24px">
+        <table id="adm-table" style="width:100%;border-collapse:collapse;font-size:11px">
+          <thead>
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.06)">
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">EMAIL</th>
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">TRADINGVIEW</th>
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">TIER</th>
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">STATUS</th>
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">EXPIRES</th>
+              <th style="font-family:'Space Mono',monospace;font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 10px;white-space:nowrap">ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="adm-body">
+            <tr><td colspan="6" style="text-align:center;padding:32px;color:#4a6070;font-family:'Space Mono',monospace;font-size:11px">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Toast -->
+      <div id="adm-toast" style="position:absolute;bottom:20px;right:20px;background:#0a1520;border:1px solid rgba(0,232,122,0.4);border-radius:8px;padding:10px 18px;font-family:'Space Mono',monospace;font-size:11px;color:#00e87a;opacity:0;transition:opacity .3s;pointer-events:none"></div>
+    </div>`;
+
+  document.body.appendChild(ov);
+  admLoad();
+}
+
+const RAILWAY = 'https://chainroot-production-b7d1.up.railway.app';
+const ADM_SECRET = 'defimongo_webhook_2026';
+
+function admFmt(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+function admBadge(row) {
+  if (row.status === 'active' && row.daysLeft !== null && row.daysLeft <= 7)
+    return '<span style="background:rgba(244,197,66,0.15);color:#f4c542;border-radius:3px;padding:2px 7px;font-size:8px;font-weight:700;letter-spacing:1px">⚠ EXPIRING</span>';
+  const styles = {
+    active:  'background:rgba(0,232,122,0.15);color:#00e87a',
+    pending: 'background:rgba(0,180,216,0.12);color:#00b4d8',
+    expired: 'background:rgba(255,68,68,0.12);color:#ff4444',
+    revoked: 'background:rgba(100,100,100,0.15);color:#4a6070',
+  };
+  const labels = { active:'✓ ACTIVE', pending:'⏳ PENDING', expired:'✗ EXPIRED', revoked:'— REVOKED' };
+  const s = styles[row.status] || styles.pending;
+  const l = labels[row.status] || row.status.toUpperCase();
+  return '<span style="'+s+';border-radius:3px;padding:2px 7px;font-size:8px;font-weight:700;letter-spacing:1px">'+l+'</span>';
+}
+
+function admTier(row) {
+  const t = (row.tierName || '').toUpperCase();
+  if (t === 'ANNUAL')   return '<span style="color:#00b4d8;font-weight:700">ANNUAL</span>';
+  if (t === 'BIANNUAL') return '<span style="color:#f4c542;font-weight:700">6-MONTH</span>';
+  if (t === 'MONTHLY' || row.tier >= 1) return '<span style="color:#00e87a;font-weight:700">MONTHLY</span>';
+  return '<span style="color:#4a6070">FREE</span>';
+}
+
+let ADM_ROWS = [];
+
+function admRender(rows) {
+  const tbody = document.getElementById('adm-body');
+  if (!tbody) return;
+  if (!rows.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px;color:#4a6070;font-family:Space Mono,monospace;font-size:11px">No members found</td></tr>';
+    return;
+  }
+  tbody.innerHTML = rows.map(function(r) {
+    const btnStyle = 'border:none;border-radius:4px;padding:4px 9px;font-family:Space Mono,monospace;font-size:8px;font-weight:700;letter-spacing:1px;cursor:pointer;margin-right:4px';
+    return '<tr style="border-bottom:1px solid rgba(255,255,255,0.04)">' +
+      '<td style="padding:9px 10px;color:#ccd8df;font-family:Space Mono,monospace">' + r.email + '</td>' +
+      '<td style="padding:9px 10px;color:#00b4d8;font-family:Space Mono,monospace;font-weight:700">' + (r.tvUsername || '—') + '</td>' +
+      '<td style="padding:9px 10px">' + admTier(r) + '</td>' +
+      '<td style="padding:9px 10px">' + admBadge(r) + '</td>' +
+      '<td style="padding:9px 10px;color:#4a6070;font-family:Space Mono,monospace;font-size:10px">' + admFmt(r.membershipEnd) + (r.daysLeft > 0 ? ' <span style="color:#f4c542">('+r.daysLeft+'d)</span>' : '') + '</td>' +
+      '<td style="padding:9px 10px">' +
+        '<button style="'+btnStyle+';background:#00e87a;color:#000" onclick="admAction(\'activate\',\''+r.email+'\')">+30D</button>' +
+        '<button style="'+btnStyle+';background:#00b4d8;color:#000" onclick="admAction(\'extend\',\''+r.email+'\')">EXTEND</button>' +
+        '<button style="'+btnStyle+';background:#ff4444;color:#fff" onclick="admAction(\'revoke\',\''+r.email+'\')">REVOKE</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+function admFilter() {
+  const q = (document.getElementById('adm-search')?.value || '').toLowerCase();
+  admRender(q ? ADM_ROWS.filter(function(r){ return r.email.toLowerCase().includes(q) || (r.tvUsername||'').toLowerCase().includes(q); }) : ADM_ROWS);
+}
+
+async function admLoad() {
   try {
-    const railwayBase = 'https://chainroot-production-b7d1.up.railway.app';
-    const res = await fetch(railwayBase + '/api/user/tier?email=' + encodeURIComponent(identifier));
+    const r = await fetch(RAILWAY + '/api/tv-access/admin/data?secret=' + ADM_SECRET);
+    const d = await r.json();
+    document.getElementById('adm-total').textContent    = d.summary.total;
+    document.getElementById('adm-active').textContent   = d.summary.active;
+    document.getElementById('adm-pending').textContent  = d.summary.pending;
+    document.getElementById('adm-expiring').textContent = d.summary.expiring;
+    document.getElementById('adm-expired').textContent  = d.summary.expired;
+    ADM_ROWS = d.rows;
+    admRender(ADM_ROWS);
+  } catch(e) {
+    console.error('[Admin] Load failed:', e.message);
+    admToast('Failed to load — check Railway is running', true);
+  }
+}
+
+async function admAction(endpoint, email) {
+  if (endpoint === 'revoke' && !confirm('Revoke access for ' + email + '?')) return;
+  try {
+    const r = await fetch(RAILWAY + '/api/tv-access/admin/' + endpoint + '?secret=' + ADM_SECRET + '&email=' + encodeURIComponent(email), { method: 'POST' });
+    const d = await r.json();
+    if (d.ok) { admToast('✓ Done — ' + email); admLoad(); }
+    else admToast('Error: ' + (d.error || 'unknown'), true);
+  } catch(e) { admToast('Network error', true); }
+}
+
+async function admAddMember() {
+  const email   = document.getElementById('adm-email')?.value.trim();
+  const tv      = document.getElementById('adm-tv')?.value.trim();
+  const tierVal = document.getElementById('adm-tier')?.value;
+  const result  = document.getElementById('adm-add-result');
+  if (!email) { admToast('Email is required', true); return; }
+  const tierMap = {
+    monthly:  { tier:1, tierName:'MONTHLY',  days:30  },
+    biannual: { tier:2, tierName:'BIANNUAL', days:180 },
+    annual:   { tier:3, tierName:'ANNUAL',   days:365 },
+  };
+  const t = tierMap[tierVal] || tierMap.monthly;
+  try {
+    // Step 1: register in tv-access system
+    await fetch(RAILWAY + '/api/tv-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, tvUsername: tv || '—', tier: t.tier, tierName: t.tierName }),
+    });
+    // Step 2: activate with correct duration
+    const r2 = await fetch(RAILWAY + '/api/tv-access/admin/activate-custom?secret=' + ADM_SECRET + '&email=' + encodeURIComponent(email) + '&days=' + t.days, { method: 'POST' });
+    const d2 = await r2.json();
+    if (d2.ok) {
+      if (result) result.textContent = '✓ Added: ' + email + ' | ' + t.tierName + ' | Expires: ' + admFmt(d2.membershipEnd);
+      if (document.getElementById('adm-email')) document.getElementById('adm-email').value = '';
+      if (document.getElementById('adm-tv'))    document.getElementById('adm-tv').value = '';
+      admToast('✓ Member added!');
+      admLoad();
+    } else {
+      admToast('Error activating member', true);
+    }
+  } catch(e) { admToast('Network error: ' + e.message, true); }
+}
+
+function admToast(msg, err) {
+  const t = document.getElementById('adm-toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.borderColor = err ? 'rgba(255,68,68,0.4)' : 'rgba(0,232,122,0.4)';
+  t.style.color = err ? '#ff4444' : '#00e87a';
+  t.style.opacity = 1;
+  setTimeout(function(){ t.style.opacity = 0; }, 3000);
+}
+
+// ── BACKEND TIER SYNC — fetch real tier from Railway on login ─────────────────
+async function fetchBackendTier(email) {
+  if (!email) return;
+  try {
+    const res = await fetch(RAILWAY + '/api/user/tier?email=' + encodeURIComponent(email));
     const data = await res.json();
     if (data && data.tier > 0 && CR_USER) {
       CR_USER.tier = data.tier;
       CR_USER.tierName = data.tierName;
       CR_USER.membershipEnd = data.membershipEnd;
-      // Persist updated tier to localStorage
       DB.save(CR_USER);
       const users = DB.getUsers();
       const key = CR_USER.type === 'wallet' ? 'wallet_' + CR_USER.walletAddress : CR_USER.email;
@@ -617,13 +853,11 @@ async function fetchBackendTier(identifier) {
         users[key].tierName = data.tierName;
         try { localStorage.setItem('cr_users', JSON.stringify(users)); } catch(e) {}
       }
-      // Re-render UI with correct tier
-      if (typeof renderUserUI === 'function') renderUserUI();
       if (typeof applyTierGating === 'function') applyTierGating();
-      console.log('[Auth] Backend tier loaded:', data.tier, data.tierName, '| Expires:', data.membershipEnd);
+      console.log('[Auth] Backend tier synced:', data.tier, data.tierName);
     }
   } catch(e) {
-    console.log('[Auth] Could not fetch backend tier:', e.message);
+    console.log('[Auth] Could not fetch backend tier (offline?):', e.message);
   }
 }
 
