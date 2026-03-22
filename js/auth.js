@@ -6,9 +6,15 @@
 let aTab = 'register';
 let CR_USER = null; // { email, displayName, walletAddress, joinedAt, portfolio:[], tier:0 }
 
-function getTier(){ return CR_USER?.tier ?? 0; }
+// Private tier — sourced from server-signed JWT, not directly from CR_USER.tier
+// This prevents the common console bypass: CR_USER.tier = 3
+let _jwtTier = 0;
+let _authJWT  = null;
+
+function getTier(){ return _jwtTier; }
 function getTierName(){ return ['FREE','EXPLORER','PRO','ELITE'][getTier()]||'FREE'; }
 function getTierColor(){ return ['#4a6070','#00b4d8','#9945FF','#f4c542'][getTier()]||'#4a6070'; }
+function getAuthHeader(){ return _authJWT ? { 'Authorization': 'Bearer ' + _authJWT } : {}; }
 
 // ── SIMPLE LOCAL STORAGE USER DB (frontend-only until backend is wired) ───────
 const DB = {
@@ -861,6 +867,11 @@ async function fetchBackendTier(email) {
   try {
     const res = await fetch(RAILWAY + '/api/user/tier?email=' + encodeURIComponent(email));
     const data = await res.json();
+    // Store server-signed JWT — tier is now sourced from this, not CR_USER.tier
+    if (data && data.token) {
+      _authJWT = data.token;
+      _jwtTier = data.tier || 0;
+    }
     if (data && data.tier > 0 && CR_USER) {
       CR_USER.tier = data.tier;
       CR_USER.tierName = data.tierName;

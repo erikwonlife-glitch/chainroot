@@ -5,6 +5,9 @@ const fetch    = require('node-fetch');
 const cors     = require('cors');
 const nacl     = require('tweetnacl');
 const bs58     = require('bs58');
+const jwt      = require('jsonwebtoken');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'dev_secret_change_in_prod';
 
 const app    = express();
 const PORT   = process.env.PORT || 8080;
@@ -114,19 +117,21 @@ async function fetchBTCPrice() {
   return null;
 }
 
+const ALLOWED_ORIGINS = [
+  'https://erikwonlife-glitch.github.io',
+  'http://localhost:3000',
+  'http://localhost:8080',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:8080',
+];
+if (process.env.CUSTOM_DOMAIN) ALLOWED_ORIGINS.push(process.env.CUSTOM_DOMAIN);
+
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, curl, Postman)
+    // Allow requests with no origin (mobile apps, curl, server-to-server)
     if (!origin) return callback(null, true);
-    // Allow any GitHub Pages subdomain + localhost for dev
-    if (
-      origin.includes('github.io') ||
-      origin.includes('localhost') ||
-      origin.includes('127.0.0.1')
-    ) {
-      return callback(null, true);
-    }
-    callback(null, false);
+    if (ALLOWED_ORIGINS.includes(origin)) return callback(null, true);
+    callback(new Error('CORS: origin not allowed'));
   },
   credentials: true
 }));
@@ -1706,21 +1711,32 @@ app.get('/api/tv-access/status', async function(req, res) {
   });
 });
 
-// GET /api/user/tier?email=  — frontend calls this on login to get real tier
+// GET /api/user/tier?email=  — frontend calls this on login to get real tier + signed JWT
 app.get('/api/user/tier', async function(req, res) {
-  res.set('Access-Control-Allow-Origin', '*');
   const email = (req.query.email || '').toLowerCase().trim();
-  if (!email) return res.json({ tier: 0, tierName: 'FREE', status: 'none' });
+  if (!email) {
+    const token = jwt.sign({ email: '', tier: 0, tierName: 'FREE' }, JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ tier: 0, tierName: 'FREE', status: 'none', token });
+  }
   const reg = await tvFind(email);
-  if (!reg) return res.json({ tier: 0, tierName: 'FREE', status: 'none' });
+  if (!reg) {
+    const token = jwt.sign({ email, tier: 0, tierName: 'FREE' }, JWT_SECRET, { expiresIn: '24h' });
+    return res.json({ tier: 0, tierName: 'FREE', status: 'none', token });
+  }
   const status = tvCalcStatus(reg);
-  // Map status to tier number
   let tier = 0;
   if (status === 'active') {
     if (reg.tierName === 'ANNUAL' || reg.tier >= 3) tier = 3;
     else if (reg.tierName === 'BIANNUAL' || reg.tier >= 2) tier = 2;
     else tier = 1;
   }
+  const payload = {
+    email,
+    tier,
+    tierName: reg.tierName || 'FREE',
+    membershipEnd: reg.membershipEnd || null,
+  };
+  const token = jwt.sign(payload, JWT_SECRET, { expiresIn: '24h' });
   res.json({
     tier,
     tierName: reg.tierName || 'FREE',
@@ -1728,6 +1744,7 @@ app.get('/api/user/tier', async function(req, res) {
     membershipEnd: reg.membershipEnd || null,
     daysLeft: tvDaysLeft(reg.membershipEnd),
     tvUsername: reg.tvUsername || null,
+    token,
   });
 });
 
@@ -1854,7 +1871,6 @@ function ownerAuth(req, res) {
 
 // GET /api/admin-data?wallet=&sig=&msg=
 app.get('/api/admin-data', async function(req, res) {
-  res.set('Access-Control-Allow-Origin', '*');
   if (!ownerAuth(req, res)) return;
   const all = await tvAll();
   const rows = all.map(function(r) {
@@ -1881,7 +1897,6 @@ app.get('/api/admin-data', async function(req, res) {
 
 // POST /api/admin-action  — body: { wallet, action, email, days, tvUsername, tier, tierName }
 app.post('/api/admin-action', async function(req, res) {
-  res.set('Access-Control-Allow-Origin', '*');
   if (!ownerAuth(req, res)) return;
   const { action, email: rawEmail, days, tvUsername, tier, tierName } = req.body || {};
   const email = (rawEmail || '').toLowerCase().trim();
