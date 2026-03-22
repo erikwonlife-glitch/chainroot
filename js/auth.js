@@ -703,7 +703,6 @@ function openAdminPanel() {
 }
 
 const RAILWAY = 'https://chainroot-production-b7d1.up.railway.app';
-const ADM_SECRET = 'defimongo_webhook_2026';
 
 function admFmt(d) {
   if (!d) return '—';
@@ -766,7 +765,8 @@ function admFilter() {
 
 async function admLoad() {
   try {
-    const r = await fetch(RAILWAY + '/api/tv-access/admin/data?secret=' + ADM_SECRET);
+    const wallet = CR_USER?.walletAddress || '';
+    const r = await fetch(RAILWAY + '/api/admin-data?wallet=' + encodeURIComponent(wallet));
     const d = await r.json();
     document.getElementById('adm-total').textContent    = d.summary.total;
     document.getElementById('adm-active').textContent   = d.summary.active;
@@ -784,7 +784,11 @@ async function admLoad() {
 async function admAction(endpoint, email) {
   if (endpoint === 'revoke' && !confirm('Revoke access for ' + email + '?')) return;
   try {
-    const r = await fetch(RAILWAY + '/api/tv-access/admin/' + endpoint + '?secret=' + ADM_SECRET + '&email=' + encodeURIComponent(email), { method: 'POST' });
+    const r = await fetch(RAILWAY + '/api/admin-action', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ wallet: CR_USER?.walletAddress, action: endpoint, email }),
+    });
     const d = await r.json();
     if (d.ok) { admToast('✓ Done — ' + email); admLoad(); }
     else admToast('Error: ' + (d.error || 'unknown'), true);
@@ -804,14 +808,11 @@ async function admAddMember() {
   };
   const t = tierMap[tierVal] || tierMap.monthly;
   try {
-    // Step 1: register in tv-access system
-    await fetch(RAILWAY + '/api/tv-access', {
+    const r2 = await fetch(RAILWAY + '/api/admin-action', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, tvUsername: tv || '—', tier: t.tier, tierName: t.tierName }),
+      body: JSON.stringify({ wallet: CR_USER?.walletAddress, action: 'add', email, tvUsername: tv || '—', tier: t.tier, tierName: t.tierName, days: t.days }),
     });
-    // Step 2: activate with correct duration
-    const r2 = await fetch(RAILWAY + '/api/tv-access/admin/activate-custom?secret=' + ADM_SECRET + '&email=' + encodeURIComponent(email) + '&days=' + t.days, { method: 'POST' });
     const d2 = await r2.json();
     if (d2.ok) {
       if (result) result.textContent = '✓ Added: ' + email + ' | ' + t.tierName + ' | Expires: ' + admFmt(d2.membershipEnd);

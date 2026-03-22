@@ -1803,6 +1803,86 @@ app.get('/api/tv-access/admin/data', async function(req, res) {
   res.json({ summary, rows });
 });
 
+// ── SECURE WALLET-AUTHENTICATED PROXY ROUTES ─────────────────────────────────
+// The WEBHOOK_SECRET never leaves the server. The browser only sends the owner
+// wallet address; the server validates it and performs the action internally.
+const OWNER_WALLET = 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ';
+
+function ownerAuth(req, res) {
+  const wallet = (req.query.wallet || req.body?.wallet || '').trim();
+  if (wallet !== OWNER_WALLET) {
+    res.status(403).json({ error: 'Forbidden' });
+    return false;
+  }
+  return true;
+}
+
+// GET /api/admin-data?wallet=
+app.get('/api/admin-data', async function(req, res) {
+  res.set('Access-Control-Allow-Origin', '*');
+  if (!ownerAuth(req, res)) return;
+  const all = await tvAll();
+  const rows = all.map(function(r) {
+    const status = tvCalcStatus(r);
+    return {
+      email:         r.email,
+      tvUsername:    r.tvUsername,
+      tier:          r.tier,
+      tierName:      r.tierName,
+      status,
+      membershipEnd: r.membershipEnd,
+      daysLeft:      tvDaysLeft(r.membershipEnd),
+    };
+  });
+  const summary = {
+    total:    rows.length,
+    active:   rows.filter(function(r){ return r.status === 'active'; }).length,
+    expiring: rows.filter(function(r){ return r.status === 'active' && r.daysLeft !== null && r.daysLeft <= 7; }).length,
+    pending:  rows.filter(function(r){ return r.status === 'pending'; }).length,
+    expired:  rows.filter(function(r){ return r.status === 'expired' || r.status === 'revoked'; }).length,
+  };
+  res.json({ summary, rows });
+});
+
+// POST /api/admin-action  — body: { wallet, action, email, days, tvUsername, tier, tierName }
+app.post('/api/admin-action', async function(req, res) {
+  res.set('Access-Control-Allow-Origin', '*');
+  if (!ownerAuth(req, res)) return;
+  const { action, email: rawEmail, days, tvUsername, tier, tierName } = req.body || {};
+  const email = (rawEmail || '').toLowerCase().trim();
+  if (!email) return res.status(400).json({ error: 'email required' });
+
+  if (action === 'activate') {
+    const start = new Date();
+    const end   = new Date(start.getTime() + 30 * 86400000);
+    await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+    return res.json({ ok: true, membershipEnd: end });
+  }
+  if (action === 'extend') {
+    const reg  = await tvFind(email);
+    const base = (reg && reg.membershipEnd && new Date(reg.membershipEnd) > new Date())
+      ? new Date(reg.membershipEnd) : new Date();
+    const end  = new Date(base.getTime() + 30 * 86400000);
+    const start = (reg && reg.membershipStart) ? reg.membershipStart : new Date();
+    await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+    return res.json({ ok: true, membershipEnd: end });
+  }
+  if (action === 'revoke') {
+    await tvUpsert(email, { status: 'revoked', membershipEnd: new Date() });
+    return res.json({ ok: true });
+  }
+  if (action === 'add') {
+    const d = parseInt(days) || 30;
+    // Register then activate
+    await tvUpsert(email, { tvUsername: tvUsername || '—', tier: tier || 1, tierName: tierName || 'MONTHLY', status: 'pending', submittedAt: new Date() });
+    const start = new Date();
+    const end   = new Date(start.getTime() + d * 86400000);
+    await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+    return res.json({ ok: true, membershipEnd: end });
+  }
+  res.status(400).json({ error: 'unknown action' });
+});
+
 // GET /admin/access?secret=  (HTML admin dashboard)
 app.get('/admin/access', function(req, res) {
   const secret = req.query.secret || '';
