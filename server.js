@@ -1483,6 +1483,7 @@ app.get('/api/overview/:type', async function(req, res) {
 function tvAdminAuth(req, res) {
   const secret   = req.query.secret || req.headers['x-admin-secret'];
   const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
+  console.log('[Auth] Expected secret:', expected, '| Provided:', secret ? secret.substring(0,6)+'...' : 'none');
   if (!secret || secret !== expected) {
     res.status(401).json({ error: 'Unauthorized' });
     return false;
@@ -1644,6 +1645,7 @@ setInterval(runScanner, 4 * 60 * 60 * 1000);
 app.post('/api/signals/webhook', function(req, res) {
   const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
   const provided  = req.headers['x-webhook-secret'] || '';
+  console.log('[Auth] Expected secret:', expected, '| Provided:', provided ? provided.substring(0,6)+'...' : 'none');
   if(provided !== expected) return res.status(401).json({ error: 'unauthorized' });
 
   const { symbol, tf, signal, price } = req.body || {};
@@ -1702,6 +1704,31 @@ app.get('/api/tv-access/status', async function(req, res) {
   });
 });
 
+// GET /api/user/tier?email=  — frontend calls this on login to get real tier
+app.get('/api/user/tier', async function(req, res) {
+  res.set('Access-Control-Allow-Origin', '*');
+  const email = (req.query.email || '').toLowerCase().trim();
+  if (!email) return res.json({ tier: 0, tierName: 'FREE', status: 'none' });
+  const reg = await tvFind(email);
+  if (!reg) return res.json({ tier: 0, tierName: 'FREE', status: 'none' });
+  const status = tvCalcStatus(reg);
+  // Map status to tier number
+  let tier = 0;
+  if (status === 'active') {
+    if (reg.tierName === 'ANNUAL' || reg.tier >= 3) tier = 3;
+    else if (reg.tierName === 'BIANNUAL' || reg.tier >= 2) tier = 2;
+    else tier = 1;
+  }
+  res.json({
+    tier,
+    tierName: reg.tierName || 'FREE',
+    status,
+    membershipEnd: reg.membershipEnd || null,
+    daysLeft: tvDaysLeft(reg.membershipEnd),
+    tvUsername: reg.tvUsername || null,
+  });
+});
+
 // POST /api/tv-access/admin/activate?secret=&email=  (30 days from today)
 app.post('/api/tv-access/admin/activate', async function(req, res) {
   if (!tvAdminAuth(req, res)) return;
@@ -1709,6 +1736,18 @@ app.post('/api/tv-access/admin/activate', async function(req, res) {
   if (!email) return res.status(400).json({ error: 'email required' });
   const start = new Date();
   const end   = new Date(start.getTime() + 30 * 86400000);
+  await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
+  res.json({ ok: true, membershipStart: start, membershipEnd: end });
+});
+
+// POST /api/tv-access/admin/activate-custom?secret=&email=&days=
+app.post('/api/tv-access/admin/activate-custom', async function(req, res) {
+  if (!tvAdminAuth(req, res)) return;
+  const email = (req.query.email || '').toLowerCase().trim();
+  const days = parseInt(req.query.days) || 30;
+  if (!email) return res.status(400).json({ error: 'email required' });
+  const start = new Date();
+  const end = new Date(start.getTime() + days * 86400000);
   await tvUpsert(email, { status: 'active', membershipStart: start, membershipEnd: end });
   res.json({ ok: true, membershipStart: start, membershipEnd: end });
 });
@@ -1768,6 +1807,7 @@ app.get('/api/tv-access/admin/data', async function(req, res) {
 app.get('/admin/access', function(req, res) {
   const secret = req.query.secret || '';
   const expected = process.env.WEBHOOK_SECRET || 'defimongo_webhook_2026';
+  console.log('[Auth] Expected secret:', expected, '| Provided:', secret ? secret.substring(0,6)+'...' : 'none');
   if (!secret || secret !== expected) {
     return res.status(401).send('<h2 style="font-family:monospace;color:red">401 Unauthorized</h2>');
   }
@@ -1776,52 +1816,55 @@ app.get('/admin/access', function(req, res) {
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>DeFiMongo — Money Pulse Line Access Admin</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<title>DeFiMongo Admin</title>
 <style>
-  *{box-sizing:border-box;margin:0;padding:0}
-  body{background:#030a0f;color:#ccd8df;font-family:'Space Mono',monospace;padding:24px;min-height:100vh}
-  h1{font-size:20px;color:#fff;margin-bottom:4px}
-  .sub{font-size:10px;color:#4a6070;letter-spacing:1px;margin-bottom:24px}
-  .cards{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:28px}
-  .card{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:10px;padding:16px 20px;flex:1;min-width:100px;text-align:center}
-  .card .val{font-size:26px;font-weight:700;margin-bottom:4px}
-  .card .lbl{font-size:9px;color:#4a6070;letter-spacing:1px}
-  table{width:100%;border-collapse:collapse;font-size:11px}
-  th{font-size:9px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap}
-  td{padding:10px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
-  tr:hover td{background:rgba(255,255,255,0.02)}
-  .badge{display:inline-block;border-radius:4px;padding:3px 8px;font-size:9px;letter-spacing:1px;font-weight:700}
-  .s-active{background:rgba(0,232,122,0.15);color:#00e87a;border:1px solid rgba(0,232,122,0.3)}
-  .s-expiring{background:rgba(244,197,66,0.15);color:#f4c542;border:1px solid rgba(244,197,66,0.3)}
-  .s-pending{background:rgba(0,180,216,0.12);color:#00b4d8;border:1px solid rgba(0,180,216,0.25)}
-  .s-expired{background:rgba(255,68,68,0.12);color:#ff4444;border:1px solid rgba(255,68,68,0.25)}
-  .s-revoked{background:rgba(100,100,100,0.15);color:#4a6070;border:1px solid rgba(255,255,255,0.08)}
-  .btn{border:none;border-radius:5px;padding:5px 10px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .15s}
-  .btn:hover{opacity:.8}
-  .btn-activate{background:#00e87a;color:#000}
-  .btn-extend{background:#00b4d8;color:#000}
-  .btn-revoke{background:#ff4444;color:#fff}
-  .wrap{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:12px;overflow:auto}
-  .empty{text-align:center;padding:48px;color:#4a6070;font-size:13px}
-  .refresh{background:transparent;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:6px 14px;color:#ccd8df;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:1px;float:right}
-  .refresh:hover{border-color:#00b4d8}
-  .toast{position:fixed;bottom:24px;right:24px;background:#0a1520;border:1px solid rgba(0,232,122,0.4);border-radius:8px;padding:12px 20px;font-size:11px;color:#00e87a;opacity:0;transition:opacity .3s;pointer-events:none}
-  .tv{color:#00b4d8;font-weight:700}
-  .days-bar{height:4px;border-radius:2px;background:rgba(255,255,255,0.06);margin-top:4px;width:120px}
-  .days-fill{height:100%;border-radius:2px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#030a0f;color:#ccd8df;font-family:'Space Mono',monospace;padding:24px;min-height:100vh}
+h1{font-size:18px;color:#fff;margin-bottom:2px}
+.sub{font-size:9px;color:#4a6070;letter-spacing:2px;margin-bottom:20px}
+.cards{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+.card{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:8px;padding:14px 18px;flex:1;min-width:80px;text-align:center}
+.card .val{font-size:24px;font-weight:700;margin-bottom:2px}
+.card .lbl{font-size:8px;color:#4a6070;letter-spacing:1px}
+.panel{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:10px;padding:20px;margin-bottom:16px}
+.panel h2{font-size:11px;letter-spacing:2px;color:#00b4d8;margin-bottom:14px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+input,select{background:#030a0f;border:1px solid rgba(0,180,216,0.2);border-radius:6px;padding:8px 12px;color:#ccd8df;font-family:'Space Mono',monospace;font-size:11px;outline:none}
+input:focus,select:focus{border-color:#00b4d8}
+input{flex:1;min-width:160px}
+.btn{border:none;border-radius:5px;padding:8px 14px;font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:opacity .15s;white-space:nowrap}
+.btn:hover{opacity:.8}
+.btn-add{background:#00e87a;color:#000}
+.btn-activate{background:#00e87a;color:#000}
+.btn-extend{background:#00b4d8;color:#000}
+.btn-revoke{background:#ff4444;color:#fff}
+.btn-search{background:#1c3a50;color:#00b4d8;border:1px solid rgba(0,180,216,0.3)}
+.wrap{background:#0a1520;border:1px solid rgba(0,180,216,0.12);border-radius:10px;overflow:auto}
+table{width:100%;border-collapse:collapse;font-size:11px}
+th{font-size:8px;color:#4a6070;letter-spacing:1px;text-align:left;padding:8px 12px;border-bottom:1px solid rgba(255,255,255,0.06);white-space:nowrap}
+td{padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.04);vertical-align:middle}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.badge{display:inline-block;border-radius:3px;padding:2px 7px;font-size:8px;letter-spacing:1px;font-weight:700}
+.s-active{background:rgba(0,232,122,0.15);color:#00e87a}
+.s-pending{background:rgba(0,180,216,0.12);color:#00b4d8}
+.s-expired{background:rgba(255,68,68,0.12);color:#ff4444}
+.s-revoked{background:rgba(100,100,100,0.15);color:#4a6070}
+.s-expiring{background:rgba(244,197,66,0.15);color:#f4c542}
+.actions{display:flex;gap:5px;flex-wrap:wrap}
+.toast{position:fixed;bottom:20px;right:20px;background:#0a1520;border:1px solid rgba(0,232,122,0.4);border-radius:8px;padding:10px 18px;font-size:11px;color:#00e87a;opacity:0;transition:opacity .3s;pointer-events:none;z-index:999}
+.empty{text-align:center;padding:40px;color:#4a6070;font-size:12px}
+.tier-monthly{color:#00e87a}
+.tier-biannual{color:#f4c542}
+.tier-annual{color:#00b4d8}
 </style>
 </head>
 <body>
-<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;flex-wrap:wrap;gap:8px">
-  <div>
-    <h1>📺 MONEY PULSE LINE ACCESS ADMIN</h1>
-    <div class="sub">DEFIMONGO · MONEY PULSE LINE INDICATOR MANAGEMENT</div>
-  </div>
-  <button class="refresh" onclick="load()">↻ REFRESH</button>
+<div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+  <div><h1>⚡ DEFIMONGO ADMIN</h1><div class="sub">MEMBER ACCESS MANAGEMENT</div></div>
+  <button class="btn btn-search" onclick="load()">↻ REFRESH</button>
 </div>
 
-<div class="cards" id="summary-cards">
+<div class="cards">
   <div class="card"><div class="val" id="s-total">—</div><div class="lbl">TOTAL</div></div>
   <div class="card"><div class="val" style="color:#00e87a" id="s-active">—</div><div class="lbl">ACTIVE</div></div>
   <div class="card"><div class="val" style="color:#f4c542" id="s-expiring">—</div><div class="lbl">EXPIRING ≤7D</div></div>
@@ -1829,22 +1872,51 @@ app.get('/admin/access', function(req, res) {
   <div class="card"><div class="val" style="color:#ff4444" id="s-expired">—</div><div class="lbl">EXPIRED</div></div>
 </div>
 
+<!-- ADD NEW MEMBER PANEL -->
+<div class="panel">
+  <h2>+ ADD / UPGRADE MEMBER</h2>
+  <div class="row">
+    <input id="new-email" type="email" placeholder="Email address (required)">
+    <input id="new-tv" type="text" placeholder="TradingView username">
+    <select id="new-tier">
+      <option value="monthly">Monthly — $40 (30 days)</option>
+      <option value="biannual">6-Month — $150 (180 days)</option>
+      <option value="annual">Annual — $250 (365 days)</option>
+    </select>
+    <button class="btn btn-add" onclick="addMember()">ADD MEMBER →</button>
+  </div>
+  <div id="add-result" style="margin-top:10px;font-size:10px;color:#4a6070"></div>
+</div>
+
+<!-- SEARCH PANEL -->
+<div class="panel" style="padding:14px 20px">
+  <div class="row">
+    <input id="search-input" type="text" placeholder="Search by email or TradingView username..." oninput="filterTable()">
+    <select id="filter-status" onchange="filterTable()">
+      <option value="">All statuses</option>
+      <option value="active">Active</option>
+      <option value="pending">Pending</option>
+      <option value="expired">Expired</option>
+      <option value="revoked">Revoked</option>
+    </select>
+  </div>
+</div>
+
 <div class="wrap">
-  <table id="members-table">
+  <table>
     <thead>
       <tr>
-        <th>TRADINGVIEW</th>
         <th>EMAIL</th>
+        <th>TRADINGVIEW</th>
         <th>TIER</th>
         <th>STATUS</th>
-        <th>START</th>
-        <th>END</th>
+        <th>EXPIRES</th>
         <th>DAYS LEFT</th>
         <th>ACTIONS</th>
       </tr>
     </thead>
     <tbody id="members-body">
-      <tr><td colspan="8" class="empty">Loading...</td></tr>
+      <tr><td colspan="7" class="empty">Loading...</td></tr>
     </tbody>
   </table>
 </div>
@@ -1853,77 +1925,111 @@ app.get('/admin/access', function(req, res) {
 
 <script>
 const SECRET = ${JSON.stringify(secret)};
-const BASE   = '';
+let ALL_ROWS = [];
 
 function fmt(d) {
   if (!d) return '—';
-  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+  return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
 }
 
 function statusBadge(row) {
-  if (row.status === 'active' && row.daysLeft !== null && row.daysLeft <= 7) {
+  if (row.status === 'active' && row.daysLeft !== null && row.daysLeft <= 7)
     return '<span class="badge s-expiring">⚠ EXPIRING</span>';
-  }
-  const map = { active:'s-active', pending:'s-pending', expired:'s-expired', revoked:'s-revoked' };
-  const labels = { active:'✓ ACTIVE', pending:'⏳ PENDING', expired:'✗ EXPIRED', revoked:'— REVOKED' };
-  const cls = map[row.status] || 's-pending';
-  return '<span class="badge '+cls+'">'+(labels[row.status]||row.status.toUpperCase())+'</span>';
+  const map={active:'s-active',pending:'s-pending',expired:'s-expired',revoked:'s-revoked'};
+  const lbl={active:'✓ ACTIVE',pending:'⏳ PENDING',expired:'✗ EXPIRED',revoked:'— REVOKED'};
+  return '<span class="badge '+(map[row.status]||'s-pending')+'">'+(lbl[row.status]||row.status.toUpperCase())+'</span>';
 }
 
-function daysBar(row) {
-  if (!row.membershipStart || !row.membershipEnd) return '';
-  const total = new Date(row.membershipEnd) - new Date(row.membershipStart);
-  const used  = Date.now() - new Date(row.membershipStart);
-  const pct   = Math.max(0, Math.min(100, (used / total) * 100));
-  const color = pct > 85 ? '#ff4444' : pct > 60 ? '#f4c542' : '#00e87a';
-  return '<div class="days-bar"><div class="days-fill" style="width:'+pct+'%;background:'+color+'"></div></div>';
+function tierLabel(row) {
+  const t = (row.tierName||'').toUpperCase();
+  if (t==='ANNUAL') return '<span class="tier-annual">ANNUAL</span>';
+  if (t==='BIANNUAL') return '<span class="tier-biannual">6-MONTH</span>';
+  if (t==='MONTHLY'||row.tier>=1) return '<span class="tier-monthly">MONTHLY</span>';
+  return '<span style="color:#4a6070">FREE</span>';
+}
+
+function renderRows(rows) {
+  const tbody = document.getElementById('members-body');
+  if (!rows.length) { tbody.innerHTML='<tr><td colspan="7" class="empty">No members found</td></tr>'; return; }
+  tbody.innerHTML = rows.map(function(r) {
+    return '<tr>'+
+      '<td style="color:#ccd8df">'+r.email+'</td>'+
+      '<td style="color:#00b4d8;font-weight:700">'+(r.tvUsername||'—')+'</td>'+
+      '<td>'+tierLabel(r)+'</td>'+
+      '<td>'+statusBadge(r)+'</td>'+
+      '<td>'+(r.membershipEnd?fmt(r.membershipEnd):'—')+'</td>'+
+      '<td>'+(r.daysLeft!==null&&r.daysLeft>0?r.daysLeft+'d':'—')+'</td>'+
+      '<td><div class="actions">'+
+        '<button class="btn btn-activate" onclick="action(\'activate\',\''+r.email+'\')">+30D</button>'+
+        '<button class="btn btn-extend" onclick="action(\'extend\',\''+r.email+'\')">EXTEND</button>'+
+        '<button class="btn btn-revoke" onclick="action(\'revoke\',\''+r.email+'\')">REVOKE</button>'+
+      '</div></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function filterTable() {
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const st = document.getElementById('filter-status').value;
+  const filtered = ALL_ROWS.filter(function(r) {
+    const matchQ = !q || r.email.toLowerCase().includes(q) || (r.tvUsername||'').toLowerCase().includes(q);
+    const matchS = !st || r.status === st;
+    return matchQ && matchS;
+  });
+  renderRows(filtered);
 }
 
 async function action(endpoint, email) {
-  const r = await fetch('/api/tv-access/admin/'+endpoint+'?secret='+SECRET+'&email='+encodeURIComponent(email), { method:'POST' });
+  if (endpoint==='revoke' && !confirm('Revoke access for '+email+'?')) return;
+  const r = await fetch('/api/tv-access/admin/'+endpoint+'?secret='+SECRET+'&email='+encodeURIComponent(email),{method:'POST'});
   const d = await r.json();
-  if (d.ok) { showToast('Done'); load(); } else { showToast('Error: '+(d.error||'unknown'), true); }
+  if (d.ok) { showToast('✓ Done — '+email); load(); }
+  else showToast('Error: '+(d.error||'unknown'), true);
 }
 
-function showToast(msg, err) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.style.borderColor = err ? 'rgba(255,68,68,0.4)' : 'rgba(0,232,122,0.4)';
-  t.style.color = err ? '#ff4444' : '#00e87a';
-  t.style.opacity = 1;
-  setTimeout(function(){ t.style.opacity = 0; }, 2500);
+async function addMember() {
+  const email = document.getElementById('new-email').value.trim();
+  const tv = document.getElementById('new-tv').value.trim();
+  const tierVal = document.getElementById('new-tier').value;
+  if (!email) { showToast('Email is required', true); return; }
+  const tierMap = { monthly:{tier:1,tierName:'MONTHLY',days:30}, biannual:{tier:2,tierName:'BIANNUAL',days:180}, annual:{tier:3,tierName:'ANNUAL',days:365} };
+  const t = tierMap[tierVal];
+  // Register user in tv-access system
+  const r1 = await fetch('/api/tv-access',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,tvUsername:tv||'—',tier:t.tier,tierName:t.tierName})});
+  // Activate with correct duration
+  const end = new Date(Date.now() + t.days * 86400000);
+  const r2 = await fetch('/api/tv-access/admin/activate-custom?secret='+SECRET+'&email='+encodeURIComponent(email)+'&days='+t.days,{method:'POST'});
+  const d2 = await r2.json();
+  if (d2.ok) {
+    document.getElementById('add-result').textContent = '✓ Member added: '+email+' | Expires: '+fmt(d2.membershipEnd);
+    document.getElementById('new-email').value='';
+    document.getElementById('new-tv').value='';
+    showToast('✓ Member added!');
+    load();
+  } else {
+    showToast('Error adding member', true);
+  }
 }
 
 async function load() {
   const r = await fetch('/api/tv-access/admin/data?secret='+SECRET);
   const d = await r.json();
-  document.getElementById('s-total').textContent    = d.summary.total;
-  document.getElementById('s-active').textContent   = d.summary.active;
+  document.getElementById('s-total').textContent = d.summary.total;
+  document.getElementById('s-active').textContent = d.summary.active;
   document.getElementById('s-expiring').textContent = d.summary.expiring;
-  document.getElementById('s-pending').textContent  = d.summary.pending;
-  document.getElementById('s-expired').textContent  = d.summary.expired;
-  const tbody = document.getElementById('members-body');
-  if (!d.rows.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="empty">No registrations yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = d.rows.map(function(row) {
-    const dl = row.daysLeft !== null ? (row.daysLeft <= 0 ? '<span style="color:#ff4444">Expired</span>' : row.daysLeft + ' days') : '—';
-    return '<tr>' +
-      '<td><span class="tv">@'+row.tvUsername+'</span></td>' +
-      '<td>'+row.email+'</td>' +
-      '<td>'+( row.tierName || 'FREE' )+'</td>' +
-      '<td>'+statusBadge(row)+'</td>' +
-      '<td>'+fmt(row.membershipStart)+'</td>' +
-      '<td>'+fmt(row.membershipEnd)+'</td>' +
-      '<td>'+dl+daysBar(row)+'</td>' +
-      '<td style="white-space:nowrap">' +
-        '<button class="btn btn-activate" onclick="action(\'activate\',\''+row.email+'\')">ACTIVATE</button> ' +
-        '<button class="btn btn-extend"   onclick="action(\'extend\',\''+row.email+'\')">+30D</button> ' +
-        '<button class="btn btn-revoke"   onclick="action(\'revoke\',\''+row.email+'\')">REVOKE</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
+  document.getElementById('s-pending').textContent = d.summary.pending;
+  document.getElementById('s-expired').textContent = d.summary.expired;
+  ALL_ROWS = d.rows;
+  filterTable();
+}
+
+function showToast(msg, err) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.borderColor = err?'rgba(255,68,68,0.4)':'rgba(0,232,122,0.4)';
+  t.style.color = err?'#ff4444':'#00e87a';
+  t.style.opacity=1;
+  setTimeout(function(){t.style.opacity=0;},2500);
 }
 
 load();

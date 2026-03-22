@@ -241,6 +241,8 @@ async function doLogin(){
   const user = { email, displayName:stored.display, walletAddress:stored.walletAddress||null, joinedAt:stored.joinedAt, portfolio:stored.portfolio||[], type:'email', tier: stored.tier||0 };
   DB.save(user);
   CR_USER = user;
+  // Fetch real tier from backend (overrides localStorage tier)
+  fetchBackendTier(user.email);
   showAuthSuccess(stored.display, email, null);
 }
 
@@ -299,6 +301,7 @@ function finishWalletAuth(type, addr, btn){
   }
   DB.save(user);
   CR_USER=user;
+  fetchBackendTier(CR_USER.walletAddress || CR_USER.email);
   if(CR_USER.walletAddress === 'GskmXrB1ESZqx8p76fi154UNi2sZgFUU26N2QtuMXnmZ'){
     CR_USER.tier = 3;
     DB.save(CR_USER);
@@ -594,6 +597,35 @@ function closeMobileSidebar(){
   const saved=DB.load();
   if(saved){ CR_USER=saved; setTimeout(updateTopbarLoggedIn, 100); }
 })();
+
+async function fetchBackendTier(identifier) {
+  if (!identifier) return;
+  try {
+    const railwayBase = 'https://chainroot-production-b7d1.up.railway.app';
+    const res = await fetch(railwayBase + '/api/user/tier?email=' + encodeURIComponent(identifier));
+    const data = await res.json();
+    if (data && data.tier > 0 && CR_USER) {
+      CR_USER.tier = data.tier;
+      CR_USER.tierName = data.tierName;
+      CR_USER.membershipEnd = data.membershipEnd;
+      // Persist updated tier to localStorage
+      DB.save(CR_USER);
+      const users = DB.getUsers();
+      const key = CR_USER.type === 'wallet' ? 'wallet_' + CR_USER.walletAddress : CR_USER.email;
+      if (users[key]) {
+        users[key].tier = data.tier;
+        users[key].tierName = data.tierName;
+        try { localStorage.setItem('cr_users', JSON.stringify(users)); } catch(e) {}
+      }
+      // Re-render UI with correct tier
+      if (typeof renderUserUI === 'function') renderUserUI();
+      if (typeof applyTierGating === 'function') applyTierGating();
+      console.log('[Auth] Backend tier loaded:', data.tier, data.tierName, '| Expires:', data.membershipEnd);
+    }
+  } catch(e) {
+    console.log('[Auth] Could not fetch backend tier:', e.message);
+  }
+}
 
 // ── START ─────────────────────────────────────────────────────────────────────
 init();
